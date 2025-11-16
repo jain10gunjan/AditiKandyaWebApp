@@ -1,67 +1,125 @@
 import { useEffect, useState } from 'react'
 import { apiGet } from '../lib/api.js'
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
+import { useAuth } from '@clerk/clerk-react'
+import Navbar from '../components/Navbar.jsx'
+import Footer from '../components/Footer.jsx'
 
-function CourseCard({ course }) {
+function CourseCard({ course, isEnrolled = false }) {
   const [isHovered, setIsHovered] = useState(false)
+  
+  // Calculate actual metrics from course data
+  const totalLessons = course.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0
+  const totalDurationSec = course.modules?.reduce((acc, m) => 
+    acc + (m.lessons?.reduce((a, l) => a + (l.durationSec || 0), 0) || 0), 0) || 0
+  const totalHours = Math.round(totalDurationSec / 3600) || Math.round(totalDurationSec / 60 / 60) || 0
+  const studentCount = course.studentCount || 0
+  const rating = course.rating || 4.8
+  const studentDisplay = studentCount > 0 
+    ? (studentCount >= 1000 ? `${(studentCount / 1000).toFixed(1)}k+` : `${studentCount}+`)
+    : 'New'
+  
+  // Check if teacher is assigned - check both teacherId and teacherName
+  const hasTeacher = (course.teacherId && course.teacherId.trim() !== '') || 
+                     (course.teacherName && course.teacherName.trim() !== '' && course.teacherName !== 'Expert Instructor')
   
   return (
     <a 
       key={course._id} 
       href={`/courses/${course._id}`} 
-      className="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-100 hover:border-sky-200"
+      className="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-100 hover:border-sky-200 relative overflow-hidden"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative overflow-hidden rounded-xl mb-4">
-        <img 
-          src={course.image || course.thumbnailPath || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=600&auto=format&fit=crop'} 
-          alt={course.title} 
-          className="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-300" 
-        />
-        <div className="absolute top-3 right-3 bg-sky-600 text-white px-3 py-1 rounded-full text-xs font-medium">
-          {course.level || 'All Levels'}
-        </div>
-        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur text-slate-700 px-2 py-1 rounded-full text-xs font-medium">
-          {course.price === 0 ? 'Free' : `₹${course.price}`}
-        </div>
-      </div>
+      {/* Hover gradient overlay */}
+      <div className={`absolute inset-0 bg-gradient-to-br from-sky-50/0 to-blue-50/0 group-hover:from-sky-50/30 group-hover:to-blue-50/30 transition-all duration-300 pointer-events-none z-0`}></div>
       
-      <div className="space-y-3">
-        <h3 className="font-bold text-xl text-slate-800 group-hover:text-sky-700 transition-colors">
-          {course.title}
-        </h3>
-        <p className="text-slate-600 text-sm line-clamp-3 leading-relaxed">
-          {course.description || 'Learn this amazing instrument with our expert instructors. Perfect for beginners and intermediate players.'}
-        </p>
-        
-        <div className="flex items-center justify-between pt-2">
-          <div className="flex items-center space-x-2">
-            <div className="flex text-yellow-400 text-sm">
-              {'★'.repeat(5)}
+      <div className="relative z-10">
+        <div className="relative overflow-hidden rounded-xl mb-4">
+          <img 
+            src={course.image || course.thumbnailPath || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=600&auto=format&fit=crop'} 
+            alt={course.title} 
+            className="h-48 w-full object-cover group-hover:scale-110 transition-transform duration-500" 
+            onError={(e) => {
+              e.target.src = 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=600&auto=format&fit=crop'
+            }}
+          />
+          <div className="absolute top-3 right-3 bg-sky-600 text-white px-3 py-1 rounded-full text-xs font-medium shadow-lg group-hover:bg-sky-700 transition-colors z-10">
+            {course.level || 'All Levels'}
+          </div>
+          {/* Hide price badge when enrolled */}
+          {!isEnrolled && (
+            <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-slate-700 px-2 py-1 rounded-full text-xs font-medium shadow-md group-hover:bg-white transition-colors z-10">
+              {course.price === 0 ? 'Free' : `₹${course.price?.toLocaleString() || 0}`}
             </div>
-            <span className="text-xs text-slate-500">(4.8)</span>
-          </div>
-          <div className="flex items-center space-x-2 text-xs text-slate-500">
-            <span>📚</span>
-            <span>{course.modules?.length || course.chapters?.length || 8} Lessons</span>
-          </div>
+          )}
+          {isEnrolled && (
+            <div className="absolute bottom-3 right-3 bg-green-500 text-white px-3 py-1.5 rounded-full text-xs font-medium shadow-lg flex items-center gap-1.5 z-10 animate-fade-in">
+              <span className="text-sm">✓</span>
+              <span>Already Enrolled</span>
+            </div>
+          )}
         </div>
         
-        <div className="flex items-center justify-between pt-2">
-          <div className="flex items-center space-x-4 text-sm text-slate-600">
-            <span className="flex items-center">
-              <span className="mr-1">👥</span>
-              {Math.floor(Math.random() * 200) + 50} students
-            </span>
-            <span className="flex items-center">
-              <span className="mr-1">⏱️</span>
-              {Math.floor(Math.random() * 20) + 10} hours
-            </span>
+        <div className="space-y-3">
+          <div>
+            <h3 className="font-bold text-xl text-slate-800 group-hover:text-sky-700 transition-colors mb-1">
+              {course.title}
+            </h3>
+            {hasTeacher && (
+              <p className="text-xs text-slate-500 flex items-center gap-1">
+                <span>👩‍🏫</span>
+                <span>{course.teacherName || 'Assigned Teacher'}</span>
+                {course.teacherInstrument && (
+                  <>
+                    <span className="text-slate-300">•</span>
+                    <span>{course.teacherInstrument}</span>
+                  </>
+                )}
+              </p>
+            )}
           </div>
-          <span className="px-4 py-2 rounded-full bg-gradient-to-r from-sky-600 to-blue-600 text-white text-sm font-medium group-hover:from-sky-700 group-hover:to-blue-700 transition-all duration-300">
-            View Details
-          </span>
+          <p className="text-slate-600 text-sm line-clamp-3 leading-relaxed">
+            {course.description || 'Learn this amazing instrument with our expert instructors. Perfect for beginners and intermediate players.'}
+          </p>
+          
+          <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+            <div className="flex items-center space-x-2">
+              <div className="flex text-yellow-400 text-sm">
+                {'★'.repeat(Math.floor(rating))}
+                {rating % 1 >= 0.5 && <span className="text-yellow-400">½</span>}
+              </div>
+              <span className="text-xs text-slate-500">({rating.toFixed(1)})</span>
+            </div>
+            <div className="flex items-center space-x-2 text-xs text-slate-500">
+              <span>📚</span>
+              <span>{totalLessons || 0} {totalLessons === 1 ? 'Lesson' : 'Lessons'}</span>
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center space-x-4 text-sm text-slate-600">
+              <span className="flex items-center gap-1 group-hover:text-sky-600 transition-colors">
+                <span>👥</span>
+                <span>{studentDisplay} {studentCount === 1 ? 'student' : 'students'}</span>
+              </span>
+              {totalHours > 0 && (
+                <span className="flex items-center gap-1 group-hover:text-sky-600 transition-colors">
+                  <span>⏱️</span>
+                  <span>{totalHours}h</span>
+                </span>
+              )}
+            </div>
+            {!isEnrolled ? (
+              <span className="px-4 py-2 rounded-full bg-gradient-to-r from-sky-600 to-blue-600 text-white text-sm font-medium group-hover:from-sky-700 group-hover:to-blue-700 transition-all duration-300 shadow-md group-hover:shadow-lg transform group-hover:scale-105">
+                View Details →
+              </span>
+            ) : (
+              <span className="px-4 py-2 rounded-full bg-gradient-to-r from-green-600 to-emerald-600 text-white text-sm font-medium group-hover:from-green-700 group-hover:to-emerald-700 transition-all duration-300 shadow-md group-hover:shadow-lg transform group-hover:scale-105 flex items-center gap-1.5">
+                <span>✓</span>
+                <span>Continue Learning →</span>
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </a>
@@ -74,8 +132,8 @@ function FilterButton({ active, onClick, children }) {
       onClick={onClick}
       className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
         active 
-          ? 'bg-sky-600 text-white shadow-md' 
-          : 'bg-white text-slate-600 border border-slate-200 hover:border-sky-300 hover:text-sky-700'
+          ? 'bg-sky-600 text-white shadow-md hover:shadow-lg transform hover:scale-105' 
+          : 'bg-white text-slate-600 border border-slate-200 hover:border-sky-300 hover:text-sky-700 hover:bg-sky-50'
       }`}
     >
       {children}
@@ -88,6 +146,8 @@ export default function CoursesPage() {
   const [filteredCourses, setFilteredCourses] = useState([])
   const [activeFilter, setActiveFilter] = useState('all')
   const [loading, setLoading] = useState(true)
+  const [enrolledCourseIds, setEnrolledCourseIds] = useState(new Set())
+  const { getToken, isSignedIn } = useAuth()
 
   useEffect(() => {
     const loadCourses = async () => {
@@ -96,6 +156,34 @@ export default function CoursesPage() {
         const data = await apiGet('/courses')
         setCourses(data)
         setFilteredCourses(data)
+        
+        // Load enrollment status if user is signed in
+        if (isSignedIn) {
+          try {
+            const token = await getToken().catch(() => undefined)
+            if (token) {
+              const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'}/api/me/enrollments`, {
+                headers: { Authorization: `Bearer ${token}` }
+              })
+              if (response.ok) {
+                const enrollments = await response.json()
+                // The endpoint returns an array of { enrollmentId, course } objects
+                const enrolledIds = new Set(
+                  Array.isArray(enrollments) 
+                    ? enrollments.map(e => {
+                        const id = e.course?._id || e.courseId
+                        return id ? String(id) : null
+                      }).filter(Boolean)
+                    : []
+                )
+                console.log('Enrolled course IDs:', Array.from(enrolledIds))
+                setEnrolledCourseIds(enrolledIds)
+              }
+            }
+          } catch (error) {
+            console.error('Failed to load enrollments:', error)
+          }
+        }
       } catch (error) {
         console.error('Failed to load courses:', error)
         // Fallback demo courses
@@ -180,40 +268,7 @@ export default function CoursesPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-pink-50">
-      {/* Enhanced Header */}
-      <header className="sticky top-0 z-10 backdrop-blur bg-white/80 border-b border-slate-200 shadow-sm">
-        <nav className="max-w-6xl mx-auto flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
-            <a href="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-blue-600 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-lg">🎶</span>
-              </div>
-              <div>
-                <span className="font-extrabold text-slate-800 text-lg">Themusinest.com</span>
-                <div className="text-xs text-slate-500">Music Academy</div>
-              </div>
-            </a>
-          </div>
-          <div className="hidden md:flex items-center gap-6 text-slate-700">
-            <a href="/" className="hover:text-sky-700 font-medium transition-colors">Home</a>
-            <a href="/courses" className="hover:text-sky-700 font-medium transition-colors text-sky-600">Courses</a>
-            <a href="/teachers" className="hover:text-sky-700 font-medium transition-colors">Teachers</a>
-            <a href="/schedule" className="hover:text-sky-700 font-medium transition-colors">Schedule</a>
-            <a href="/dashboard" className="hover:text-sky-700 font-medium transition-colors">Dashboard</a>
-            <a href="/admin" className="hover:text-sky-700 font-medium transition-colors">Admin</a>
-            <SignedOut>
-              <SignInButton>
-                <button className="px-4 py-2 rounded-full bg-gradient-to-r from-sky-600 to-blue-600 text-white text-sm font-medium hover:from-sky-700 hover:to-blue-700 transition-all duration-300 shadow-md hover:shadow-lg">
-                  Sign In
-                </button>
-              </SignInButton>
-            </SignedOut>
-            <SignedIn>
-              <UserButton afterSignOutUrl="/" />
-            </SignedIn>
-          </div>
-        </nav>
-      </header>
+      <Navbar />
 
       <main className="pb-16">
         {/* Hero Section */}
@@ -248,14 +303,32 @@ export default function CoursesPage() {
 
           {/* Courses Grid */}
           {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="bg-white rounded-2xl shadow-md p-6 border border-slate-100 animate-pulse">
+                  <div className="h-48 bg-slate-200 rounded-xl mb-4"></div>
+                  <div className="h-6 bg-slate-200 rounded mb-2"></div>
+                  <div className="h-4 bg-slate-200 rounded w-3/4 mb-4"></div>
+                  <div className="h-4 bg-slate-200 rounded"></div>
+                </div>
+              ))}
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredCourses.map((course) => (
-                <CourseCard key={course._id} course={course} />
-              ))}
+              {filteredCourses.map((course) => {
+                const courseId = String(course._id)
+                const isEnrolled = enrolledCourseIds.has(courseId) || enrolledCourseIds.has(course._id)
+                if (isEnrolled) {
+                  console.log('Course enrolled:', course.title, 'ID:', courseId)
+                }
+                return (
+                  <CourseCard 
+                    key={course._id} 
+                    course={course} 
+                    isEnrolled={isEnrolled}
+                  />
+                )
+              })}
             </div>
           )}
 
@@ -274,73 +347,9 @@ export default function CoursesPage() {
           )}
         </section>
 
-        {/* Call to Action Section */}
-        <section className="max-w-6xl mx-auto px-4 mt-20">
-          <div className="bg-gradient-to-r from-sky-600 to-blue-600 rounded-3xl p-8 md:p-12 text-center text-white">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Start Your Musical Journey?</h2>
-            <p className="text-xl mb-8 opacity-90">Join thousands of students who have discovered their passion for music with us.</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="#enroll" className="px-8 py-4 rounded-full bg-white text-sky-600 hover:bg-slate-50 font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl">
-                Enroll Now
-              </a>
-              <a href="/teachers" className="px-8 py-4 rounded-full bg-transparent border-2 border-white text-white hover:bg-white hover:text-sky-600 font-semibold text-lg transition-all duration-300">
-                Meet Our Teachers
-              </a>
-            </div>
-          </div>
-        </section>
       </main>
 
-      {/* Enhanced Footer */}
-      <footer className="border-t mt-20 bg-gradient-to-r from-slate-50 to-sky-50">
-        <div className="max-w-6xl mx-auto p-8">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-blue-600 rounded-xl flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">🎶</span>
-                </div>
-                <span className="font-extrabold text-slate-800 text-lg">Themusinest.com</span>
-              </div>
-              <p className="text-slate-600 text-sm">Making music education accessible and fun for everyone.</p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-800 mb-4">Quick Links</h3>
-              <ul className="space-y-2 text-sm text-slate-600">
-                <li><a href="/courses" className="hover:text-sky-700 transition-colors">Courses</a></li>
-                <li><a href="/teachers" className="hover:text-sky-700 transition-colors">Teachers</a></li>
-                <li><a href="/schedule" className="hover:text-sky-700 transition-colors">Schedule</a></li>
-                <li><a href="/dashboard" className="hover:text-sky-700 transition-colors">Dashboard</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-800 mb-4">Contact</h3>
-              <ul className="space-y-2 text-sm text-slate-600">
-                <li>📧 support@themusinest.com</li>
-                <li>📞 +91-98765-43210</li>
-                <li>📍 Mumbai, India</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-800 mb-4">Follow Us</h3>
-              <div className="flex gap-3">
-                <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center cursor-pointer hover:bg-sky-200 transition-colors">
-                  <span className="text-sky-600 text-sm">f</span>
-                </div>
-                <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center cursor-pointer hover:bg-sky-200 transition-colors">
-                  <span className="text-sky-600 text-sm">📷</span>
-                </div>
-                <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center cursor-pointer hover:bg-sky-200 transition-colors">
-                  <span className="text-sky-600 text-sm">📺</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="border-t border-slate-200 mt-8 pt-6 text-center text-slate-600 text-sm">
-            © {new Date().getFullYear()} Themusinest.com • Made with 🎶 and ❤️
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

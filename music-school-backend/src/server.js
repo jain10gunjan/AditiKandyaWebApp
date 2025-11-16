@@ -70,6 +70,19 @@ const Course = mongoose.model(
       image: String,
       level: String,
       thumbnailPath: String, // local file path served via /uploads
+      // Course metrics
+      studentCount: { type: Number, default: 0 },
+      rating: { type: Number, default: 4.8 },
+      // Teacher information
+      teacherId: String, // Reference to Teacher model
+      teacherName: String,
+      teacherDescription: String,
+      teacherAvatar: String,
+      teacherInstrument: String,
+      // Additional course content
+      scales: String,
+      arpeggios: String,
+      performanceTips: String,
       curriculum: [
         {
           title: String,
@@ -463,18 +476,74 @@ app.post('/api/enroll', requireAuthGuarded, async (req, res) => {
 // Basic content management (temporary: any signed-in user)
 app.post('/api/courses', requireAdmin, async (req, res) => {
   if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
-  const { title, description, price, image, level } = req.body || {}
+  const { title, description, price, image, level, teacherId } = req.body || {}
   if (!title || !description) return res.status(400).json({ error: 'Missing fields' })
-  const doc = await Course.create({ title, description, price, image, level })
+  
+  const courseData = { title, description, price, image, level }
+  
+  // If teacherId is provided, fetch teacher data and populate course fields
+  if (teacherId) {
+    const teacher = await Teacher.findById(teacherId)
+    if (teacher) {
+      courseData.teacherId = teacherId
+      courseData.teacherName = teacher.name
+      courseData.teacherAvatar = teacher.avatar
+      courseData.teacherInstrument = teacher.instrument
+    }
+  }
+  
+  const doc = await Course.create(courseData)
   res.status(201).json(doc)
 })
 
 app.put('/api/courses/:id', requireAdmin, async (req, res) => {
   if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
-  const { title, description, price, image, level } = req.body || {}
+  const { 
+    title, description, price, image, level, 
+    studentCount, rating,
+    teacherId, teacherName, teacherDescription, teacherAvatar, teacherInstrument,
+    scales, arpeggios, performanceTips
+  } = req.body || {}
+  const updateData = {}
+  if (title !== undefined) updateData.title = title
+  if (description !== undefined) updateData.description = description
+  if (price !== undefined) updateData.price = price
+  if (image !== undefined) updateData.image = image
+  if (level !== undefined) updateData.level = level
+  if (studentCount !== undefined) updateData.studentCount = Number(studentCount) || 0
+  if (rating !== undefined) updateData.rating = Number(rating) || 4.8
+  
+  // Handle teacherId - if provided, auto-populate teacher fields
+  if (teacherId !== undefined) {
+    if (teacherId) {
+      const teacher = await Teacher.findById(teacherId)
+      if (teacher) {
+        updateData.teacherId = teacherId
+        updateData.teacherName = teacher.name
+        updateData.teacherAvatar = teacher.avatar
+        updateData.teacherInstrument = teacher.instrument
+      }
+    } else {
+      // If teacherId is empty string, clear teacher assignment
+      updateData.teacherId = ''
+      updateData.teacherName = ''
+      updateData.teacherAvatar = ''
+      updateData.teacherInstrument = ''
+    }
+  }
+  
+  // Allow manual override of teacher fields
+  if (teacherName !== undefined) updateData.teacherName = teacherName
+  if (teacherDescription !== undefined) updateData.teacherDescription = teacherDescription
+  if (teacherAvatar !== undefined) updateData.teacherAvatar = teacherAvatar
+  if (teacherInstrument !== undefined) updateData.teacherInstrument = teacherInstrument
+  if (scales !== undefined) updateData.scales = scales
+  if (arpeggios !== undefined) updateData.arpeggios = arpeggios
+  if (performanceTips !== undefined) updateData.performanceTips = performanceTips
+  
   const doc = await Course.findByIdAndUpdate(
     req.params.id,
-    { title, description, price, image, level },
+    updateData,
     { new: true }
   )
   if (!doc) return res.status(404).json({ error: 'Not found' })
@@ -790,6 +859,19 @@ app.post('/api/teachers', requireAuthGuarded, async (req, res) => {
   res.status(201).json(doc)
 })
 
+app.put('/api/teachers/:id', requireAuthGuarded, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const { name, instrument, avatar } = req.body || {}
+  if (!name || !instrument) return res.status(400).json({ error: 'Missing fields' })
+  const doc = await Teacher.findByIdAndUpdate(
+    req.params.id,
+    { name, instrument, avatar },
+    { new: true }
+  )
+  if (!doc) return res.status(404).json({ error: 'Not found' })
+  res.json(doc)
+})
+
 app.delete('/api/teachers/:id', requireAuthGuarded, async (req, res) => {
   if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
   const ok = await Teacher.findByIdAndDelete(req.params.id)
@@ -809,6 +891,84 @@ app.post('/api/admin/enrollments/:id/approve', requireAdmin, async (req, res) =>
   const doc = await Enrollment.findByIdAndUpdate(req.params.id, { approved: true }, { new: true })
   if (!doc) return res.status(404).json({ error: 'Not found' })
   res.json(doc)
+})
+
+// Admin: Manually enroll a student by email
+app.post('/api/admin/enrollments/manual', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const { email, courseId, name } = req.body || {}
+  
+  if (!email || !courseId) {
+    return res.status(400).json({ error: 'Email and course ID are required' })
+  }
+  
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email.trim().toLowerCase())) {
+    return res.status(400).json({ error: 'Invalid email format' })
+  }
+  
+  // Check if course exists
+  const course = await Course.findById(courseId)
+  if (!course) {
+    return res.status(404).json({ error: 'Course not found' })
+  }
+  
+  // Try to find user in Clerk by email
+  let userId = null
+  let studentName = name || 'Student'
+  
+  if (hasClerk) {
+    try {
+      // Search for user by email in Clerk
+      const users = await clerkClient.users.getUserList({ emailAddress: [email.trim().toLowerCase()] })
+      if (users && users.data && users.data.length > 0) {
+        userId = users.data[0].id
+        studentName = users.data[0].firstName || users.data[0].emailAddresses?.[0]?.emailAddress || studentName
+      }
+    } catch (err) {
+      console.warn('Could not find user in Clerk by email:', err?.message)
+      // Continue without userId - enrollment will work with email only
+    }
+  }
+  
+  // Check if enrollment already exists
+  const existingEnrollment = userId 
+    ? await Enrollment.findOne({ userId, courseId })
+    : await Enrollment.findOne({ email: email.trim().toLowerCase(), courseId })
+  
+  if (existingEnrollment) {
+    if (existingEnrollment.approved) {
+      return res.status(400).json({ error: 'Student is already enrolled in this course' })
+    } else {
+      // Approve existing pending enrollment
+      const updated = await Enrollment.findByIdAndUpdate(
+        existingEnrollment._id,
+        { approved: true, email: email.trim().toLowerCase(), name: studentName },
+        { new: true }
+      )
+      return res.json({ 
+        message: 'Existing enrollment approved',
+        enrollment: updated 
+      })
+    }
+  }
+  
+  // Create new enrollment (approved by default for manual enrollment)
+  const enrollment = await Enrollment.create({
+    name: studentName,
+    email: email.trim().toLowerCase(),
+    instrument: '',
+    userId: userId || `email:${email.trim().toLowerCase()}`,
+    courseId,
+    approved: true,
+    paymentId: 'manual-enrollment'
+  })
+  
+  res.status(201).json({
+    message: 'Student enrolled successfully',
+    enrollment
+  })
 })
 
 // Auth test route

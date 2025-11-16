@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth, SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
-import { apiGet, apiPost } from '../lib/api'
+import { apiGet, apiPost, apiPut } from '../lib/api'
 
 function ResourcePreview({ lesson, courseId, moduleIndex, lessonIndex }) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
@@ -250,6 +250,269 @@ function LessonForm({ moduleIndex, lessonType, onSubmit, onCancel }) {
   )
 }
 
+function CourseDetailsEditForm({ course, onSave, onCancel, loading }) {
+  const [formData, setFormData] = useState({
+    title: course?.title || '',
+    description: course?.description || '',
+    price: course?.price || 0,
+    level: course?.level || 'Beginner',
+    image: course?.image || '',
+    studentCount: course?.studentCount || 0,
+    rating: course?.rating || 4.8,
+    teacherName: course?.teacherName || '',
+    teacherDescription: course?.teacherDescription || '',
+    teacherAvatar: course?.teacherAvatar || '',
+    teacherInstrument: course?.teacherInstrument || '',
+    scales: course?.scales || '',
+    arpeggios: course?.arpeggios || '',
+    performanceTips: course?.performanceTips || '',
+  })
+
+  useEffect(() => {
+    if (course) {
+      setFormData({
+        title: course.title || '',
+        description: course.description || '',
+        price: course.price || 0,
+        level: course.level || 'Beginner',
+        image: course.image || '',
+        studentCount: course.studentCount || 0,
+        rating: course.rating || 4.8,
+        teacherName: course.teacherName || '',
+        teacherDescription: course.teacherDescription || '',
+        teacherAvatar: course.teacherAvatar || '',
+        teacherInstrument: course.teacherInstrument || '',
+        scales: course.scales || '',
+        arpeggios: course.arpeggios || '',
+        performanceTips: course.performanceTips || '',
+      })
+    }
+  }, [course])
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    await onSave(formData)
+  }
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'price' || name === 'studentCount' || name === 'rating' 
+        ? Number(value) || 0 
+        : value
+    }))
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
+      <h2 className="text-2xl font-bold text-slate-900 mb-6">Edit Course Details</h2>
+      
+      <div className="space-y-6">
+        {/* Basic Course Info */}
+        <div>
+          <h3 className="text-lg font-semibold text-slate-800 mb-4">Basic Information</h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Course Title</label>
+              <input
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Price (₹)</label>
+              <input
+                name="price"
+                type="number"
+                value={formData.price}
+                onChange={handleChange}
+                className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Level</label>
+              <select
+                name="level"
+                value={formData.level}
+                onChange={handleChange}
+                className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              >
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+                <option value="All Levels">All Levels</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Image URL</label>
+              <input
+                name="image"
+                value={formData.image}
+                onChange={handleChange}
+                className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows={4}
+              className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              required
+            />
+          </div>
+        </div>
+
+        {/* Course Metrics */}
+        <div>
+          <h3 className="text-lg font-semibold text-slate-800 mb-4">Course Metrics</h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Student Count</label>
+              <input
+                name="studentCount"
+                type="number"
+                value={formData.studentCount}
+                onChange={handleChange}
+                placeholder="1200"
+                className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Rating (0-5)</label>
+              <input
+                name="rating"
+                type="number"
+                step="0.1"
+                min="0"
+                max="5"
+                value={formData.rating}
+                onChange={handleChange}
+                placeholder="4.8"
+                className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Teacher Information */}
+        <div>
+          <h3 className="text-lg font-semibold text-slate-800 mb-4">Teacher Information</h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Teacher Name</label>
+              <input
+                name="teacherName"
+                value={formData.teacherName}
+                onChange={handleChange}
+                placeholder="e.g., Aarav Sharma"
+                className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Instrument</label>
+              <input
+                name="teacherInstrument"
+                value={formData.teacherInstrument}
+                onChange={handleChange}
+                placeholder="e.g., Guitar, Piano, Vocals"
+                className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">Teacher Avatar URL</label>
+              <input
+                name="teacherAvatar"
+                value={formData.teacherAvatar}
+                onChange={handleChange}
+                placeholder="https://example.com/avatar.jpg"
+                className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">Teacher Description</label>
+              <textarea
+                name="teacherDescription"
+                value={formData.teacherDescription}
+                onChange={handleChange}
+                rows={3}
+                placeholder="Expert musician with 10+ years of teaching experience..."
+                className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Course Content */}
+        <div>
+          <h3 className="text-lg font-semibold text-slate-800 mb-4">Additional Course Content</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Scales</label>
+              <textarea
+                name="scales"
+                value={formData.scales}
+                onChange={handleChange}
+                rows={3}
+                placeholder="Describe the scales covered in this course..."
+                className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Arpeggios</label>
+              <textarea
+                name="arpeggios"
+                value={formData.arpeggios}
+                onChange={handleChange}
+                rows={3}
+                placeholder="Describe the arpeggios covered in this course..."
+                className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Performance Tips</label>
+              <textarea
+                name="performanceTips"
+                value={formData.performanceTips}
+                onChange={handleChange}
+                rows={3}
+                placeholder="Share performance tips and techniques..."
+                className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-3 pt-4">
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-6 py-3 bg-gradient-to-r from-sky-600 to-blue-600 text-white rounded-lg hover:from-sky-700 hover:to-blue-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl disabled:opacity-50"
+          >
+            {loading ? 'Saving...' : 'Save Course Details'}
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-6 py-3 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors font-medium"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </form>
+  )
+}
+
 export default function AdminCourseBuilder() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -259,6 +522,8 @@ export default function AdminCourseBuilder() {
   const [mTitle, setMTitle] = useState('')
   const [mOrder, setMOrder] = useState('')
   const [showLessonForm, setShowLessonForm] = useState({ moduleIndex: null, type: null })
+  const [showEditForm, setShowEditForm] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   const reload = async () => {
     setLoading(true)
@@ -312,6 +577,21 @@ export default function AdminCourseBuilder() {
 
   const cancelAddLesson = () => {
     setShowLessonForm({ moduleIndex: null, type: null })
+  }
+
+  const handleSaveCourseDetails = async (formData) => {
+    try {
+      setSaving(true)
+      const token = await getToken()
+      await apiPut(`/courses/${id}`, formData, token)
+      setShowEditForm(false)
+      reload()
+    } catch (error) {
+      console.error('Failed to save course details:', error)
+      alert('Failed to save course details. Please try again.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (loading) {
@@ -374,6 +654,12 @@ export default function AdminCourseBuilder() {
                 <p className="text-slate-600">Build and manage your course content</p>
               </div>
               <div className="flex gap-3">
+                <button
+                  onClick={() => setShowEditForm(!showEditForm)}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+                >
+                  {showEditForm ? 'Hide Edit Form' : 'Edit Course Details'}
+                </button>
                 <a
                   href={`/courses/${course._id}`}
                   target="_blank"
@@ -432,6 +718,18 @@ export default function AdminCourseBuilder() {
           </SignedOut>
 
           <SignedIn>
+            {/* Course Details Edit Form */}
+            {showEditForm && (
+              <div className="mb-8">
+                <CourseDetailsEditForm
+                  course={course}
+                  onSave={handleSaveCourseDetails}
+                  onCancel={() => setShowEditForm(false)}
+                  loading={saving}
+                />
+              </div>
+            )}
+
             {/* Add Module Form */}
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200 mb-8">
               <h2 className="text-xl font-bold text-slate-900 mb-4">Add New Module</h2>

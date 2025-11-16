@@ -5,6 +5,20 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Youth Music Academy</title>
+    <script>
+      // Prevent hash scroll on page load - must run before React loads
+      (function() {
+        if (window.location.hash) {
+          // Remove hash from URL immediately
+          const url = window.location.href.split('#')[0];
+          window.history.replaceState(null, '', url);
+        }
+        // Force scroll to top
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

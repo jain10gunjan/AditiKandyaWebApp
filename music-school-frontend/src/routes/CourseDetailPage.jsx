@@ -1,34 +1,246 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { apiGet, apiPost, apiPut } from '../lib/api.js'
-import { SignedIn, SignedOut, SignInButton, useAuth, UserButton } from '@clerk/clerk-react'
+import { SignedIn, SignedOut, SignInButton, useAuth } from '@clerk/clerk-react'
 import toast from 'react-hot-toast'
+import Navbar from '../components/Navbar.jsx'
+import Footer from '../components/Footer.jsx'
 
-function CourseLeadForm({ course }) {
+function CourseLeadForm({ course, onSuccess }) {
   const [submitting, setSubmitting] = useState(false)
+  const [errors, setErrors] = useState({})
+  const [touched, setTouched] = useState({})
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    whatsapp: '',
+    country: ''
+  })
+  const nameInputRef = useRef(null)
+
+  // Validation functions
+  const validateFullName = (name) => {
+    if (!name || name.trim().length === 0) {
+      return 'Full name is required'
+    }
+    if (name.trim().length < 2) {
+      return 'Name must be at least 2 characters'
+    }
+    if (name.trim().length > 100) {
+      return 'Name must be less than 100 characters'
+    }
+    if (!/^[a-zA-Z\s'-]+$/.test(name.trim())) {
+      return 'Name can only contain letters, spaces, hyphens, and apostrophes'
+    }
+    return null
+  }
+
+  const validateEmail = (email) => {
+    if (!email || email.trim().length === 0) {
+      return 'Email is required'
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email.trim())) {
+      return 'Please enter a valid email address'
+    }
+    return null
+  }
+
+  const validateWhatsApp = (whatsapp) => {
+    if (!whatsapp || whatsapp.trim().length === 0) {
+      return null // Optional field
+    }
+    // Remove spaces, dashes, and plus signs for validation
+    const cleaned = whatsapp.replace(/[\s\-+]/g, '')
+    if (!/^\d{10,15}$/.test(cleaned)) {
+      return 'Please enter a valid phone number (10-15 digits)'
+    }
+    if (cleaned.length < 10) {
+      return 'Phone number must have at least 10 digits'
+    }
+    return null
+  }
+
+  const validateCountry = (country) => {
+    if (!country || country.trim().length === 0) {
+      return null // Optional field
+    }
+    if (country.trim().length < 2) {
+      return 'Country name must be at least 2 characters'
+    }
+    return null
+  }
+
+  const validateField = (name, value) => {
+    switch (name) {
+      case 'fullName':
+        return validateFullName(value)
+      case 'email':
+        return validateEmail(value)
+      case 'whatsapp':
+        return validateWhatsApp(value)
+      case 'country':
+        return validateCountry(value)
+      default:
+        return null
+    }
+  }
+
+  // Auto-focus first field when form mounts
+  useEffect(() => {
+    if (nameInputRef.current) {
+      setTimeout(() => {
+        nameInputRef.current?.focus()
+      }, 100)
+    }
+  }, [])
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    let processedValue = value
+    
+    // Format phone number as user types
+    if (name === 'whatsapp') {
+      // Remove all non-digits
+      const digits = value.replace(/\D/g, '')
+      // Format: +91 98765 43210 (for Indian numbers) or keep as is
+      if (digits.length > 0) {
+        if (digits.length <= 2) {
+          processedValue = digits.length > 0 ? `+${digits}` : digits
+        } else if (digits.length <= 7) {
+          processedValue = `+${digits.slice(0, 2)} ${digits.slice(2)}`
+        } else {
+          processedValue = `+${digits.slice(0, 2)} ${digits.slice(2, 7)} ${digits.slice(7, 12)}`
+        }
+      } else {
+        processedValue = ''
+      }
+    }
+    
+    setFormData(prev => ({ ...prev, [name]: processedValue }))
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[name]
+        return newErrors
+      })
+    }
+  }
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target
+    setTouched(prev => ({ ...prev, [name]: true }))
+    
+    const error = validateField(name, value)
+    if (error) {
+      setErrors(prev => ({ ...prev, [name]: error }))
+    } else {
+      setErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[name]
+        return newErrors
+      })
+    }
+  }
+
+  const validateForm = () => {
+    const newErrors = {}
+    
+    const fullNameError = validateFullName(formData.fullName)
+    if (fullNameError) newErrors.fullName = fullNameError
+    
+    const emailError = validateEmail(formData.email)
+    if (emailError) newErrors.email = emailError
+    
+    const whatsappError = validateWhatsApp(formData.whatsapp)
+    if (whatsappError) newErrors.whatsapp = whatsappError
+    
+    const countryError = validateCountry(formData.country)
+    if (countryError) newErrors.country = countryError
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Mark all fields as touched
+    setTouched({
+      fullName: true,
+      email: true,
+      whatsapp: true,
+      country: true
+    })
+    
+    // Validate form and get errors
+    const currentErrors = {}
+    const fullNameError = validateFullName(formData.fullName)
+    if (fullNameError) currentErrors.fullName = fullNameError
+    const emailError = validateEmail(formData.email)
+    if (emailError) currentErrors.email = emailError
+    const whatsappError = validateWhatsApp(formData.whatsapp)
+    if (whatsappError) currentErrors.whatsapp = whatsappError
+    const countryError = validateCountry(formData.country)
+    if (countryError) currentErrors.country = countryError
+    
+    // Set errors
+    setErrors(currentErrors)
+    
+    // If there are errors, show message and scroll to first error
+    if (Object.keys(currentErrors).length > 0) {
+      toast.error('Please fix the errors in the form')
+      // Scroll to first error
+      const firstErrorField = Object.keys(currentErrors)[0]
+      if (firstErrorField) {
+        setTimeout(() => {
+          const element = document.querySelector(`[name="${firstErrorField}"]`)
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            element.focus()
+          }
+        }, 100)
+      }
+      return
+    }
+
     try {
       setSubmitting(true)
-      const form = new FormData(e.currentTarget)
       const payload = {
-        fullName: form.get('fullName'),
-        email: form.get('email'),
-        whatsapp: form.get('whatsapp'),
-        country: form.get('country'),
+        fullName: formData.fullName.trim(),
+        email: formData.email.trim().toLowerCase(),
+        whatsapp: formData.whatsapp.trim(),
+        country: formData.country.trim(),
         courseId: course?._id,
         courseTitle: course?.title,
       }
+      
       await toast.promise(
         apiPost('/leads', payload),
         {
           loading: 'Submitting your details...',
-          success: 'Thanks! We\'ll contact you soon.',
+          success: 'Thanks! We\'ll contact you soon. 🎉',
           error: 'Submission failed. Please try again.',
         }
       )
-      e.currentTarget.reset()
+      
+      // Reset form
+      setFormData({
+        fullName: '',
+        email: '',
+        whatsapp: '',
+        country: ''
+      })
+      setErrors({})
+      setTouched({})
+      
+      // Close modal after short delay to show success message
+      setTimeout(() => {
+        if (onSuccess) onSuccess()
+      }, 1500)
+      
     } catch (err) {
       console.error('Failed to submit lead', err)
     } finally {
@@ -37,29 +249,277 @@ function CourseLeadForm({ course }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-3">
-      <input name="fullName" placeholder="Full Name" className="border border-slate-300 rounded-lg p-3" required />
-      <input name="email" type="email" placeholder="Email Address" className="border border-slate-300 rounded-lg p-3" required />
-      <input name="whatsapp" placeholder="WhatsApp Number" className="border border-slate-300 rounded-lg p-3" />
-      <input name="country" placeholder="Country" className="border border-slate-300 rounded-lg p-3" />
-      <button type="submit" disabled={submitting} className="w-full px-6 py-3 rounded-lg bg-white border border-slate-300 text-slate-800 hover:border-sky-300 hover:bg-sky-50 transition-colors font-medium disabled:opacity-50">
-        {submitting ? 'Submitting...' : 'Submit Details'}
+    <form onSubmit={handleSubmit} className="grid gap-4" noValidate>
+      {/* Full Name */}
+      <div>
+        <label htmlFor="fullName" className="block text-sm font-medium text-slate-700 mb-2">
+          Full Name <span className="text-red-500">*</span>
+        </label>
+        <input
+          ref={nameInputRef}
+          id="fullName"
+          name="fullName"
+          type="text"
+          value={formData.fullName}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          placeholder="Enter your full name"
+          maxLength={100}
+          className={`w-full border rounded-lg p-3 transition-all duration-200 ${
+            errors.fullName && touched.fullName
+              ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'
+              : formData.fullName && !errors.fullName
+              ? 'border-green-300 bg-green-50/30 focus:ring-2 focus:ring-green-500 focus:border-green-500'
+              : 'border-slate-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500'
+          }`}
+          required
+          aria-invalid={errors.fullName && touched.fullName ? 'true' : 'false'}
+          aria-describedby={errors.fullName && touched.fullName ? 'fullName-error' : undefined}
+        />
+        <div className="flex items-center justify-between mt-1">
+          {errors.fullName && touched.fullName ? (
+            <p id="fullName-error" className="text-sm text-red-600 flex items-center gap-1 animate-fade-in">
+              <span>⚠️</span> {errors.fullName}
+            </p>
+          ) : formData.fullName && !errors.fullName ? (
+            <p className="text-xs text-green-600 flex items-center gap-1">
+              <span>✓</span> Looks good!
+            </p>
+          ) : null}
+          {formData.fullName.length > 0 && (
+            <span className="text-xs text-slate-400">{formData.fullName.length}/100</span>
+          )}
+        </div>
+      </div>
+
+      {/* Email */}
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
+          Email Address <span className="text-red-500">*</span>
+        </label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          placeholder="your.email@example.com"
+          className={`w-full border rounded-lg p-3 transition-all duration-200 ${
+            errors.email && touched.email
+              ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'
+              : formData.email && !errors.email
+              ? 'border-green-300 bg-green-50/30 focus:ring-2 focus:ring-green-500 focus:border-green-500'
+              : 'border-slate-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500'
+          }`}
+          required
+          aria-invalid={errors.email && touched.email ? 'true' : 'false'}
+          aria-describedby={errors.email && touched.email ? 'email-error' : undefined}
+        />
+        {errors.email && touched.email ? (
+          <p id="email-error" className="mt-1 text-sm text-red-600 flex items-center gap-1 animate-fade-in">
+            <span>⚠️</span> {errors.email}
+          </p>
+        ) : formData.email && !errors.email ? (
+          <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+            <span>✓</span> Valid email address
+          </p>
+        ) : null}
+      </div>
+
+      {/* WhatsApp */}
+      <div>
+        <label htmlFor="whatsapp" className="block text-sm font-medium text-slate-700 mb-2">
+          WhatsApp Number <span className="text-slate-400 text-xs">(Optional)</span>
+        </label>
+        <input
+          id="whatsapp"
+          name="whatsapp"
+          type="tel"
+          value={formData.whatsapp}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          placeholder="+91 98765 43210"
+          maxLength={17}
+          className={`w-full border rounded-lg p-3 transition-all duration-200 ${
+            errors.whatsapp && touched.whatsapp
+              ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'
+              : formData.whatsapp && !errors.whatsapp
+              ? 'border-green-300 bg-green-50/30 focus:ring-2 focus:ring-green-500 focus:border-green-500'
+              : 'border-slate-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500'
+          }`}
+          aria-invalid={errors.whatsapp && touched.whatsapp ? 'true' : 'false'}
+          aria-describedby={errors.whatsapp && touched.whatsapp ? 'whatsapp-error' : undefined}
+        />
+        {errors.whatsapp && touched.whatsapp ? (
+          <p id="whatsapp-error" className="mt-1 text-sm text-red-600 flex items-center gap-1 animate-fade-in">
+            <span>⚠️</span> {errors.whatsapp}
+          </p>
+        ) : formData.whatsapp && !errors.whatsapp ? (
+          <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+            <span>✓</span> Valid phone number
+          </p>
+        ) : (
+          <p className="mt-1 text-xs text-slate-500">We'll use this to contact you quickly</p>
+        )}
+      </div>
+
+      {/* Country */}
+      <div>
+        <label htmlFor="country" className="block text-sm font-medium text-slate-700 mb-2">
+          Country <span className="text-slate-400 text-xs">(Optional)</span>
+        </label>
+        <input
+          id="country"
+          name="country"
+          type="text"
+          value={formData.country}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          placeholder="e.g., India, USA, UK"
+          className={`w-full border rounded-lg p-3 transition-all duration-200 ${
+            errors.country && touched.country
+              ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'
+              : 'border-slate-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500'
+          }`}
+          aria-invalid={errors.country && touched.country ? 'true' : 'false'}
+          aria-describedby={errors.country && touched.country ? 'country-error' : undefined}
+        />
+        {errors.country && touched.country && (
+          <p id="country-error" className="mt-1 text-sm text-red-600 flex items-center gap-1 animate-fade-in">
+            <span>⚠️</span> {errors.country}
+          </p>
+        )}
+      </div>
+
+      {/* Submit Button */}
+      <button
+        type="submit"
+        disabled={submitting}
+        className={`w-full px-6 py-3 rounded-lg font-medium transition-all duration-300 shadow-sm relative overflow-hidden ${
+          submitting
+            ? 'bg-slate-400 text-white cursor-not-allowed'
+            : 'bg-gradient-to-r from-sky-600 to-blue-600 text-white hover:from-sky-700 hover:to-blue-700 hover:shadow-md active:scale-95'
+        }`}
+      >
+        {submitting ? (
+          <span className="flex items-center justify-center gap-2">
+            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Submitting...
+          </span>
+        ) : (
+          <span className="flex items-center justify-center gap-2">
+            <span className="text-lg">📝</span>
+            <span>Submit Enrollment Request</span>
+            <span className="text-sm">→</span>
+          </span>
+        )}
       </button>
+
+      {/* Helper Text */}
+      <p className="text-xs text-slate-500 text-center">
+        By submitting, you agree to be contacted by our team regarding this course.
+      </p>
     </form>
   )
 }
 
 function CourseLeadModal({ open, onClose, course }) {
+  const [isClosing, setIsClosing] = useState(false)
+
+  useEffect(() => {
+    if (open) {
+      setIsClosing(false)
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [open])
+
+  const handleClose = () => {
+    setIsClosing(true)
+    setTimeout(() => {
+      onClose()
+      setIsClosing(false)
+    }, 200)
+  }
+
+  const handleSuccess = () => {
+    setTimeout(() => {
+      handleClose()
+    }, 1500)
+  }
+
+  // Close on ESC key
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape' && open) {
+        handleClose()
+      }
+    }
+    if (open) {
+      window.addEventListener('keydown', handleEsc)
+    }
+    return () => window.removeEventListener('keydown', handleEsc)
+  }, [open])
+
   if (!open) return null
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-slate-200">
-        <div className="p-5 border-b border-slate-200 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-slate-900">Enroll Interest • {course?.title}</h3>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-slate-100">✕</button>
+    <div 
+      className={`fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 transition-opacity duration-200 ${
+        isClosing ? 'opacity-0' : 'opacity-100'
+      }`}
+      onClick={handleClose}
+    >
+      <div 
+        className={`bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-slate-200 transform transition-all duration-200 ${
+          isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Header */}
+        <div className="p-5 lg:p-6 border-b border-slate-200 bg-gradient-to-r from-sky-50 to-blue-50">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <h3 className="text-lg lg:text-xl font-semibold text-slate-900 mb-1">
+                Enroll in Course
+              </h3>
+              <p className="text-sm text-slate-600 truncate">{course?.title}</p>
+            </div>
+            <button 
+              onClick={handleClose} 
+              className="p-2 rounded-lg hover:bg-slate-200 transition-colors ml-4 flex-shrink-0"
+              title="Close (ESC)"
+            >
+              <span className="text-xl">✕</span>
+            </button>
+          </div>
         </div>
-        <div className="p-5">
-          <CourseLeadForm course={course} />
+
+        {/* Modal Body */}
+        <div className="p-5 lg:p-6 max-h-[70vh] overflow-y-auto">
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800 flex items-start gap-2">
+              <span className="text-lg">💡</span>
+              <span>Fill in your details below and our team will contact you shortly to complete your enrollment!</span>
+            </p>
+          </div>
+          <CourseLeadForm course={course} onSuccess={handleSuccess} />
+        </div>
+
+        {/* Modal Footer */}
+        <div className="p-4 border-t border-slate-200 bg-slate-50">
+          <p className="text-xs text-slate-500 text-center">
+            🔒 Your information is secure and will only be used for enrollment purposes
+          </p>
         </div>
       </div>
     </div>
@@ -384,27 +844,80 @@ function ModuleSection({ module, moduleIndex, course, enrolled, onPlayVideo, onO
   )
 }
 
-function InstructorCard({ instructor }) {
+function InstructorCard({ course }) {
+  // Debug: Log course data to see what we're getting
+  if (course && (course.teacherId || course.teacherName)) {
+    console.log('Course teacher data:', {
+      teacherId: course.teacherId,
+      teacherName: course.teacherName,
+      teacherInstrument: course.teacherInstrument,
+      teacherAvatar: course.teacherAvatar,
+      teacherDescription: course.teacherDescription
+    })
+  }
+  
+  // Check for teacher data - check both teacherId and teacherName
+  const hasTeacher = (course.teacherId && course.teacherId.trim() !== '') || 
+                     (course.teacherName && course.teacherName.trim() !== '' && course.teacherName !== 'Expert Instructor')
+  
+  const teacherName = hasTeacher && course.teacherName && course.teacherName.trim() !== '' && course.teacherName !== 'Expert Instructor'
+    ? course.teacherName 
+    : 'Expert Instructor'
+  const teacherInstrument = hasTeacher && course.teacherInstrument && course.teacherInstrument.trim() !== ''
+    ? course.teacherInstrument 
+    : 'Music'
+  const teacherAvatar = hasTeacher && course.teacherAvatar && course.teacherAvatar.trim() !== ''
+    ? course.teacherAvatar 
+    : 'https://i.pravatar.cc/150?img=12'
+  const teacherDescription = hasTeacher && course.teacherDescription && course.teacherDescription.trim() !== ''
+    ? course.teacherDescription 
+    : `Expert musician with 10+ years of teaching experience. Specialized in ${teacherInstrument.toLowerCase()} with a passion for helping students discover their musical potential.`
+  const rating = course.rating || 4.8
+  const studentCount = course.studentCount || 0
+  const studentDisplay = studentCount > 0 
+    ? (studentCount >= 1000 ? `${(studentCount / 1000).toFixed(1)}k+` : `${studentCount}+`)
+    : '0'
+  
   return (
-    <div className="bg-white rounded-xl p-6 border border-slate-200">
+    <div className="bg-white rounded-xl p-6 border border-slate-200 hover:border-sky-300 hover:shadow-md transition-all duration-300">
       <div className="flex items-start space-x-4">
-        <img 
-          src={instructor.avatar || 'https://i.pravatar.cc/150?img=12'} 
-          alt={instructor.name}
-          className="w-16 h-16 rounded-full object-cover"
-        />
+        <div className="relative group">
+          <img 
+            src={teacherAvatar} 
+            alt={teacherName}
+            className="w-16 h-16 rounded-full object-cover ring-2 ring-slate-200 group-hover:ring-sky-400 transition-all duration-300"
+            onError={(e) => {
+              e.target.src = 'https://i.pravatar.cc/150?img=12'
+            }}
+          />
+          {hasTeacher && (
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center z-10">
+              <span className="text-white text-xs">✓</span>
+            </div>
+          )}
+        </div>
         <div className="flex-1">
-          <h3 className="font-semibold text-slate-800 text-lg">{instructor.name}</h3>
-          <p className="text-sky-600 font-medium">{instructor.instrument} Instructor</p>
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="font-semibold text-slate-800 text-lg">{teacherName}</h3>
+            {hasTeacher && (
+              <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium animate-fade-in">
+                Assigned
+              </span>
+            )}
+          </div>
+          <p className="text-sky-600 font-medium flex items-center gap-1">
+            <span>🎵</span>
+            <span>{teacherInstrument} Instructor</span>
+          </p>
           <div className="flex items-center space-x-2 mt-2">
             <div className="flex text-yellow-400">
-              {'★'.repeat(5)}
+              {'★'.repeat(Math.floor(rating))}
+              {rating % 1 >= 0.5 && <span className="text-yellow-400">½</span>}
             </div>
-            <span className="text-sm text-slate-600">(4.9) • 1,200+ students</span>
+            <span className="text-sm text-slate-600">({rating.toFixed(1)}) • {studentDisplay} students</span>
           </div>
           <p className="text-slate-600 text-sm mt-3 leading-relaxed">
-            Expert musician with 10+ years of teaching experience. Specialized in {instructor.instrument.toLowerCase()} 
-            with a passion for helping students discover their musical potential.
+            {teacherDescription}
           </p>
         </div>
       </div>
@@ -413,19 +926,40 @@ function InstructorCard({ instructor }) {
 }
 
 function CourseStats({ course }) {
+  const studentCount = course.studentCount || 0
+  const studentDisplay = studentCount > 0 
+    ? (studentCount >= 1000 ? `${(studentCount / 1000).toFixed(1)}k+` : `${studentCount}+`)
+    : '0'
+  
+  const totalLessons = course.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0
+  const totalDurationSec = course.modules?.reduce((acc, m) => 
+    acc + (m.lessons?.reduce((a, l) => a + (l.durationSec || 0), 0) || 0), 0) || 0
+  const totalHours = Math.round(totalDurationSec / 3600) || 0
+  const totalMinutes = Math.round((totalDurationSec % 3600) / 60) || 0
+  const durationDisplay = totalHours > 0 
+    ? `${totalHours}h${totalMinutes > 0 ? ` ${totalMinutes}m` : ''}`
+    : totalMinutes > 0 
+    ? `${totalMinutes}m`
+    : '0h'
+  
   const stats = [
-    { label: 'Students', value: '1,200+', icon: '👥' },
-    { label: 'Lessons', value: course.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0, icon: '📚' },
-    { label: 'Duration', value: `${Math.round((course.modules?.reduce((acc, m) => acc + (m.lessons?.reduce((a, l) => a + (l.durationSec || 0), 0) || 0), 0) || 0) / 60)}h`, icon: '⏱️' },
-    { label: 'Level', value: course.level || 'All Levels', icon: '📈' }
+    { label: 'Students', value: studentDisplay, icon: '👥', color: 'text-sky-600' },
+    { label: 'Lessons', value: totalLessons, icon: '📚', color: 'text-emerald-600' },
+    { label: 'Duration', value: durationDisplay, icon: '⏱️', color: 'text-purple-600' },
+    { label: 'Level', value: course.level || 'All Levels', icon: '📈', color: 'text-orange-600' }
   ]
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {stats.map((stat, index) => (
-        <div key={index} className="bg-white rounded-lg p-4 text-center border border-slate-200">
-          <div className="text-2xl mb-2">{stat.icon}</div>
-          <div className="font-semibold text-slate-800">{stat.value}</div>
+        <div 
+          key={index} 
+          className="bg-white rounded-xl p-4 text-center border border-slate-200 hover:border-sky-300 hover:shadow-md transition-all duration-300 group cursor-default"
+        >
+          <div className="text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">{stat.icon}</div>
+          <div className={`font-bold text-lg ${stat.color} mb-1 group-hover:scale-105 transition-transform duration-300`}>
+            {stat.value}
+          </div>
           <div className="text-sm text-slate-600">{stat.label}</div>
         </div>
       ))}
@@ -450,6 +984,14 @@ export default function CourseDetailPage() {
       try {
         setLoading(true)
         const courseData = await apiGet(`/courses/${id}`)
+        console.log('Loaded course data:', courseData)
+        console.log('Teacher data in course:', {
+          teacherId: courseData?.teacherId,
+          teacherName: courseData?.teacherName,
+          teacherInstrument: courseData?.teacherInstrument,
+          teacherAvatar: courseData?.teacherAvatar,
+          teacherDescription: courseData?.teacherDescription
+        })
         setCourse(courseData)
         
         // Check enrollment status
@@ -462,10 +1004,17 @@ export default function CourseDetailPage() {
         const res = await fetch(url.toString(), { headers: token ? { Authorization: `Bearer ${token}` } : {} })
         if (res.ok) {
           const data = await res.json()
-          setEnrolled(Boolean(data.enrolled))
+          const isEnrolled = Boolean(data.enrolled)
+          setEnrolled(isEnrolled)
+            
+          // Redirect enrolled users to dashboard course view
+          if (isEnrolled) {
+            navigate(`/dashboard/course/${id}`, { replace: true })
+            return
+          }
             
             // Load progress data if enrolled
-            if (data.enrolled && token) {
+            if (isEnrolled && token) {
               try {
                 const progressRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/courses/${id}/progress`, {
                   headers: { Authorization: `Bearer ${token}` }
@@ -686,40 +1235,7 @@ export default function CourseDetailPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-pink-50">
-      {/* Enhanced Header */}
-      <header className="sticky top-0 z-10 backdrop-blur bg-white/80 border-b border-slate-200 shadow-sm">
-        <nav className="max-w-6xl mx-auto flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
-            <a href="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-blue-600 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-lg">🎶</span>
-              </div>
-              <div>
-                <span className="font-extrabold text-slate-800 text-lg">Themusinest.com</span>
-                <div className="text-xs text-slate-500">Music Academy</div>
-              </div>
-            </a>
-          </div>
-          <div className="hidden md:flex items-center gap-6 text-slate-700">
-            <a href="/" className="hover:text-sky-700 font-medium transition-colors">Home</a>
-            <a href="/courses" className="hover:text-sky-700 font-medium transition-colors">Courses</a>
-            <a href="/teachers" className="hover:text-sky-700 font-medium transition-colors">Teachers</a>
-            <a href="/schedule" className="hover:text-sky-700 font-medium transition-colors">Schedule</a>
-            <a href="/dashboard" className="hover:text-sky-700 font-medium transition-colors">Dashboard</a>
-            <a href="/admin" className="hover:text-sky-700 font-medium transition-colors">Admin</a>
-            <SignedOut>
-              <SignInButton>
-                <button className="px-4 py-2 rounded-full bg-gradient-to-r from-sky-600 to-blue-600 text-white text-sm font-medium hover:from-sky-700 hover:to-blue-700 transition-all duration-300 shadow-md hover:shadow-lg">
-                  Sign In
-                </button>
-              </SignInButton>
-            </SignedOut>
-            <SignedIn>
-              <UserButton afterSignOutUrl="/" />
-            </SignedIn>
-          </div>
-        </nav>
-      </header>
+      <Navbar />
 
       <main className="pb-16">
         {/* Course Hero Section */}
@@ -750,11 +1266,15 @@ export default function CourseDetailPage() {
                 </div>
                 
                 <div className="flex items-center justify-between pt-6 border-t border-slate-200">
-                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-4">
                     <div className="flex text-yellow-400">
-                      {'★'.repeat(5)}
+                      {'★'.repeat(Math.floor(course.rating || 4.8))}
+                      {(course.rating || 4.8) % 1 >= 0.5 && <span className="text-yellow-400">½</span>}
                     </div>
-                    <span className="text-slate-600">4.8 (1,200+ ratings)</span>
+                    <span className="text-slate-600">
+                      {(course.rating || 4.8).toFixed(1)} 
+                      {course.studentCount > 0 && ` (${course.studentCount >= 1000 ? `${(course.studentCount / 1000).toFixed(1)}k+` : `${course.studentCount}+`} ratings)`}
+                    </span>
                   </div>
                   <div className="flex items-center space-x-4">
                     <SignedOut>
@@ -786,7 +1306,7 @@ export default function CourseDetailPage() {
               </div>
 
               {/* Course Image */}
-              <div className="bg-white rounded-2xl overflow-hidden border border-slate-200">
+              <div className="bg-white rounded-2xl overflow-hidden border border-slate-200 relative">
                 <img 
                   src={course.image || course.thumbnailPath || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=800&auto=format&fit=crop'} 
                   alt={course.title} 
@@ -840,7 +1360,7 @@ export default function CourseDetailPage() {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Pricing Card */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-200 sticky top-24">
+              <div className="bg-white rounded-2xl p-6 border border-slate-200 sticky top-24 z-20">
                 <div className="text-center mb-6">
                   <div className="text-3xl font-bold text-slate-900 mb-2">
                     ₹{course.price?.toLocaleString() || '2,999'}
@@ -894,62 +1414,49 @@ export default function CourseDetailPage() {
               </div>
 
               {/* Instructor Card */}
-              <InstructorCard instructor={{ name: 'Aarav Sharma', instrument: 'Guitar', avatar: 'https://i.pravatar.cc/150?img=12' }} />
+              <InstructorCard course={course} />
+
+              {/* Additional Course Content */}
+              {(course.scales || course.arpeggios || course.performanceTips) && (
+                <div className="bg-white rounded-2xl p-8 border border-slate-200">
+                  <h2 className="text-2xl font-bold text-slate-900 mb-6">What You'll Learn</h2>
+                  <div className="space-y-6">
+                    {course.scales && (
+                      <div>
+                        <h3 className="font-semibold text-slate-800 text-lg mb-2 flex items-center">
+                          <span className="mr-2">🎵</span>
+                          Scales
+                        </h3>
+                        <p className="text-slate-600 leading-relaxed whitespace-pre-line">{course.scales}</p>
+                      </div>
+                    )}
+                    {course.arpeggios && (
+                      <div>
+                        <h3 className="font-semibold text-slate-800 text-lg mb-2 flex items-center">
+                          <span className="mr-2">🎹</span>
+                          Arpeggios
+                        </h3>
+                        <p className="text-slate-600 leading-relaxed whitespace-pre-line">{course.arpeggios}</p>
+                      </div>
+                    )}
+                    {course.performanceTips && (
+                      <div>
+                        <h3 className="font-semibold text-slate-800 text-lg mb-2 flex items-center">
+                          <span className="mr-2">💡</span>
+                          Performance Tips
+                        </h3>
+                        <p className="text-slate-600 leading-relaxed whitespace-pre-line">{course.performanceTips}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </section>
       </main>
 
-      {/* Enhanced Footer */}
-      <footer className="border-t mt-20 bg-gradient-to-r from-slate-50 to-sky-50">
-        <div className="max-w-6xl mx-auto p-8">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-blue-600 rounded-xl flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">🎶</span>
-                </div>
-                <span className="font-extrabold text-slate-800 text-lg">Themusinest.com</span>
-              </div>
-              <p className="text-slate-600 text-sm">Making music education accessible and fun for everyone.</p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-800 mb-4">Quick Links</h3>
-              <ul className="space-y-2 text-sm text-slate-600">
-                <li><a href="/courses" className="hover:text-sky-700 transition-colors">Courses</a></li>
-                <li><a href="/teachers" className="hover:text-sky-700 transition-colors">Teachers</a></li>
-                <li><a href="/schedule" className="hover:text-sky-700 transition-colors">Schedule</a></li>
-                <li><a href="/dashboard" className="hover:text-sky-700 transition-colors">Dashboard</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-800 mb-4">Contact</h3>
-              <ul className="space-y-2 text-sm text-slate-600">
-                <li>📧 support@themusinest.com</li>
-                <li>📞 +91-98765-43210</li>
-                <li>📍 Mumbai, India</li>
-                  </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-800 mb-4">Follow Us</h3>
-              <div className="flex gap-3">
-                <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center cursor-pointer hover:bg-sky-200 transition-colors">
-                  <span className="text-sky-600 text-sm">f</span>
-                </div>
-                <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center cursor-pointer hover:bg-sky-200 transition-colors">
-                  <span className="text-sky-600 text-sm">📷</span>
-                </div>
-                <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center cursor-pointer hover:bg-sky-200 transition-colors">
-                  <span className="text-sky-600 text-sm">📺</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="border-t border-slate-200 mt-8 pt-6 text-center text-slate-600 text-sm">
-            © {new Date().getFullYear()} Themusinest.com • Made with 🎶 and ❤️
-          </div>
-      </div>
-      </footer>
+      <Footer />
 
       {/* Video Modal - Only for enrolled users */}
       <VideoModal
