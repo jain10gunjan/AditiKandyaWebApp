@@ -73,6 +73,8 @@ const Course = mongoose.model(
       // Course metrics
       studentCount: { type: Number, default: 0 },
       rating: { type: Number, default: 4.8 },
+      // Free/Public course flag
+      isFree: { type: Boolean, default: false }, // Free courses available to all signed-in users
       // Teacher information
       teacherId: String, // Reference to Teacher model
       teacherName: String,
@@ -198,6 +200,7 @@ const Schedule = mongoose.model(
       meetingLink: String,
       instructor: String,
       location: String,
+      type: { type: String, enum: ['class', 'exam', 'holiday', 'event'], default: 'class' },
       isRecurring: { type: Boolean, default: false },
       recurringPattern: String, // daily, weekly, monthly
       status: { type: String, enum: ['scheduled', 'completed', 'cancelled'], default: 'scheduled' },
@@ -249,6 +252,25 @@ const Progress = mongoose.model(
         type: mongoose.Schema.Types.Mixed,
         default: {}
       }
+    },
+    { timestamps: true }
+  )
+);
+
+// Free Resource Tracking model
+const FreeResourceTracking = mongoose.model(
+  'FreeResourceTracking',
+  new mongoose.Schema(
+    {
+      userId: { type: String, required: true },
+      resourceId: { type: String, required: true },
+      courseId: { type: String, required: true },
+      viewed: { type: Boolean, default: false },
+      viewedAt: Date,
+      completed: { type: Boolean, default: false },
+      completedAt: Date,
+      timeSpent: { type: Number, default: 0 }, // in seconds
+      lastAccessedAt: Date,
     },
     { timestamps: true }
   )
@@ -339,7 +361,10 @@ function isAdminFromClaims(claims) {
 const requireAdmin = hasClerk
   ? async (req, res, next) => {
       try {
-        if (!req.auth) return res.status(401).json({ error: 'Unauthenticated' })
+        if (!req.auth) {
+          console.log('requireAdmin: No auth found')
+          return res.status(401).json({ error: 'Unauthenticated' })
+        }
         const claims = req.auth.sessionClaims || {}
         let isAdmin = isAdminFromClaims(claims)
         if (!isAdmin) {
@@ -347,12 +372,19 @@ const requireAdmin = hasClerk
             const user = await clerkClient.users.getUser(req.auth.userId)
             const emails = (user.emailAddresses || []).map((e) => String(e.emailAddress || '').toLowerCase())
             isAdmin = emails.some((e) => ADMIN_EMAILS.includes(e))
-          } catch (_) {}
+          } catch (err) {
+            console.log('requireAdmin: Error checking user:', err.message)
+          }
         }
-        if (!isAdmin) return res.status(403).json({ error: 'Admin only' })
+        if (!isAdmin) {
+          console.log('requireAdmin: User is not admin')
+          return res.status(403).json({ error: 'Admin only' })
+        }
+        console.log('requireAdmin: User is admin, proceeding')
         next()
       } catch (e) {
-        res.status(500).json({ error: 'Admin check failed' })
+        console.error('requireAdmin: Error:', e)
+        return res.status(500).json({ error: 'Admin check failed' })
       }
     }
   : (req, res) => res.status(501).json({ error: 'Auth not configured' })
@@ -500,7 +532,7 @@ app.put('/api/courses/:id', requireAdmin, async (req, res) => {
   if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
   const { 
     title, description, price, image, level, 
-    studentCount, rating,
+    studentCount, rating, isFree,
     teacherId, teacherName, teacherDescription, teacherAvatar, teacherInstrument,
     scales, arpeggios, performanceTips
   } = req.body || {}
@@ -512,6 +544,7 @@ app.put('/api/courses/:id', requireAdmin, async (req, res) => {
   if (level !== undefined) updateData.level = level
   if (studentCount !== undefined) updateData.studentCount = Number(studentCount) || 0
   if (rating !== undefined) updateData.rating = Number(rating) || 4.8
+  if (isFree !== undefined) updateData.isFree = Boolean(isFree)
   
   // Handle teacherId - if provided, auto-populate teacher fields
   if (teacherId !== undefined) {
@@ -1071,35 +1104,137 @@ app.get('/api/me/attendance/:courseId', requireAuthGuarded, async (req, res) => 
 
 // ==================== CALENDAR/SCHEDULE ENDPOINTS ====================
 
-// Admin: Create a schedule
+// Admin: Get all schedules (with optional date filter)
+app.get('/api/admin/schedules', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.json([])
+  const { date, courseId } = req.query || {}
+  let query = {}
+  if (date) {
+    const startOfDay = new Date(date)
+    startOfDay.setHours(0, 0, 0, 0)
+    const endOfDay = new Date(date)
+    endOfDay.setHours(23, 59, 59, 999)
+    query.startTime = { $gte: startOfDay, $lte: endOfDay }
+  }
+  if (courseId) {
+    query.courseId = courseId
+  }
+  const schedules = await Schedule.find(query).sort({ startTime: 1 })
+  res.json(schedules)
+})
+
+// Admin: Create a schedule (supports single or multiple dates for duplication)
 app.post('/api/admin/schedules', requireAdmin, async (req, res) => {
-  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
-  const { courseId, title, description, startTime, endTime, meetingLink, instructor, location, isRecurring, recurringPattern } = req.body || {}
-  if (!courseId || !title || !startTime || !endTime) return res.status(400).json({ error: 'Missing required fields' })
+  console.log('POST /api/admin/schedules hit')
+  try {
+    if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+    const { courseId, title, description, startTime, endTime, dateTime, date, time, meetingLink, instructor, location, isRecurring, recurringPattern, type, duplicateDates } = req.body || {}
   
+  // Support both dateTime format and separate date/time format
+  let finalStartTime, finalEndTime
+  if (dateTime) {
+    finalStartTime = new Date(dateTime)
+    finalEndTime = new Date(finalStartTime.getTime() + 60 * 60 * 1000) // Default 1 hour duration
+  } else if (date && time) {
+    finalStartTime = new Date(`${date}T${time}`)
+    finalEndTime = new Date(finalStartTime.getTime() + 60 * 60 * 1000) // Default 1 hour duration
+  } else if (startTime && endTime) {
+    finalStartTime = new Date(startTime)
+    finalEndTime = new Date(endTime)
+  } else {
+    return res.status(400).json({ error: 'Missing required fields: need dateTime or (date and time) or (startTime and endTime)' })
+  }
+  
+  if (!title) return res.status(400).json({ error: 'Title is required' })
+  
+  // If duplicateDates is provided, create multiple events
+  if (duplicateDates && Array.isArray(duplicateDates) && duplicateDates.length > 0) {
+    const schedules = []
+    // Create event on original date first
+    const originalSchedule = await Schedule.create({
+      courseId: courseId || '',
+      title,
+      description,
+      startTime: finalStartTime,
+      endTime: finalEndTime,
+      meetingLink,
+      instructor,
+      location,
+      isRecurring: Boolean(isRecurring),
+      recurringPattern,
+      type: type || 'class'
+    })
+    schedules.push(originalSchedule)
+    
+    // Create events on duplicate dates
+    for (const dupDate of duplicateDates) {
+      // Skip if duplicate date is the same as original date
+      const dupDateStr = new Date(dupDate).toISOString().split('T')[0]
+      const originalDateStr = finalStartTime.toISOString().split('T')[0]
+      if (dupDateStr === originalDateStr) continue
+      
+      const dupStartTime = new Date(dupDate)
+      dupStartTime.setHours(finalStartTime.getHours(), finalStartTime.getMinutes(), 0, 0)
+      const dupEndTime = new Date(dupStartTime.getTime() + (finalEndTime.getTime() - finalStartTime.getTime()))
+      
+      const schedule = await Schedule.create({
+        courseId: courseId || '',
+        title,
+        description,
+        startTime: dupStartTime,
+        endTime: dupEndTime,
+        meetingLink,
+        instructor,
+        location,
+        isRecurring: Boolean(isRecurring),
+        recurringPattern,
+        type: type || 'class'
+      })
+      schedules.push(schedule)
+    }
+    return res.status(201).json(schedules)
+  }
+  
+  // Single event creation
   const schedule = await Schedule.create({
-    courseId,
+    courseId: courseId || '',
     title,
     description,
-    startTime: new Date(startTime),
-    endTime: new Date(endTime),
+    startTime: finalStartTime,
+    endTime: finalEndTime,
     meetingLink,
     instructor,
     location,
     isRecurring: Boolean(isRecurring),
-    recurringPattern
+    recurringPattern,
+    type: type || 'class'
   })
   res.status(201).json(schedule)
+  } catch (error) {
+    console.error('Error creating schedule:', error)
+    res.status(500).json({ error: error.message || 'Failed to create schedule' })
+  }
 })
 
 // Admin: Update a schedule
 app.put('/api/admin/schedules/:id', requireAdmin, async (req, res) => {
   if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
-  const { title, description, startTime, endTime, meetingLink, instructor, location, status } = req.body || {}
+  const { title, description, startTime, endTime, meetingLink, instructor, location, status, type } = req.body || {}
+  
+  const updateData = {}
+  if (title !== undefined) updateData.title = title
+  if (description !== undefined) updateData.description = description
+  if (startTime !== undefined) updateData.startTime = new Date(startTime)
+  if (endTime !== undefined) updateData.endTime = new Date(endTime)
+  if (meetingLink !== undefined) updateData.meetingLink = meetingLink
+  if (instructor !== undefined) updateData.instructor = instructor
+  if (location !== undefined) updateData.location = location
+  if (status !== undefined) updateData.status = status
+  if (type !== undefined) updateData.type = type
   
   const schedule = await Schedule.findByIdAndUpdate(
     req.params.id,
-    { title, description, startTime: startTime ? new Date(startTime) : undefined, endTime: endTime ? new Date(endTime) : undefined, meetingLink, instructor, location, status },
+    updateData,
     { new: true }
   )
   if (!schedule) return res.status(404).json({ error: 'Schedule not found' })
@@ -1201,24 +1336,111 @@ app.get('/api/admin/resources/:courseId', requireAdmin, async (req, res) => {
   res.json(resources)
 })
 
-// Student: Get resources for enrolled courses
+// Student: Get resources for enrolled courses OR free courses
 app.get('/api/me/resources/:courseId', requireAuthGuarded, async (req, res) => {
   if (!dbConnected) return res.json([])
   
-  // Check if user is enrolled
-  const enrollment = await Enrollment.findOne({ 
-    userId: req.auth.userId, 
-    courseId: req.params.courseId, 
-    approved: true 
-  })
+  // Check if course is free
+  const course = await Course.findById(req.params.courseId)
+  const isFreeCourse = course && course.isFree === true
   
-  if (!enrollment) return res.status(403).json({ error: 'Not enrolled in this course' })
+  // Check if user is enrolled (if not a free course)
+  if (!isFreeCourse) {
+    const enrollment = await Enrollment.findOne({ 
+      userId: req.auth.userId, 
+      courseId: req.params.courseId, 
+      approved: true 
+    })
+    
+    if (!enrollment) return res.status(403).json({ error: 'Not enrolled in this course' })
+  }
   
   const resources = await Resource.find({ 
     courseId: req.params.courseId 
   }).sort({ order: 1 })
   
   res.json(resources)
+})
+
+// Get all free courses (available to all signed-in users)
+app.get('/api/free-courses', requireAuthGuarded, async (req, res) => {
+  if (!dbConnected) return res.json([])
+  const courses = await Course.find({ isFree: true }).sort({ createdAt: -1 })
+  res.json(courses)
+})
+
+// Track free resource view
+app.post('/api/free-resources/track/view', requireAuthGuarded, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const { resourceId, courseId } = req.body || {}
+  if (!resourceId || !courseId) return res.status(400).json({ error: 'Missing resourceId or courseId' })
+  
+  try {
+    const userId = req.auth.userId
+    const tracking = await FreeResourceTracking.findOneAndUpdate(
+      { userId, resourceId },
+      {
+        userId,
+        resourceId,
+        courseId,
+        viewed: true,
+        viewedAt: new Date(),
+        lastAccessedAt: new Date()
+      },
+      { upsert: true, new: true }
+    )
+    res.json(tracking)
+  } catch (error) {
+    console.error('Error tracking resource view:', error)
+    res.status(500).json({ error: 'Failed to track view' })
+  }
+})
+
+// Track free resource completion
+app.post('/api/free-resources/track/complete', requireAuthGuarded, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const { resourceId, courseId, timeSpent } = req.body || {}
+  if (!resourceId || !courseId) return res.status(400).json({ error: 'Missing resourceId or courseId' })
+  
+  try {
+    const userId = req.auth.userId
+    const tracking = await FreeResourceTracking.findOneAndUpdate(
+      { userId, resourceId },
+      {
+        userId,
+        resourceId,
+        courseId,
+        completed: true,
+        completedAt: new Date(),
+        timeSpent: timeSpent || 0,
+        lastAccessedAt: new Date(),
+        viewed: true,
+        viewedAt: new Date()
+      },
+      { upsert: true, new: true }
+    )
+    res.json(tracking)
+  } catch (error) {
+    console.error('Error tracking resource completion:', error)
+    res.status(500).json({ error: 'Failed to track completion' })
+  }
+})
+
+// Get user's free resource tracking data
+app.get('/api/free-resources/tracking', requireAuthGuarded, async (req, res) => {
+  if (!dbConnected) return res.json([])
+  try {
+    const userId = req.auth.userId
+    const { courseId } = req.query || {}
+    const query = { userId }
+    if (courseId) query.courseId = courseId
+    
+    const tracking = await FreeResourceTracking.find(query)
+    res.json(tracking)
+  } catch (error) {
+    console.error('Error getting tracking data:', error)
+    res.status(500).json({ error: 'Failed to get tracking data' })
+  }
 })
 
 // Serve resource files with access control
@@ -1236,18 +1458,26 @@ app.get('/api/resources/:resourceId/file', async (req, res) => {
   
   console.log('Serving resource:', resource._id, 'filePath:', resource.filePath)
   
-  // Check access: public resource OR enrolled user (via auth or userHint)
+  // Check access: public resource OR enrolled user OR free course (via auth or userHint)
   let allowed = Boolean(resource.isPublic)
   const userId = (req.auth && req.auth.userId) || req.query.userHint
   
   if (!allowed && userId) {
-    const enrollment = await Enrollment.findOne({ 
-      userId, 
-      courseId: resource.courseId, 
-      approved: true 
-    })
-    allowed = Boolean(enrollment)
-    console.log('Enrollment check:', { userId, courseId: resource.courseId, allowed, enrollment })
+    // Check if course is free
+    const course = await Course.findById(resource.courseId)
+    if (course && course.isFree === true) {
+      allowed = true
+      console.log('Free course access granted:', { userId, courseId: resource.courseId })
+    } else {
+      // Check enrollment
+      const enrollment = await Enrollment.findOne({ 
+        userId, 
+        courseId: resource.courseId, 
+        approved: true 
+      })
+      allowed = Boolean(enrollment)
+      console.log('Enrollment check:', { userId, courseId: resource.courseId, allowed, enrollment })
+    }
   }
   
   if (!allowed) {

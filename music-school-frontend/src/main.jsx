@@ -22,6 +22,7 @@ import AdminCalendar from './routes/AdminCalendar.jsx'
 import AdminResources from './routes/AdminResources.jsx'
 import AdminEnrollmentLeads from './routes/AdminEnrollmentLeads.jsx'
 import AdminTeachersPage from './routes/AdminTeachersPage.jsx'
+import AdminFreeCourses from './routes/AdminFreeCourses.jsx'
 import { Toaster } from 'react-hot-toast'
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
@@ -50,6 +51,7 @@ const router = createBrowserRouter([
   { path: '/admin/resources', element: <AdminResources /> },
   { path: '/admin/enrollment-leads', element: <AdminEnrollmentLeads /> },
   { path: '/admin/teachers', element: <AdminTeachersPage /> },
+  { path: '/admin/free-courses', element: <AdminFreeCourses /> },
   { path: '/dashboard', element: <StudentDashboard /> },
   { path: '/dashboard/course/:id', element: <StudentDashboard /> },
   { path: '/student/attendance', element: <StudentAttendance /> },

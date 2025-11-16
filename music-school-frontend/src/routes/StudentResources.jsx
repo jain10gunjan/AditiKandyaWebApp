@@ -1,33 +1,42 @@
 import { useEffect, useState } from 'react'
 import { useAuth, SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
 import { apiGet } from '../lib/api'
+import toast from 'react-hot-toast'
 
-function VideoPlayer({ resource }) {
+function VideoPlayer({ resource, onView, onComplete }) {
   const { getToken } = useAuth()
   const [videoUrl, setVideoUrl] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [videoKey, setVideoKey] = useState(0)
+  const [startTime, setStartTime] = useState(null)
 
   useEffect(() => {
     loadVideo()
+    return () => {
+      // Track time spent when component unmounts
+      if (startTime && resource) {
+        const timeSpent = Math.floor((Date.now() - startTime) / 1000)
+        if (timeSpent > 5) { // Only track if watched for more than 5 seconds
+          onComplete(timeSpent)
+        }
+      }
+    }
   }, [resource._id])
 
   const loadVideo = async () => {
     try {
       setLoading(true)
       setError(null)
+      setStartTime(Date.now())
       
       const token = await getToken().catch(() => undefined)
-      const user = window.Clerk?.user
-      const userHint = user?.id
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+      const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
       
-      const url = new URL(`${import.meta.env.VITE_API_BASE_URL}/resources/${resource._id}/file`)
-      if (!token && userHint) url.searchParams.set('userHint', userHint)
-      
+      const url = new URL(`${baseUrl}/resources/${resource._id}/file`)
       const headers = token ? { Authorization: `Bearer ${token}` } : {}
       
-      // First, check if the video is accessible
       const response = await fetch(url.toString(), { 
         method: 'HEAD',
         headers 
@@ -35,20 +44,17 @@ function VideoPlayer({ resource }) {
       
       if (!response.ok) {
         if (response.status === 401) {
-          throw new Error('You are not authorized to access this video. Please ensure you are enrolled in the course.')
+          throw new Error('You are not authorized to access this video.')
         } else if (response.status === 404) {
-          throw new Error('Video file not found. Please contact your instructor.')
-        } else if (response.status === 403) {
-          throw new Error('Access denied. You may not be enrolled in this course.')
+          throw new Error('Video file not found.')
         } else {
-          throw new Error(`Failed to load video (${response.status}): ${response.statusText}`)
+          throw new Error(`Failed to load video (${response.status})`)
         }
       }
       
-      // If HEAD request succeeds, set the video URL
       setVideoUrl(url.toString())
-      setVideoKey(prev => prev + 1) // Force video re-render
-      
+      setVideoKey(prev => prev + 1)
+      onView()
     } catch (err) {
       console.error('Error loading video:', err)
       setError(err.message)
@@ -62,9 +68,11 @@ function VideoPlayer({ resource }) {
     setError('Video playback failed. The file may be corrupted or in an unsupported format.')
   }
 
-  const handleRetry = () => {
-    setVideoKey(prev => prev + 1)
-    loadVideo()
+  const handleVideoEnd = () => {
+    if (startTime && resource) {
+      const timeSpent = Math.floor((Date.now() - startTime) / 1000)
+      onComplete(timeSpent)
+    }
   }
 
   if (loading) {
@@ -85,12 +93,6 @@ function VideoPlayer({ resource }) {
           <div className="text-4xl mb-4">⚠️</div>
           <h3 className="text-lg font-semibold text-red-800 mb-2">Video Error</h3>
           <p className="text-red-600 mb-4">{error}</p>
-          <button
-            onClick={handleRetry}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-          >
-            Try Again
-          </button>
         </div>
       </div>
     )
@@ -105,34 +107,20 @@ function VideoPlayer({ resource }) {
           className="w-full"
           style={{ maxHeight: '60vh' }}
           onError={handleVideoError}
+          onEnded={handleVideoEnd}
           preload="metadata"
           crossOrigin="anonymous"
         >
           <source src={videoUrl} type="video/mp4" />
           <source src={videoUrl} type="video/webm" />
           <source src={videoUrl} type="video/ogg" />
-          <div className="absolute inset-0 bg-slate-900 text-white flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-4xl mb-4">🎥</div>
-              <p>Your browser does not support video playback.</p>
-              <a 
-                href={videoUrl} 
-                download 
-                className="inline-block mt-4 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
-              >
-                Download Video
-              </a>
-            </div>
-          </div>
         </video>
         
-        {/* Video overlay with title */}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
           <h3 className="text-white font-semibold">{resource.title}</h3>
         </div>
       </div>
       
-      {/* Video controls info */}
       <div className="mt-4 p-4 bg-slate-50 rounded-lg">
         <div className="flex items-center justify-between text-sm text-slate-600">
           <div className="flex items-center gap-4">
@@ -154,52 +142,49 @@ function VideoPlayer({ resource }) {
   )
 }
 
-function AudioPlayer({ resource }) {
+function AudioPlayer({ resource, onView, onComplete }) {
   const { getToken } = useAuth()
   const [audioUrl, setAudioUrl] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [audioKey, setAudioKey] = useState(0)
+  const [startTime, setStartTime] = useState(null)
 
   useEffect(() => {
     loadAudio()
+    return () => {
+      if (startTime && resource) {
+        const timeSpent = Math.floor((Date.now() - startTime) / 1000)
+        if (timeSpent > 5) {
+          onComplete(timeSpent)
+        }
+      }
+    }
   }, [resource._id])
 
   const loadAudio = async () => {
     try {
       setLoading(true)
       setError(null)
+      setStartTime(Date.now())
       
       const token = await getToken().catch(() => undefined)
-      const user = window.Clerk?.user
-      const userHint = user?.id
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+      const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
       
-      const url = new URL(`${import.meta.env.VITE_API_BASE_URL}/resources/${resource._id}/file`)
-      if (!token && userHint) url.searchParams.set('userHint', userHint)
-      
+      const url = new URL(`${baseUrl}/resources/${resource._id}/file`)
       const headers = token ? { Authorization: `Bearer ${token}` } : {}
       
-      // Check if the audio is accessible
       const response = await fetch(url.toString(), { 
         method: 'HEAD',
         headers 
       })
       
       if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('You are not authorized to access this audio. Please ensure you are enrolled in the course.')
-        } else if (response.status === 404) {
-          throw new Error('Audio file not found. Please contact your instructor.')
-        } else if (response.status === 403) {
-          throw new Error('Access denied. You may not be enrolled in this course.')
-        } else {
-          throw new Error(`Failed to load audio (${response.status}): ${response.statusText}`)
-        }
+        throw new Error('Failed to load audio')
       }
       
       setAudioUrl(url.toString())
-      setAudioKey(prev => prev + 1)
-      
+      onView()
     } catch (err) {
       console.error('Error loading audio:', err)
       setError(err.message)
@@ -208,14 +193,11 @@ function AudioPlayer({ resource }) {
     }
   }
 
-  const handleAudioError = (e) => {
-    console.error('Audio playback error:', e)
-    setError('Audio playback failed. The file may be corrupted or in an unsupported format.')
-  }
-
-  const handleRetry = () => {
-    setAudioKey(prev => prev + 1)
-    loadAudio()
+  const handleAudioEnd = () => {
+    if (startTime && resource) {
+      const timeSpent = Math.floor((Date.now() - startTime) / 1000)
+      onComplete(timeSpent)
+    }
   }
 
   if (loading) {
@@ -236,12 +218,6 @@ function AudioPlayer({ resource }) {
           <div className="text-4xl mb-4">⚠️</div>
           <h3 className="text-lg font-semibold text-red-800 mb-2">Audio Error</h3>
           <p className="text-red-600 mb-4">{error}</p>
-          <button
-            onClick={handleRetry}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-          >
-            Try Again
-          </button>
         </div>
       </div>
     )
@@ -256,16 +232,14 @@ function AudioPlayer({ resource }) {
           
           <div className="max-w-md mx-auto">
             <audio
-              key={audioKey}
               controls
               className="w-full"
-              onError={handleAudioError}
+              onEnded={handleAudioEnd}
               preload="metadata"
             >
               <source src={audioUrl} type="audio/mpeg" />
               <source src={audioUrl} type="audio/wav" />
               <source src={audioUrl} type="audio/ogg" />
-              Your browser does not support the audio tag.
             </audio>
           </div>
           
@@ -298,13 +272,12 @@ function Sidebar({ activeTab, onTabChange, isOpen, onClose }) {
     { id: 'courses', label: 'My Courses', icon: '📚', href: '/dashboard' },
     { id: 'calendar', label: 'Calendar', icon: '📅', href: '/student/calendar' },
     { id: 'attendance', label: 'Attendance', icon: '📊', href: '/student/attendance' },
-    { id: 'resources', label: 'Resources', icon: '📖', href: '/student/resources' },
+    { id: 'resources', label: 'Free Resources', icon: '🎁', href: '/student/resources' },
     { id: 'schedule', label: 'Schedule', icon: '⏰', href: '/student/schedule' },
   ]
 
   return (
     <>
-      {/* Mobile Overlay */}
       {isOpen && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
@@ -312,12 +285,10 @@ function Sidebar({ activeTab, onTabChange, isOpen, onClose }) {
         />
       )}
       
-      {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-50 w-56 lg:w-60 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="h-full overflow-y-auto">
-          {/* Header */}
           <div className="p-4 lg:p-6 border-b border-slate-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 lg:gap-3">
@@ -326,7 +297,7 @@ function Sidebar({ activeTab, onTabChange, isOpen, onClose }) {
                 </div>
                 <div>
                   <h1 className="font-bold text-slate-900 text-sm lg:text-base">Music Academy</h1>
-                  <p className="text-xs text-slate-600">Student Dashboard</p>
+                  <p className="text-xs text-slate-300">Student Dashboard</p>
                 </div>
               </div>
               <button
@@ -338,7 +309,6 @@ function Sidebar({ activeTab, onTabChange, isOpen, onClose }) {
             </div>
           </div>
 
-          {/* User Profile */}
           <div className="p-4 lg:p-6 border-b border-slate-200">
             <div className="flex items-center gap-2 lg:gap-3">
               <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center">
@@ -357,7 +327,6 @@ function Sidebar({ activeTab, onTabChange, isOpen, onClose }) {
             </div>
           </div>
 
-          {/* Navigation Menu */}
           <nav className="p-3 lg:p-4">
             <ul className="space-y-1 lg:space-y-2">
               {menuItems.map((item) => (
@@ -379,7 +348,6 @@ function Sidebar({ activeTab, onTabChange, isOpen, onClose }) {
             </ul>
           </nav>
 
-          {/* Footer */}
           <div className="absolute bottom-0 left-0 right-0 p-3 lg:p-4 border-t border-slate-200">
             <div className="flex items-center justify-between">
               <a href="/" className="flex items-center gap-1 lg:gap-2 text-xs lg:text-sm text-slate-600 hover:text-slate-900">
@@ -395,7 +363,7 @@ function Sidebar({ activeTab, onTabChange, isOpen, onClose }) {
   )
 }
 
-function ResourceCard({ resource, onClick, completed, onToggleComplete }) {
+function ResourceCard({ resource, onClick, tracking, onToggleComplete }) {
   const getResourceIcon = (type) => {
     switch (type) {
       case 'video': return '🎥'
@@ -430,26 +398,35 @@ function ResourceCard({ resource, onClick, completed, onToggleComplete }) {
     return `${minutes}:${secs.toString().padStart(2, '0')}`
   }
 
-  const formatFileSize = (bytes) => {
-    if (!bytes) return ''
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(1024))
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i]
-  }
+  const isCompleted = tracking?.completed || false
+  const isViewed = tracking?.viewed || false
+  const timeSpent = tracking?.timeSpent || 0
 
   return (
     <div 
-      className="group bg-white rounded-xl lg:rounded-2xl shadow-sm border border-slate-200 p-4 lg:p-6 hover:shadow-lg hover:border-sky-300 transition-all duration-200"
+      className={`group bg-white rounded-xl lg:rounded-2xl shadow-sm border-2 p-4 lg:p-6 hover:shadow-lg transition-all duration-200 ${
+        isCompleted ? 'border-green-300 bg-green-50/30' : isViewed ? 'border-sky-300' : 'border-slate-200'
+      }`}
     >
       <div className="flex items-start gap-4">
-        <div className="w-12 h-12 lg:w-14 lg:h-14 bg-slate-100 rounded-xl lg:rounded-2xl flex items-center justify-center group-hover:bg-sky-100 transition-colors flex-shrink-0">
+        <div className={`w-12 h-12 lg:w-14 lg:h-14 rounded-xl lg:rounded-2xl flex items-center justify-center flex-shrink-0 transition-colors ${
+          isCompleted ? 'bg-green-100' : isViewed ? 'bg-sky-100' : 'bg-slate-100'
+        }`}>
           <span className="text-2xl lg:text-3xl">{getResourceIcon(resource.type)}</span>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between mb-2">
-            <h3 className="font-bold text-slate-900 text-sm lg:text-base group-hover:text-sky-700 transition-colors line-clamp-2">
-              {resource.title}
-            </h3>
+            <div className="flex-1">
+              <h3 className={`font-bold text-slate-900 text-sm lg:text-base group-hover:text-sky-700 transition-colors line-clamp-2 ${
+                isCompleted ? 'line-through text-green-700' : ''
+              }`}>
+                {resource.title}
+                {isCompleted && <span className="ml-2 text-green-600">✓</span>}
+              </h3>
+              {isViewed && !isCompleted && (
+                <span className="text-xs text-sky-600 mt-1 inline-block">👁️ Viewed</span>
+              )}
+            </div>
             <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getResourceTypeColor(resource.type)} ml-2 flex-shrink-0`}>
               {resource.type.toUpperCase()}
             </span>
@@ -466,17 +443,19 @@ function ResourceCard({ resource, onClick, completed, onToggleComplete }) {
               {resource.duration && (
                 <span>⏱️ {formatDuration(resource.duration)}</span>
               )}
-              {resource.fileSize && (
-                <span>📦 {formatFileSize(resource.fileSize)}</span>
+              {timeSpent > 0 && (
+                <span className="text-green-600 font-medium">
+                  ⏳ {formatDuration(timeSpent)} watched
+                </span>
               )}
               <label className="inline-flex items-center gap-2 select-none cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={completed}
+                  checked={isCompleted}
                   onChange={(e) => onToggleComplete(resource._id, e.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                  className="h-4 w-4 rounded border-slate-300 text-green-600 focus:ring-green-500"
                 />
-                <span className="text-slate-700">Mark as Completed</span>
+                <span className="text-slate-700">Mark Complete</span>
               </label>
             </div>
             <button onClick={onClick} className="text-sky-600 group-hover:text-sky-700 font-medium">
@@ -489,7 +468,7 @@ function ResourceCard({ resource, onClick, completed, onToggleComplete }) {
   )
 }
 
-function ResourceModal({ resource, isOpen, onClose }) {
+function ResourceModal({ resource, isOpen, onClose, onView, onComplete }) {
   if (!isOpen || !resource) return null
 
   const getResourceIcon = (type) => {
@@ -515,9 +494,8 @@ function ResourceModal({ resource, isOpen, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl lg:rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
-        {/* Header */}
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-white rounded-xl lg:rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between p-4 lg:p-6 border-b border-slate-200">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center">
@@ -538,7 +516,6 @@ function ResourceModal({ resource, isOpen, onClose }) {
           </button>
         </div>
         
-        {/* Content */}
         <div className="p-4 lg:p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 120px)' }}>
           {resource.description && (
             <div className="mb-6 p-4 bg-slate-50 rounded-lg">
@@ -547,12 +524,10 @@ function ResourceModal({ resource, isOpen, onClose }) {
             </div>
           )}
           
-          {/* Video Player */}
           {resource.type === 'video' && resource.filePath && (
-            <VideoPlayer resource={resource} />
+            <VideoPlayer resource={resource} onView={onView} onComplete={onComplete} />
           )}
           
-          {/* PDF Viewer */}
           {resource.type === 'pdf' && resource.filePath && (
             <div className="w-full h-96 lg:h-[600px]">
               <iframe
@@ -563,12 +538,10 @@ function ResourceModal({ resource, isOpen, onClose }) {
             </div>
           )}
           
-          {/* Audio Player */}
           {resource.type === 'audio' && resource.filePath && (
-            <AudioPlayer resource={resource} />
+            <AudioPlayer resource={resource} onView={onView} onComplete={onComplete} />
           )}
           
-          {/* Image Viewer */}
           {resource.type === 'image' && resource.filePath && (
             <div className="w-full">
               <img
@@ -580,7 +553,6 @@ function ResourceModal({ resource, isOpen, onClose }) {
             </div>
           )}
           
-          {/* Document Download */}
           {resource.type === 'document' && resource.filePath && (
             <div className="text-center py-12">
               <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -592,21 +564,11 @@ function ResourceModal({ resource, isOpen, onClose }) {
                 href={`${import.meta.env.VITE_API_BASE_URL}/resources/${resource._id}/file`}
                 download
                 className="inline-flex items-center gap-2 px-6 py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors font-medium"
+                onClick={onView}
               >
                 <span>⬇️</span>
                 Download Document
               </a>
-            </div>
-          )}
-          
-          {/* No File Available */}
-          {!resource.filePath && (
-            <div className="text-center py-12">
-              <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-4xl">📁</span>
-              </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">File Not Available</h3>
-              <p className="text-slate-600">This resource is not available for viewing or download.</p>
             </div>
           )}
         </div>
@@ -615,40 +577,16 @@ function ResourceModal({ resource, isOpen, onClose }) {
   )
 }
 
-function ResourcesContent({ enrollments, resources, loading, selectedResource, setSelectedResource, showModal, setShowModal, onMenuClick }) {
+function ResourcesContent({ freeCourses, resources, loading, selectedResource, setSelectedResource, showModal, setShowModal, onMenuClick, trackingData, onTrackView, onTrackComplete }) {
   const [selectedCourse, setSelectedCourse] = useState('')
-  const [filter, setFilter] = useState('all') // all, video, pdf, document, audio, image
+  const [filter, setFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
-  const [completedMap, setCompletedMap] = useState({}) // resourceId -> boolean
-
-  const userId = window.Clerk?.user?.id || 'guest'
-
-  const progressKey = (courseId) => `resourceProgress:${userId}:${courseId}`
-  const loadProgress = (courseId) => {
-    try {
-      const raw = localStorage.getItem(progressKey(courseId))
-      return raw ? JSON.parse(raw) : {}
-    } catch {
-      return {}
-    }
-  }
-  const saveProgress = (courseId, map) => {
-    try {
-      localStorage.setItem(progressKey(courseId), JSON.stringify(map))
-    } catch {}
-  }
 
   useEffect(() => {
-    if (enrollments.length > 0) {
-      setSelectedCourse(enrollments[0].course._id)
+    if (freeCourses.length > 0) {
+      setSelectedCourse(freeCourses[0]._id)
     }
-  }, [enrollments])
-
-  useEffect(() => {
-    if (selectedCourse) {
-      setCompletedMap(loadProgress(selectedCourse))
-    }
-  }, [selectedCourse])
+  }, [freeCourses])
 
   const getGreeting = () => {
     const hour = new Date().getHours()
@@ -677,18 +615,24 @@ function ResourcesContent({ enrollments, resources, loading, selectedResource, s
   }
 
   const stats = getResourceStats()
-
   const total = filteredResources.length || 0
-  const completedCount = filteredResources.reduce((acc, r) => acc + (completedMap[r._id] ? 1 : 0), 0)
+  const completedCount = filteredResources.reduce((acc, r) => acc + (trackingData[r._id]?.completed ? 1 : 0), 0)
+  const viewedCount = filteredResources.reduce((acc, r) => acc + (trackingData[r._id]?.viewed ? 1 : 0), 0)
   const progressPct = total > 0 ? Math.round((completedCount / total) * 100) : 0
 
-  const handleToggleComplete = (resourceId, checked) => {
-    setCompletedMap(prev => {
-      const next = { ...prev, [resourceId]: checked }
-      if (!checked) delete next[resourceId]
-      if (selectedCourse) saveProgress(selectedCourse, next)
-      return next
-    })
+  const handleToggleComplete = async (resourceId, checked) => {
+    if (checked && selectedCourse) {
+      await onTrackComplete(resourceId, selectedCourse)
+      toast.success('Resource marked as complete! 🎉')
+    }
+  }
+
+  const handleResourceView = (resource) => {
+    setSelectedResource(resource)
+    setShowModal(true)
+    if (selectedCourse) {
+      onTrackView(resource._id, selectedCourse)
+    }
   }
 
   if (loading) {
@@ -701,7 +645,6 @@ function ResourcesContent({ enrollments, resources, loading, selectedResource, s
 
   return (
     <div className="flex-1 p-4 lg:p-6 xl:p-8">
-      {/* Mobile Header */}
       <div className="lg:hidden mb-6">
         <div className="flex items-center justify-between mb-4">
           <button
@@ -711,74 +654,87 @@ function ResourcesContent({ enrollments, resources, loading, selectedResource, s
             <span className="text-xl">☰</span>
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">🎶</span>
+            <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">🎁</span>
             </div>
-            <span className="font-bold text-slate-900">Resources</span>
+            <span className="font-bold text-slate-900">Free Resources</span>
           </div>
           <div className="w-8"></div>
         </div>
       </div>
 
-      {/* Header */}
       <div className="mb-6 lg:mb-8">
         <h1 className="text-2xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-2">
-          {getGreeting()}, Your Resources 📚
+          {getGreeting()}, Explore Free Resources 🎁
         </h1>
         <p className="text-slate-600 text-sm lg:text-base">
-          Access course materials, videos, documents, and study resources.
+          Access free educational resources, videos, documents, and study materials.
         </p>
       </div>
 
-      {/* Check if student has enrollments */}
-      {enrollments.length === 0 && !loading && (
+      {freeCourses.length === 0 && !loading && (
         <div className="mb-8 p-6 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl">
           <div className="flex items-start gap-4">
-            <div className="text-2xl">🎓</div>
+            <div className="text-2xl">🎁</div>
             <div className="flex-1">
-              <h3 className="font-semibold text-amber-800 mb-2">No Enrollments Found</h3>
+              <h3 className="font-semibold text-amber-800 mb-2">No Free Courses Available</h3>
               <p className="text-amber-700 text-sm mb-4">
-                You need to be enrolled in courses to access course resources.
+                There are no free courses available at the moment. Check back later!
               </p>
               <a 
                 href="/courses" 
                 className="inline-block px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium"
               >
-                Browse Courses
+                Browse All Courses
               </a>
             </div>
           </div>
         </div>
       )}
 
-      {enrollments.length > 0 && (
+      {freeCourses.length > 0 && (
         <>
-          {/* Course Selection */}
           <div className="mb-6 lg:mb-8">
             <div className="bg-white rounded-xl lg:rounded-2xl shadow-sm border border-slate-200 p-4 lg:p-6">
-              <h2 className="font-bold text-lg lg:text-xl text-slate-900 mb-4">Select Course</h2>
+              <h2 className="font-bold text-lg lg:text-xl text-slate-900 mb-4">Select Free Course</h2>
               <select 
                 value={selectedCourse} 
                 onChange={(e) => setSelectedCourse(e.target.value)}
-                className="w-full p-3 lg:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm lg:text-base"
+                className="w-full p-3 lg:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm lg:text-base"
               >
-                {enrollments.map((enrollment) => (
-                  <option key={enrollment.course._id} value={enrollment.course._id}>
-                    {enrollment.course.title}
+                {freeCourses.map((course) => (
+                  <option key={course._id} value={course._id}>
+                    🎁 {course.title} (Free)
                   </option>
                 ))}
               </select>
+              <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm text-green-700">
+                  <span className="font-semibold">🎁 Free Course:</span> All resources in this course are available to you at no cost.
+                </p>
+              </div>
             </div>
           </div>
 
-      {/* Resource Stats + Progress */}
           {resources.length > 0 && (
             <div className="mb-6 lg:mb-8">
-          <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 lg:gap-4 mb-4">
+              <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 lg:gap-4 mb-4">
                 <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
                   <div className="text-center">
                     <div className="text-lg lg:text-2xl font-bold text-slate-900">{stats.total}</div>
                     <div className="text-xs lg:text-sm text-slate-600">Total</div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
+                  <div className="text-center">
+                    <div className="text-lg lg:text-2xl font-bold text-green-600">{completedCount}</div>
+                    <div className="text-xs lg:text-sm text-slate-600">Completed</div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
+                  <div className="text-center">
+                    <div className="text-lg lg:text-2xl font-bold text-sky-600">{viewedCount}</div>
+                    <div className="text-xs lg:text-sm text-slate-600">Viewed</div>
                   </div>
                 </div>
                 <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
@@ -795,59 +751,44 @@ function ResourcesContent({ enrollments, resources, loading, selectedResource, s
                 </div>
                 <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
                   <div className="text-center">
-                    <div className="text-lg lg:text-2xl font-bold text-green-600">{stats.document}</div>
-                    <div className="text-xs lg:text-sm text-slate-600">Documents</div>
-                  </div>
-                </div>
-                <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
-                  <div className="text-center">
                     <div className="text-lg lg:text-2xl font-bold text-purple-600">{stats.audio}</div>
                     <div className="text-xs lg:text-sm text-slate-600">Audio</div>
                   </div>
                 </div>
-                <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
-                  <div className="text-center">
-                    <div className="text-lg lg:text-2xl font-bold text-pink-600">{stats.image}</div>
-                    <div className="text-xs lg:text-sm text-slate-600">Images</div>
-                  </div>
-                </div>
               </div>
-          {/* Progress Bar */}
-          <div className="bg-gradient-to-r from-sky-50 to-blue-50 rounded-xl p-4 border border-sky-200">
-            <div className="flex items-center justify-between mb-2">
-              <div className="font-semibold text-slate-900">Your Progress</div>
-              <div className="text-sm text-slate-600">{completedCount}/{total} completed</div>
-            </div>
-            <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
-              <div className="h-3 bg-gradient-to-r from-sky-500 to-blue-600 rounded-full transition-all" style={{ width: `${progressPct}%` }} />
-            </div>
-            <div className="text-right text-sm font-semibold text-sky-700 mt-1">{progressPct}%</div>
-          </div>
+              
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="font-semibold text-slate-900">Your Progress</div>
+                  <div className="text-sm text-slate-600">{completedCount}/{total} completed</div>
+                </div>
+                <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                  <div className="h-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full transition-all" style={{ width: `${progressPct}%` }} />
+                </div>
+                <div className="text-right text-sm font-semibold text-green-700 mt-1">{progressPct}%</div>
+              </div>
             </div>
           )}
 
-          {/* Search and Filter */}
           {resources.length > 0 && (
             <div className="mb-6 lg:mb-8">
               <div className="bg-white rounded-xl lg:rounded-2xl shadow-sm border border-slate-200 p-4 lg:p-6">
                 <div className="flex flex-col lg:flex-row gap-4">
-                  {/* Search */}
                   <div className="flex-1">
                     <input
                       type="text"
                       placeholder="Search resources..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full p-3 lg:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm lg:text-base"
+                      className="w-full p-3 lg:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm lg:text-base"
                     />
                   </div>
                   
-                  {/* Filter */}
                   <div className="lg:w-48">
                     <select
                       value={filter}
                       onChange={(e) => setFilter(e.target.value)}
-                      className="w-full p-3 lg:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm lg:text-base"
+                      className="w-full p-3 lg:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm lg:text-base"
                     >
                       <option value="all">All Types</option>
                       <option value="video">Videos</option>
@@ -862,16 +803,12 @@ function ResourcesContent({ enrollments, resources, loading, selectedResource, s
             </div>
           )}
 
-          {/* Resources Grid */}
           <div>
             {resources.length === 0 ? (
               <div className="bg-white rounded-xl lg:rounded-2xl p-8 lg:p-12 text-center border border-slate-200">
                 <div className="text-4xl lg:text-6xl mb-4">📚</div>
                 <h3 className="text-lg lg:text-xl font-semibold text-slate-900 mb-2">No Resources Available</h3>
-                <p className="text-slate-600 mb-6">This course doesn't have any resources uploaded yet.</p>
-                <p className="text-sm text-slate-500">
-                  Make sure you're enrolled in this course and that your instructor has uploaded resources.
-                </p>
+                <p className="text-slate-600 mb-6">This free course doesn't have any resources uploaded yet.</p>
               </div>
             ) : filteredResources.length === 0 ? (
               <div className="bg-white rounded-xl lg:rounded-2xl p-8 lg:p-12 text-center border border-slate-200">
@@ -883,7 +820,7 @@ function ResourcesContent({ enrollments, resources, loading, selectedResource, s
                     setSearchTerm('')
                     setFilter('all')
                   }}
-                  className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm font-medium"
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
                 >
                   Clear Search
                 </button>
@@ -894,19 +831,15 @@ function ResourcesContent({ enrollments, resources, loading, selectedResource, s
                   <ResourceCard
                     key={resource._id}
                     resource={resource}
-                    completed={!!completedMap[resource._id]}
+                    tracking={trackingData[resource._id]}
                     onToggleComplete={handleToggleComplete}
-                    onClick={() => {
-                      setSelectedResource(resource)
-                      setShowModal(true)
-                    }}
+                    onClick={() => handleResourceView(resource)}
                   />
                 ))}
               </div>
             )}
           </div>
 
-          {/* Resource Modal */}
           <ResourceModal
             resource={selectedResource}
             isOpen={showModal}
@@ -914,6 +847,8 @@ function ResourcesContent({ enrollments, resources, loading, selectedResource, s
               setShowModal(false)
               setSelectedResource(null)
             }}
+            onView={() => selectedResource && selectedCourse && onTrackView(selectedResource._id, selectedCourse)}
+            onComplete={(timeSpent) => selectedResource && selectedCourse && onTrackComplete(selectedResource._id, selectedCourse, timeSpent)}
           />
         </>
       )}
@@ -923,42 +858,49 @@ function ResourcesContent({ enrollments, resources, loading, selectedResource, s
 
 export default function StudentResources() {
   const { getToken } = useAuth()
-  const [enrollments, setEnrollments] = useState([])
+  const [freeCourses, setFreeCourses] = useState([])
   const [resources, setResources] = useState([])
+  const [trackingData, setTrackingData] = useState({})
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('resources')
   const [selectedResource, setSelectedResource] = useState(null)
   const [showModal, setShowModal] = useState(false)
-
   const [selectedCourse, setSelectedCourse] = useState('')
 
   useEffect(() => {
-    loadEnrollments()
+    loadFreeCourses()
   }, [])
 
   useEffect(() => {
     if (selectedCourse) {
       loadResources()
+      loadTracking()
     }
   }, [selectedCourse])
 
-  const loadEnrollments = async () => {
+  const loadFreeCourses = async () => {
     try {
       const token = await getToken().catch(() => undefined)
-      const user = window.Clerk?.user
-      const userHint = user?.id
-      const url = new URL(`${import.meta.env.VITE_API_BASE_URL}/me/enrollments`)
-      if (!token && userHint) url.searchParams.set('userHint', userHint)
-      const headers = token ? { Authorization: `Bearer ${token}` } : {}
-      const res = await fetch(url.toString(), { headers })
-      if (res.ok) {
-        const data = await res.json()
-        setEnrollments(data)
+      if (!token) {
+        setLoading(false)
+        return
+      }
+      
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+      const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
+      const response = await fetch(`${baseUrl}/free-courses`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setFreeCourses(data || [])
         if (data.length > 0) {
-          setSelectedCourse(data[0].course._id)
+          setSelectedCourse(data[0]._id)
         }
       }
+    } catch (error) {
+      console.error('Error loading free courses:', error)
     } finally {
       setLoading(false)
     }
@@ -969,38 +911,115 @@ export default function StudentResources() {
     
     try {
       const token = await getToken().catch(() => undefined)
-      const user = window.Clerk?.user
-      const userHint = user?.id
-      const url = new URL(`${import.meta.env.VITE_API_BASE_URL}/me/resources/${selectedCourse}`)
-      if (!token && userHint) url.searchParams.set('userHint', userHint)
-      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+      if (!token) return
       
-      console.log('Loading resources from:', url.toString())
-      console.log('Headers:', headers)
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+      const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
+      const url = new URL(`${baseUrl}/me/resources/${selectedCourse}`)
+      const headers = { Authorization: `Bearer ${token}` }
       
       const res = await fetch(url.toString(), { headers })
-      console.log('Response status:', res.status)
       
       if (res.ok) {
         const data = await res.json()
-        console.log('Resources data:', data)
-        setResources(data)
+        setResources(data || [])
       } else {
-        const errorText = await res.text()
-        console.error('Error response:', errorText)
-        if (res.status === 403) {
-          alert('You are not enrolled in this course. Please enroll first.')
-        }
+        setResources([])
       }
     } catch (error) {
       console.error('Error loading resources:', error)
+      setResources([])
+    }
+  }
+
+  const loadTracking = async () => {
+    if (!selectedCourse) return
+    
+    try {
+      const token = await getToken().catch(() => undefined)
+      if (!token) return
+      
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+      const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
+      const response = await fetch(`${baseUrl}/free-resources/tracking?courseId=${selectedCourse}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        const trackingMap = {}
+        data.forEach(t => {
+          trackingMap[t.resourceId] = t
+        })
+        setTrackingData(trackingMap)
+      }
+    } catch (error) {
+      console.error('Error loading tracking:', error)
+    }
+  }
+
+  const trackView = async (resourceId, courseId) => {
+    try {
+      const token = await getToken().catch(() => undefined)
+      if (!token) return
+      
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+      const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
+      await fetch(`${baseUrl}/free-resources/track/view`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ resourceId, courseId })
+      })
+      
+      setTrackingData(prev => ({
+        ...prev,
+        [resourceId]: {
+          ...prev[resourceId],
+          viewed: true,
+          viewedAt: new Date()
+        }
+      }))
+    } catch (error) {
+      console.error('Error tracking view:', error)
+    }
+  }
+
+  const trackComplete = async (resourceId, courseId, timeSpent = 0) => {
+    try {
+      const token = await getToken().catch(() => undefined)
+      if (!token) return
+      
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+      const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
+      await fetch(`${baseUrl}/free-resources/track/complete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ resourceId, courseId, timeSpent })
+      })
+      
+      setTrackingData(prev => ({
+        ...prev,
+        [resourceId]: {
+          ...prev[resourceId],
+          completed: true,
+          completedAt: new Date(),
+          timeSpent: (prev[resourceId]?.timeSpent || 0) + timeSpent
+        }
+      }))
+    } catch (error) {
+      console.error('Error tracking completion:', error)
     }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-pink-50">
       <div className="flex">
-        {/* Sidebar */}
         <Sidebar 
           activeTab={activeTab}
           onTabChange={setActiveTab}
@@ -1008,21 +1027,20 @@ export default function StudentResources() {
           onClose={() => setSidebarOpen(false)}
         />
         
-        {/* Main Content */}
         <div className="flex-1 lg:ml-16 xl:ml-16">
-        <SignedOut>
+          <SignedOut>
             <div className="p-6 text-center">
-            <SignInButton>
+              <SignInButton>
                 <button className="px-6 py-3 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-colors">
-                  Sign in to access resources
+                  Sign in to access free resources
                 </button>
-            </SignInButton>
-          </div>
-        </SignedOut>
-        
-        <SignedIn>
+              </SignInButton>
+            </div>
+          </SignedOut>
+          
+          <SignedIn>
             <ResourcesContent
-              enrollments={enrollments}
+              freeCourses={freeCourses}
               resources={resources}
               loading={loading}
               selectedResource={selectedResource}
@@ -1030,8 +1048,11 @@ export default function StudentResources() {
               showModal={showModal}
               setShowModal={setShowModal}
               onMenuClick={() => setSidebarOpen(true)}
+              trackingData={trackingData}
+              onTrackView={trackView}
+              onTrackComplete={trackComplete}
             />
-        </SignedIn>
+          </SignedIn>
         </div>
       </div>
     </div>

@@ -154,8 +154,10 @@ export default function CoursesPage() {
       try {
         setLoading(true)
         const data = await apiGet('/courses')
-        setCourses(data)
-        setFilteredCourses(data)
+        // Ensure we have an array and filter out any invalid courses
+        const validCourses = Array.isArray(data) ? data.filter(course => course && course._id) : []
+        setCourses(validCourses)
+        setFilteredCourses(validCourses)
         
         // Load enrollment status if user is signed in
         if (isSignedIn) {
@@ -186,59 +188,9 @@ export default function CoursesPage() {
         }
       } catch (error) {
         console.error('Failed to load courses:', error)
-        // Fallback demo courses
-        const demoCourses = [
-          {
-            _id: 'demo1',
-            title: 'Guitar Basics',
-            description: 'Master the fundamentals of guitar playing. Learn chords, strumming patterns, and basic songs.',
-            price: 2999,
-            level: 'Beginner',
-            image: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=600&auto=format&fit=crop'
-          },
-          {
-            _id: 'demo2',
-            title: 'Piano Pro',
-            description: 'Advanced piano techniques, scales, arpeggios, and performance tips for intermediate players.',
-            price: 3499,
-            level: 'Intermediate',
-            image: 'https://images.unsplash.com/photo-1513883049090-d0b7439799bf?q=80&w=600&auto=format&fit=crop'
-          },
-          {
-            _id: 'demo3',
-            title: 'Vocal Coaching',
-            description: 'Develop your singing voice with breathing techniques, pitch control, and performance confidence.',
-            price: 2799,
-            level: 'All Levels',
-            image: 'https://images.unsplash.com/photo-1483412033650-1015ddeb83d1?q=80&w=600&auto=format&fit=crop'
-          },
-          {
-            _id: 'demo4',
-            title: 'Drum Mastery',
-            description: 'Learn rhythm patterns, fills, and advanced drumming techniques for all skill levels.',
-            price: 3299,
-            level: 'Intermediate',
-            image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=600&auto=format&fit=crop'
-          },
-          {
-            _id: 'demo5',
-            title: 'Violin Fundamentals',
-            description: 'Classical violin techniques, bowing, fingering, and beautiful melodies for beginners.',
-            price: 3799,
-            level: 'Beginner',
-            image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=600&auto=format&fit=crop'
-          },
-          {
-            _id: 'demo6',
-            title: 'Saxophone Jazz',
-            description: 'Jazz saxophone techniques, improvisation, and classic jazz standards.',
-            price: 3999,
-            level: 'Advanced',
-            image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=600&auto=format&fit=crop'
-          }
-        ]
-        setCourses(demoCourses)
-        setFilteredCourses(demoCourses)
+        // Set empty arrays if API fails - no demo courses
+        setCourses([])
+        setFilteredCourses([])
       } finally {
         setLoading(false)
       }

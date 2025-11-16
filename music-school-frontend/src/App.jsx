@@ -656,9 +656,9 @@ function App() {
         {/* Courses Section */}
         <section id="courses" className="max-w-6xl mx-auto px-4 mt-20">
           <SectionTitle emoji="🎵" title="Featured Courses" subtitle="Choose your instrument and start your musical journey" />
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {courses.length > 0 ? (
-              courses.slice(0, 6).map((course) => {
+          {courses.length > 0 ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {courses.slice(0, 6).map((course) => {
                 const courseId = String(course._id)
                 const isEnrolled = enrolledCourseIds.has(courseId) || enrolledCourseIds.has(course._id)
                 return (
@@ -673,15 +673,15 @@ function App() {
                     course={course}
                   />
                 )
-              })
-            ) : (
-              <>
-                <CourseCard title="Guitar Basics" level="Beginner" price={2999} image="https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=600&auto=format&fit=crop" _id="demo1" />
-                <CourseCard title="Piano Pro" level="Intermediate" price={3499} image="https://images.unsplash.com/photo-1513883049090-d0b7439799bf?q=80&w=600&auto=format&fit=crop" _id="demo2" />
-                <CourseCard title="Vocal Coaching" level="All Levels" price={2799} image="https://images.unsplash.com/photo-1483412033650-1015ddeb83d1?q=80&w=600&auto=format&fit=crop" _id="demo3" />
-              </>
-            )}
-          </div>
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <div className="text-6xl mb-4">🎵</div>
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">No courses available yet</h3>
+              <p className="text-slate-600 mb-6">Check back soon for exciting music courses!</p>
+            </div>
+          )}
           <div className="text-center mt-8">
             <a href="/courses" className="inline-flex items-center px-6 py-3 rounded-full bg-white border-2 border-sky-200 text-sky-700 font-semibold hover:border-sky-300 hover:bg-sky-50 transition-all duration-300">
               View All Courses

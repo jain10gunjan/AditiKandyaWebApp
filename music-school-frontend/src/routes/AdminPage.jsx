@@ -1179,6 +1179,17 @@ export default function AdminPage() {
                     <p className="text-sm text-slate-600">Add, edit, and manage teachers</p>
                   </div>
                 </a>
+                <a 
+                  href="/admin/free-courses"
+                  className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-purple-300 active:scale-95 text-left relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-50/0 to-pink-50/0 group-hover:from-purple-50/50 group-hover:to-pink-50/50 transition-all duration-300"></div>
+                  <div className="relative z-10">
+                    <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">🎁</div>
+                    <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-purple-700 transition-colors">Free Courses</h3>
+                    <p className="text-sm text-slate-600">Manage free courses and resources</p>
+                  </div>
+                </a>
                 <a href="/admin/enrollment-leads" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-sky-300 active:scale-95">
                   <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">📝</div>
                   <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-sky-700 transition-colors">New Enrollment Leads</h3>
