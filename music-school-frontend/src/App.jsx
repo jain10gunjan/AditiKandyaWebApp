@@ -28,21 +28,21 @@ function CourseCard({ title, level, price, image, _id, isEnrolled = false, cours
   )
   
   return (
-    <a href={`/courses/${_id}`} className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-4 border border-white/20 hover:border-[#FFD700] relative overflow-hidden">
+    <a href={`/courses/${_id}`} className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-4 border border-white/20 hover:border-[#F5E6E0] relative overflow-hidden">
       <div className="relative overflow-hidden rounded-xl">
         <img src={image} alt={title} className="h-40 w-full object-cover group-hover:scale-110 transition-transform duration-500" />
-        <div className="absolute top-3 right-3 bg-black text-[#FFD700] px-3 py-1 rounded-full text-xs font-bold z-10">
+        <div className="absolute top-3 right-3 bg-black text-[#F5E6E0] px-3 py-1 rounded-full text-xs font-bold z-10">
           {level}
         </div>
         {isEnrolled && (
-          <div className="absolute bottom-3 right-3 bg-[#FFD700] text-black px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 z-10 animate-fade-in shadow-lg">
+          <div className="absolute bottom-3 right-3 bg-[#F5E6E0] text-black px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 z-10 animate-fade-in shadow-lg">
             <span className="text-sm">✓</span>
             <span>Already Enrolled</span>
           </div>
         )}
       </div>
       <div className="mt-3">
-        <h3 className="font-cinema font-bold text-lg text-black group-hover:text-[#FFD700] transition-colors">{title}</h3>
+        <h3 className="font-cinema font-bold text-lg text-black group-hover:text-[#F5E6E0] transition-colors">{title}</h3>
         {hasTeacher && (
           <p className="text-xs text-black/70 flex items-center gap-1 mt-1 font-medium">
             <span>👩‍🏫</span>
@@ -60,12 +60,12 @@ function CourseCard({ title, level, price, image, _id, isEnrolled = false, cours
             <span className="text-black font-bold text-lg">₹{price}</span>
           )}
           {isEnrolled && (
-            <span className="text-[#FFD700] font-bold text-sm flex items-center gap-1">
+            <span className="text-[#F5E6E0] font-bold text-sm flex items-center gap-1">
               <span>✓</span>
               <span>Enrolled</span>
             </span>
           )}
-          <span className="px-4 py-1.5 rounded-full bg-black text-[#FFD700] text-sm font-bold group-hover:bg-[#FFD700] group-hover:text-black transition-all duration-300">
+          <span className="px-4 py-1.5 rounded-full bg-black text-[#F5E6E0] text-sm font-bold group-hover:bg-[#F5E6E0] group-hover:text-black transition-all duration-300">
             View Details
           </span>
         </div>
@@ -76,15 +76,15 @@ function CourseCard({ title, level, price, image, _id, isEnrolled = false, cours
 
 function TeacherCard({ name, instrument, avatar }) {
   return (
-    <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border border-white/20 text-center group hover:border-[#FFD700]">
+    <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border border-white/20 text-center group hover:border-[#F5E6E0]">
       <div className="relative inline-block">
-        <img src={avatar} alt={name} className="h-20 w-20 rounded-full object-cover mx-auto group-hover:scale-110 transition-transform duration-300 ring-2 ring-[#FFD700]/30 group-hover:ring-[#FFD700]" />
-        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#FFD700] rounded-full border-2 border-white"></div>
+        <img src={avatar} alt={name} className="h-20 w-20 rounded-full object-cover mx-auto group-hover:scale-110 transition-transform duration-300 ring-2 ring-[#F5E6E0]/30 group-hover:ring-[#F5E6E0]" />
+        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#F5E6E0] rounded-full border-2 border-white"></div>
       </div>
       <h3 className="mt-4 font-cinema font-bold text-black">{name}</h3>
       <p className="text-sm text-black/70 font-medium">{instrument} Expert</p>
       <div className="mt-2 flex justify-center">
-        <div className="flex text-[#FFD700]">
+        <div className="flex text-[#F5E6E0]">
           {'★'.repeat(5)}
         </div>
       </div>
@@ -94,8 +94,8 @@ function TeacherCard({ name, instrument, avatar }) {
 
 function StatCard({ number, label, icon, color }) {
   return (
-    <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 text-center border border-white/20 hover:border-[#FFD700]">
-      <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-[#FFD700] transition-colors">
+    <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 text-center border border-white/20 hover:border-[#F5E6E0]">
+      <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-[#F5E6E0] transition-colors">
         <span className="text-2xl">{icon}</span>
       </div>
       <div className="text-4xl font-cinema font-bold text-black mb-2">{number}</div>
@@ -106,16 +106,16 @@ function StatCard({ number, label, icon, color }) {
 
 function TestimonialCard({ name, role, content, avatar }) {
   return (
-    <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border border-white/20 hover:border-[#FFD700]">
+    <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border border-white/20 hover:border-[#F5E6E0]">
       <div className="flex items-center mb-4">
-        <img src={avatar} alt={name} className="h-12 w-12 rounded-full object-cover ring-2 ring-[#FFD700]/30" />
+        <img src={avatar} alt={name} className="h-12 w-12 rounded-full object-cover ring-2 ring-[#F5E6E0]/30" />
         <div className="ml-3">
           <div className="font-cinema font-bold text-black">{name}</div>
           <div className="text-sm text-black/70 font-medium">{role}</div>
         </div>
       </div>
       <p className="text-black italic leading-relaxed font-medium">"{content}"</p>
-      <div className="mt-3 flex text-[#FFD700]">
+      <div className="mt-3 flex text-[#F5E6E0]">
         {'★'.repeat(5)}
       </div>
     </div>
@@ -359,8 +359,8 @@ function EnrollForm() {
 						errors.fullName && touched.fullName
 							? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'
 							: formData.fullName && !errors.fullName
-							? 'border-[#FFD700] bg-[#FFD700]/5 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
-							: 'border-black/20 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
+							? 'border-[#F5E6E0] bg-[#F5E6E0]/5 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
+							: 'border-black/20 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
 					}`}
 					required
 					aria-invalid={errors.fullName && touched.fullName ? 'true' : 'false'}
@@ -399,8 +399,8 @@ function EnrollForm() {
 						errors.email && touched.email
 							? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'
 							: formData.email && !errors.email
-							? 'border-[#FFD700] bg-[#FFD700]/5 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
-							: 'border-black/20 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
+							? 'border-[#F5E6E0] bg-[#F5E6E0]/5 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
+							: 'border-black/20 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
 					}`}
 					required
 					aria-invalid={errors.email && touched.email ? 'true' : 'false'}
@@ -435,8 +435,8 @@ function EnrollForm() {
 						errors.whatsapp && touched.whatsapp
 							? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'
 							: formData.whatsapp && !errors.whatsapp
-							? 'border-[#FFD700] bg-[#FFD700]/5 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
-							: 'border-black/20 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
+							? 'border-[#F5E6E0] bg-[#F5E6E0]/5 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
+							: 'border-black/20 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
 					}`}
 					aria-invalid={errors.whatsapp && touched.whatsapp ? 'true' : 'false'}
 					aria-describedby={errors.whatsapp && touched.whatsapp ? 'enroll-whatsapp-error' : undefined}
@@ -471,8 +471,8 @@ function EnrollForm() {
 						errors.country && touched.country
 							? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'
 							: formData.country && !errors.country
-							? 'border-[#FFD700] bg-[#FFD700]/5 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
-							: 'border-black/20 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
+							? 'border-[#F5E6E0] bg-[#F5E6E0]/5 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
+							: 'border-black/20 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
 					}`}
 					aria-invalid={errors.country && touched.country ? 'true' : 'false'}
 					aria-describedby={errors.country && touched.country ? 'enroll-country-error' : undefined}
@@ -491,7 +491,7 @@ function EnrollForm() {
 				className={`md:col-span-2 px-6 py-3 rounded-lg font-bold transition-all duration-300 shadow-lg relative overflow-hidden ${
 					submitting
 						? 'bg-black text-white cursor-not-allowed'
-						: 'bg-[#FFD700] text-black hover:bg-[#FFC700] hover:shadow-xl active:scale-95'
+						: 'bg-[#F5E6E0] text-black hover:bg-[#E8D5CC] hover:shadow-xl active:scale-95'
 				}`}
 			>
 				{submitting ? (
@@ -591,7 +591,7 @@ function HeroCarousel() {
             {/* Text Content Overlay */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <div className="inline-flex items-center px-4 py-2 rounded-full bg-[#FFD700]/20 border border-[#FFD700]/40 text-[#FFD700] text-sm font-bold mb-6 backdrop-blur-sm">
+                <div className="inline-flex items-center px-4 py-2 rounded-full bg-[#F5E6E0]/20 border border-[#F5E6E0]/40 text-[#F5E6E0] text-sm font-bold mb-6 backdrop-blur-sm">
                   <span className="mr-2">🎵</span>
                   {slide.badge}
                 </div>
@@ -599,7 +599,7 @@ function HeroCarousel() {
                   {slide.title.split(' ').map((word, i, arr) => (
                     <span key={i}>
                       {i === arr.length - 1 ? (
-                        <span className="text-[#FFD700]">{word}</span>
+                        <span className="text-[#F5E6E0]">{word}</span>
                       ) : (
                         <>{word} </>
                       )}
@@ -619,7 +619,7 @@ function HeroCarousel() {
                         element.scrollIntoView({ behavior: 'smooth', block: 'start' })
                       }
                     }}
-                    className="px-8 py-4 rounded-lg bg-[#FFD700] text-black hover:bg-[#FFC700] font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 text-center"
+                    className="px-8 py-4 rounded-lg bg-[#F5E6E0] text-black hover:bg-[#E8D5CC] font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 text-center"
                   >
                     Start Learning Today
                   </a>
@@ -632,7 +632,7 @@ function HeroCarousel() {
                         element.scrollIntoView({ behavior: 'smooth', block: 'start' })
                       }
                     }}
-                    className="px-8 py-4 rounded-lg bg-transparent border-2 border-[#FFD700] hover:bg-[#FFD700]/10 font-bold text-[#FFD700] text-lg transition-all duration-300 text-center"
+                    className="px-8 py-4 rounded-lg bg-transparent border-2 border-[#F5E6E0] hover:bg-[#F5E6E0]/10 font-bold text-[#F5E6E0] text-lg transition-all duration-300 text-center"
                   >
                     Browse Courses
                   </a>
@@ -646,7 +646,7 @@ function HeroCarousel() {
       {/* Navigation Arrows */}
       <button
         onClick={goToPrevious}
-        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-[#FFD700] p-3 rounded-full transition-all duration-300 hover:scale-110 z-20 backdrop-blur-sm border border-[#FFD700]/30 sm:block hidden"
+        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-[#F5E6E0] p-3 rounded-full transition-all duration-300 hover:scale-110 z-20 backdrop-blur-sm border border-[#F5E6E0]/30 sm:block hidden"
         aria-label="Previous slide"
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -655,7 +655,7 @@ function HeroCarousel() {
       </button>
       <button
         onClick={goToNext}
-        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-[#FFD700] p-3 rounded-full transition-all duration-300 hover:scale-110 z-20 backdrop-blur-sm border border-[#FFD700]/30 sm:block hidden"
+        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-[#F5E6E0] p-3 rounded-full transition-all duration-300 hover:scale-110 z-20 backdrop-blur-sm border border-[#F5E6E0]/30 sm:block hidden"
         aria-label="Next slide"
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -671,8 +671,8 @@ function HeroCarousel() {
             onClick={() => goToSlide(index)}
             className={`h-3 rounded-full transition-all duration-300 ${
               index === currentIndex
-                ? 'bg-[#FFD700] w-8 border-2 border-white'
-                : 'bg-white/50 hover:bg-white/70 border border-[#FFD700]/50 w-3'
+                ? 'bg-[#F5E6E0] w-8 border-2 border-white'
+                : 'bg-white/50 hover:bg-white/70 border border-[#F5E6E0]/50 w-3'
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />
@@ -799,7 +799,7 @@ function App() {
             </div>
           )}
           <div className="text-center mt-8">
-            <a href="/courses" className="inline-flex items-center px-6 py-3 rounded-lg bg-[#FFD700] text-black font-bold hover:bg-[#FFC700] transition-all duration-300 shadow-lg hover:shadow-xl">
+            <a href="/courses" className="inline-flex items-center px-6 py-3 rounded-lg bg-[#F5E6E0] text-black font-bold hover:bg-[#E8D5CC] transition-all duration-300 shadow-lg hover:shadow-xl">
               View All Courses
               <span className="ml-2">→</span>
             </a>

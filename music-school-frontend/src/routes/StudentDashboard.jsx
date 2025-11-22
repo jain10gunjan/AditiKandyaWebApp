@@ -174,9 +174,9 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
         </div>
 
         {/* Enrolled Courses List */}
-        {items.length > 0 ? (
+        {items.filter(it => it.course && it.course._id).length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-            {items.map((it) => {
+            {items.filter(it => it.course && it.course._id).map((it) => {
               const prog = courseProgress[it.course._id] || { pct: 0, completed: 0, total: 0 }
               return (
                 <a 
@@ -349,11 +349,11 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
       </div>
 
       {/* Course Progress */}
-      {items.length > 0 && (
+      {items.filter(it => it.course && it.course._id).length > 0 && (
         <div className="mb-6 lg:mb-8">
           <h2 className="text-lg lg:text-xl font-bold text-slate-900 mb-4">Course Progress</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-            {items.map((it) => {
+            {items.filter(it => it.course && it.course._id).map((it) => {
               const prog = courseProgress[it.course._id] || { pct: 0, completed: 0, total: 0 }
               const isComplete = prog.pct === 100
               return (
@@ -546,9 +546,9 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
       {/* Enrolled Courses */}
       <div>
         <h2 className="text-lg lg:text-xl font-bold text-slate-900 mb-4">My Enrolled Courses</h2>
-        {items.length > 0 ? (
+        {items.filter(it => it.course && it.course._id).length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-            {items.map((it) => (
+            {items.filter(it => it.course && it.course._id).map((it) => (
               <a key={it.course._id} href={`/dashboard/course/${it.course._id}`} className="group bg-white rounded-xl lg:rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-200">
                 <div className="relative">
                   <img 

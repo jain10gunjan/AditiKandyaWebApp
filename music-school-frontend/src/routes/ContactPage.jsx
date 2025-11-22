@@ -205,20 +205,19 @@ export default function ContactPage() {
               <div className="bg-black rounded-2xl shadow-xl p-8 border border-[#FFD700]/30 text-center">
                 <div className="text-5xl mb-4">📍</div>
                 <h3 className="text-xl font-bold text-white mb-3">Location</h3>
-                <p className="text-white/80 font-medium">MusiNest Studio</p>
-                <p className="text-white/80 font-medium">Chennai, India</p>
+                <p className="text-white/80 font-medium">Virtual Studio</p>
+                <p className="text-white/80 font-medium">Based in MP India</p>
               </div>
               <div className="bg-black rounded-2xl shadow-xl p-8 border border-[#FFD700]/30 text-center">
                 <div className="text-5xl mb-4">📞</div>
                 <h3 className="text-xl font-bold text-white mb-3">Phone</h3>
-                <p className="text-white/80 font-medium">+91 98765 43210</p>
+                <p className="text-white/80 font-medium">+91 7024403520</p>
                 <p className="text-white/70 text-sm font-medium mt-2">Mon-Sat: 9 AM - 7 PM</p>
               </div>
               <div className="bg-black rounded-2xl shadow-xl p-8 border border-[#FFD700]/30 text-center">
                 <div className="text-5xl mb-4">📧</div>
                 <h3 className="text-xl font-bold text-white mb-3">Email</h3>
-                <p className="text-white/80 font-medium">aditi@musinest.com</p>
-                <p className="text-white/70 text-sm font-medium mt-2">support@themusinest.com</p>
+                <p className="text-white/80 font-medium">aditikandya@gmail.com</p>
               </div>
             </div>
 
@@ -316,7 +315,7 @@ export default function ContactPage() {
                       value={formData.phone}
                       onChange={handleChange}
                       onBlur={handleBlur}
-                      placeholder="+91 98765 43210"
+                      placeholder="+91 7024403520"
                       className={`w-full border rounded-lg p-3 transition-all duration-200 bg-white font-medium ${
                         errors.phone && touched.phone
                           ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'

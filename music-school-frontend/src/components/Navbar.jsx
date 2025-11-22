@@ -73,7 +73,7 @@ export default function Navbar({ subtitle = '- By Aditi Kandya' }) {
                   className="h-12 w-auto object-contain"
                 />
                 <div>
-                  <span className="font-cinema text-white text-lg font-bold">Themusinest</span>
+                  <span className="font-cinema text-white text-lg font-bold">The Musinest</span>
                   <div className="text-xs text-white/70 font-medium">{subtitle}</div>
                 </div>
               </a>
