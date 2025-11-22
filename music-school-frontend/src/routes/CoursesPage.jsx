@@ -5,8 +5,6 @@ import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
 
 function CourseCard({ course, isEnrolled = false }) {
-  const [isHovered, setIsHovered] = useState(false)
-  
   // Calculate actual metrics from course data
   const totalLessons = course.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0
   const totalDurationSec = course.modules?.reduce((acc, m) => 
@@ -26,100 +24,89 @@ function CourseCard({ course, isEnrolled = false }) {
     <a 
       key={course._id} 
       href={`/courses/${course._id}`} 
-      className="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-100 hover:border-sky-200 relative overflow-hidden"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-4 border border-white/20 hover:border-[#FFD700] relative overflow-hidden"
     >
-      {/* Hover gradient overlay */}
-      <div className={`absolute inset-0 bg-gradient-to-br from-sky-50/0 to-blue-50/0 group-hover:from-sky-50/30 group-hover:to-blue-50/30 transition-all duration-300 pointer-events-none z-0`}></div>
-      
-      <div className="relative z-10">
-        <div className="relative overflow-hidden rounded-xl mb-4">
-          <img 
-            src={course.image || course.thumbnailPath || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=600&auto=format&fit=crop'} 
-            alt={course.title} 
-            className="h-48 w-full object-cover group-hover:scale-110 transition-transform duration-500" 
-            onError={(e) => {
-              e.target.src = 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=600&auto=format&fit=crop'
-            }}
-          />
-          <div className="absolute top-3 right-3 bg-sky-600 text-white px-3 py-1 rounded-full text-xs font-medium shadow-lg group-hover:bg-sky-700 transition-colors z-10">
-            {course.level || 'All Levels'}
+      <div className="relative overflow-hidden rounded-xl">
+        <img 
+          src={course.image || course.thumbnailPath || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=600&auto=format&fit=crop'} 
+          alt={course.title} 
+          className="h-40 w-full object-cover group-hover:scale-110 transition-transform duration-500" 
+          onError={(e) => {
+            e.target.src = 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=600&auto=format&fit=crop'
+          }}
+        />
+        <div className="absolute top-3 right-3 bg-black text-[#FFD700] px-3 py-1 rounded-full text-xs font-bold z-10">
+          {course.level || 'All Levels'}
+        </div>
+        {!isEnrolled && (
+          <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-black px-2 py-1 rounded-full text-xs font-bold shadow-md z-10">
+            {course.price === 0 ? 'Free' : `₹${course.price?.toLocaleString() || 0}`}
           </div>
-          {/* Hide price badge when enrolled */}
-          {!isEnrolled && (
-            <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-slate-700 px-2 py-1 rounded-full text-xs font-medium shadow-md group-hover:bg-white transition-colors z-10">
-              {course.price === 0 ? 'Free' : `₹${course.price?.toLocaleString() || 0}`}
+        )}
+        {isEnrolled && (
+          <div className="absolute bottom-3 right-3 bg-[#FFD700] text-black px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 z-10 animate-fade-in shadow-lg">
+            <span className="text-sm">✓</span>
+            <span>Already Enrolled</span>
+          </div>
+        )}
+      </div>
+      <div className="mt-3">
+        <h3 className="font-cinema font-bold text-lg text-black group-hover:text-[#FFD700] transition-colors mb-1">
+          {course.title}
+        </h3>
+        {hasTeacher && (
+          <p className="text-xs text-black/70 flex items-center gap-1 mb-2 font-medium">
+            <span>👩‍🏫</span>
+            <span>{course.teacherName || 'Assigned Teacher'}</span>
+            {course.teacherInstrument && (
+              <>
+                <span className="text-black/50">•</span>
+                <span>{course.teacherInstrument}</span>
+              </>
+            )}
+          </p>
+        )}
+        <p className="text-black/70 text-sm line-clamp-2 leading-relaxed mb-3 font-medium">
+          {course.description || 'Learn this amazing instrument with our expert instructors. Perfect for beginners and intermediate players.'}
+        </p>
+        
+        <div className="flex items-center justify-between pt-2 border-t border-black/10">
+          <div className="flex items-center space-x-2">
+            <div className="flex text-[#FFD700] text-sm">
+              {'★'.repeat(Math.floor(rating))}
+              {rating % 1 >= 0.5 && <span className="text-[#FFD700]">½</span>}
             </div>
-          )}
-          {isEnrolled && (
-            <div className="absolute bottom-3 right-3 bg-green-500 text-white px-3 py-1.5 rounded-full text-xs font-medium shadow-lg flex items-center gap-1.5 z-10 animate-fade-in">
-              <span className="text-sm">✓</span>
-              <span>Already Enrolled</span>
-            </div>
-          )}
+            <span className="text-xs text-black/60 font-medium">({rating.toFixed(1)})</span>
+          </div>
+          <div className="flex items-center space-x-2 text-xs text-black/60 font-medium">
+            <span>📚</span>
+            <span>{totalLessons || 0} {totalLessons === 1 ? 'Lesson' : 'Lessons'}</span>
+          </div>
         </div>
         
-        <div className="space-y-3">
-          <div>
-            <h3 className="font-bold text-xl text-slate-800 group-hover:text-sky-700 transition-colors mb-1">
-              {course.title}
-            </h3>
-            {hasTeacher && (
-              <p className="text-xs text-slate-500 flex items-center gap-1">
-                <span>👩‍🏫</span>
-                <span>{course.teacherName || 'Assigned Teacher'}</span>
-                {course.teacherInstrument && (
-                  <>
-                    <span className="text-slate-300">•</span>
-                    <span>{course.teacherInstrument}</span>
-                  </>
-                )}
-              </p>
-            )}
-          </div>
-          <p className="text-slate-600 text-sm line-clamp-3 leading-relaxed">
-            {course.description || 'Learn this amazing instrument with our expert instructors. Perfect for beginners and intermediate players.'}
-          </p>
-          
-          <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-            <div className="flex items-center space-x-2">
-              <div className="flex text-yellow-400 text-sm">
-                {'★'.repeat(Math.floor(rating))}
-                {rating % 1 >= 0.5 && <span className="text-yellow-400">½</span>}
-              </div>
-              <span className="text-xs text-slate-500">({rating.toFixed(1)})</span>
-            </div>
-            <div className="flex items-center space-x-2 text-xs text-slate-500">
-              <span>📚</span>
-              <span>{totalLessons || 0} {totalLessons === 1 ? 'Lesson' : 'Lessons'}</span>
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between pt-2">
-            <div className="flex items-center space-x-4 text-sm text-slate-600">
-              <span className="flex items-center gap-1 group-hover:text-sky-600 transition-colors">
-                <span>👥</span>
-                <span>{studentDisplay} {studentCount === 1 ? 'student' : 'students'}</span>
-              </span>
-              {totalHours > 0 && (
-                <span className="flex items-center gap-1 group-hover:text-sky-600 transition-colors">
-                  <span>⏱️</span>
-                  <span>{totalHours}h</span>
-                </span>
-              )}
-            </div>
-            {!isEnrolled ? (
-              <span className="px-4 py-2 rounded-full bg-gradient-to-r from-sky-600 to-blue-600 text-white text-sm font-medium group-hover:from-sky-700 group-hover:to-blue-700 transition-all duration-300 shadow-md group-hover:shadow-lg transform group-hover:scale-105">
-                View Details →
-              </span>
-            ) : (
-              <span className="px-4 py-2 rounded-full bg-gradient-to-r from-green-600 to-emerald-600 text-white text-sm font-medium group-hover:from-green-700 group-hover:to-emerald-700 transition-all duration-300 shadow-md group-hover:shadow-lg transform group-hover:scale-105 flex items-center gap-1.5">
-                <span>✓</span>
-                <span>Continue Learning →</span>
+        <div className="flex items-center justify-between pt-3">
+          <div className="flex items-center space-x-4 text-sm text-black/70 font-medium">
+            <span className="flex items-center gap-1">
+              <span>👥</span>
+              <span>{studentDisplay}</span>
+            </span>
+            {totalHours > 0 && (
+              <span className="flex items-center gap-1">
+                <span>⏱️</span>
+                <span>{totalHours}h</span>
               </span>
             )}
           </div>
+          {!isEnrolled ? (
+            <span className="px-4 py-1.5 rounded-full bg-black text-[#FFD700] text-sm font-bold group-hover:bg-[#FFD700] group-hover:text-black transition-all duration-300">
+              View Details →
+            </span>
+          ) : (
+            <span className="px-4 py-1.5 rounded-full bg-[#FFD700] text-black text-sm font-bold group-hover:bg-black group-hover:text-[#FFD700] transition-all duration-300 flex items-center gap-1.5">
+              <span>✓</span>
+              <span>Continue Learning →</span>
+            </span>
+          )}
         </div>
       </div>
     </a>
@@ -130,10 +117,10 @@ function FilterButton({ active, onClick, children }) {
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+      className={`px-4 py-2 rounded-full text-sm font-bold transition-all duration-300 ${
         active 
-          ? 'bg-sky-600 text-white shadow-md hover:shadow-lg transform hover:scale-105' 
-          : 'bg-white text-slate-600 border border-slate-200 hover:border-sky-300 hover:text-sky-700 hover:bg-sky-50'
+          ? 'bg-[#FFD700] text-black shadow-md hover:shadow-lg transform hover:scale-105' 
+          : 'bg-white text-black border border-black/20 hover:border-[#FFD700] hover:text-[#FFD700]'
       }`}
     >
       {children}
@@ -218,85 +205,102 @@ export default function CoursesPage() {
     { key: 'all levels', label: 'All Levels' }
   ]
 
+  useEffect(() => {
+    // Scroll to top on page load
+    window.scrollTo(0, 0)
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+  }, [])
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-pink-50">
+    <div className="min-h-screen bg-black">
       <Navbar />
 
-      <main className="pb-16">
+      <main className="pb-20 md:pb-16">
         {/* Hero Section */}
-        <section className="max-w-6xl mx-auto px-4 pt-12 md:pt-16">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-sky-100 text-sky-700 text-sm font-medium mb-6">
-              <span className="mr-2">🎵</span>
-              {courses.length} Courses Available
+        <section className="bg-black py-16 md:py-20">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center px-4 py-2 rounded-full bg-[#FFD700]/20 text-[#FFD700] text-sm font-bold mb-6 border border-[#FFD700]/30">
+                <span className="mr-2">🎵</span>
+                {courses.length} Courses Available
+              </div>
+              <h1 className="text-4xl md:text-6xl font-cinema font-bold text-white mb-4">
+                Explore Our Music Courses
+              </h1>
+              <div className="w-24 h-1 bg-[#FFD700] mx-auto mb-6"></div>
+              <p className="text-xl md:text-2xl text-white/90 font-medium max-w-3xl mx-auto leading-relaxed">
+                Discover your musical passion with our comprehensive courses designed for all skill levels. 
+                Learn from expert instructors and join our community of music lovers.
+              </p>
             </div>
-            <h1 className="text-4xl md:text-6xl font-extrabold leading-tight text-slate-900 mb-6">
-              Explore Our 
-              <span className="bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent"> Music Courses</span>
-            </h1>
-            <p className="text-xl text-slate-700 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Discover your musical passion with our comprehensive courses designed for all skill levels. 
-              Learn from expert instructors and join our community of music lovers.
-            </p>
           </div>
+        </section>
 
-          {/* Filter Section */}
-          <div className="flex flex-wrap justify-center gap-3 mb-12">
-            {filters.map((filter) => (
-              <FilterButton
-                key={filter.key}
-                active={activeFilter === filter.key}
-                onClick={() => handleFilter(filter.key)}
-              >
-                {filter.label}
-              </FilterButton>
-            ))}
-          </div>
-
-          {/* Courses Grid */}
-          {loading ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="bg-white rounded-2xl shadow-md p-6 border border-slate-100 animate-pulse">
-                  <div className="h-48 bg-slate-200 rounded-xl mb-4"></div>
-                  <div className="h-6 bg-slate-200 rounded mb-2"></div>
-                  <div className="h-4 bg-slate-200 rounded w-3/4 mb-4"></div>
-                  <div className="h-4 bg-slate-200 rounded"></div>
-                </div>
+        {/* Filter Section */}
+        <section className="bg-white py-8">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-wrap justify-center gap-3 mb-8">
+              {filters.map((filter) => (
+                <FilterButton
+                  key={filter.key}
+                  active={activeFilter === filter.key}
+                  onClick={() => handleFilter(filter.key)}
+                >
+                  {filter.label}
+                </FilterButton>
               ))}
             </div>
-          ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredCourses.map((course) => {
-                const courseId = String(course._id)
-                const isEnrolled = enrolledCourseIds.has(courseId) || enrolledCourseIds.has(course._id)
-                if (isEnrolled) {
-                  console.log('Course enrolled:', course.title, 'ID:', courseId)
-                }
-                return (
-                  <CourseCard 
-                    key={course._id} 
-                    course={course} 
-                    isEnrolled={isEnrolled}
-                  />
-                )
-              })}
-            </div>
-          )}
+          </div>
+        </section>
 
-          {filteredCourses.length === 0 && !loading && (
-            <div className="text-center py-16">
-              <div className="text-6xl mb-4">🎵</div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">No courses found</h3>
-              <p className="text-slate-600 mb-6">Try adjusting your filter or check back later for new courses.</p>
-              <button 
-                onClick={() => handleFilter('all')}
-                className="px-6 py-3 rounded-full bg-sky-600 text-white hover:bg-sky-700 transition-colors font-medium"
-              >
-                Show All Courses
-              </button>
-            </div>
-          )}
+        {/* Courses Grid Section */}
+        <section className="bg-white py-16 md:py-20">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            {loading ? (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="bg-white rounded-2xl shadow-md p-6 border border-black/10 animate-pulse">
+                    <div className="h-40 bg-black/10 rounded-xl mb-4"></div>
+                    <div className="h-6 bg-black/10 rounded mb-2"></div>
+                    <div className="h-4 bg-black/10 rounded w-3/4 mb-4"></div>
+                    <div className="h-4 bg-black/10 rounded"></div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredCourses.map((course) => {
+                  const courseId = String(course._id)
+                  const isEnrolled = enrolledCourseIds.has(courseId) || enrolledCourseIds.has(course._id)
+                  if (isEnrolled) {
+                    console.log('Course enrolled:', course.title, 'ID:', courseId)
+                  }
+                  return (
+                    <CourseCard 
+                      key={course._id} 
+                      course={course} 
+                      isEnrolled={isEnrolled}
+                    />
+                  )
+                })}
+              </div>
+            )}
+
+            {filteredCourses.length === 0 && !loading && (
+              <div className="text-center py-16">
+                <div className="text-6xl mb-4">🎵</div>
+                <h3 className="text-xl font-bold text-black mb-2">No courses found</h3>
+                <p className="text-black/70 mb-6 font-medium">Try adjusting your filter or check back later for new courses.</p>
+                <button 
+                  onClick={() => handleFilter('all')}
+                  className="px-6 py-3 rounded-full bg-[#FFD700] text-black hover:bg-[#FFC700] transition-colors font-bold shadow-lg hover:shadow-xl"
+                >
+                  Show All Courses
+                </button>
+              </div>
+            )}
+          </div>
         </section>
 
       </main>

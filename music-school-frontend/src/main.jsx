@@ -14,6 +14,7 @@ import AdminCourseBuilderUnified from './routes/AdminCourseBuilderUnified.jsx'
 import StudentDashboard from './routes/StudentDashboard.jsx'
 import AdminCourseNew from './routes/AdminCourseNew.jsx'
 import TeachersPage from './routes/TeachersPage.jsx'
+import ContactPage from './routes/ContactPage.jsx'
 import StudentAttendance from './routes/StudentAttendance.jsx'
 import StudentCalendar from './routes/StudentCalendar.jsx'
 import StudentResources from './routes/StudentResources.jsx'
@@ -23,6 +24,13 @@ import AdminResources from './routes/AdminResources.jsx'
 import AdminEnrollmentLeads from './routes/AdminEnrollmentLeads.jsx'
 import AdminTeachersPage from './routes/AdminTeachersPage.jsx'
 import AdminFreeCourses from './routes/AdminFreeCourses.jsx'
+import AdminContacts from './routes/AdminContacts.jsx'
+import AdminFAQs from './routes/AdminFAQs.jsx'
+import AdminConsultations from './routes/AdminConsultations.jsx'
+import AdminWorkshops from './routes/AdminWorkshops.jsx'
+import AdminWorkshopEnrollments from './routes/AdminWorkshopEnrollments.jsx'
+import AboutPage from './routes/AboutPage.jsx'
+import WorkshopsPage from './routes/WorkshopsPage.jsx'
 import { Toaster } from 'react-hot-toast'
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
@@ -41,6 +49,9 @@ const router = createBrowserRouter([
   { path: '/courses', element: <CoursesPage /> },
   { path: '/courses/:id', element: <CourseDetailPage /> },
   { path: '/teachers', element: <TeachersPage /> },
+  { path: '/contact', element: <ContactPage /> },
+  { path: '/about', element: <AboutPage /> },
+  { path: '/workshops', element: <WorkshopsPage /> },
   { path: '/schedule', element: <SchedulePage /> },
   { path: '/checkout', element: <CheckoutPage /> },
   { path: '/admin', element: <AdminPage /> },
@@ -52,6 +63,11 @@ const router = createBrowserRouter([
   { path: '/admin/enrollment-leads', element: <AdminEnrollmentLeads /> },
   { path: '/admin/teachers', element: <AdminTeachersPage /> },
   { path: '/admin/free-courses', element: <AdminFreeCourses /> },
+  { path: '/admin/contacts', element: <AdminContacts /> },
+  { path: '/admin/faqs', element: <AdminFAQs /> },
+  { path: '/admin/consultations', element: <AdminConsultations /> },
+  { path: '/admin/workshops', element: <AdminWorkshops /> },
+  { path: '/admin/workshop-enrollments', element: <AdminWorkshopEnrollments /> },
   { path: '/dashboard', element: <StudentDashboard /> },
   { path: '/dashboard/course/:id', element: <StudentDashboard /> },
   { path: '/student/attendance', element: <StudentAttendance /> },

@@ -9,12 +9,12 @@ import Footer from './components/Footer.jsx'
 function SectionTitle({ emoji, title, subtitle }) {
   return (
     <div className="max-w-5xl mx-auto text-center mb-8">
-      <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-sky-600">
+      <h2 className="text-3xl md:text-5xl font-cinema font-bold tracking-wide text-white">
         <span className="mr-2">{emoji}</span>
         {title}
       </h2>
       {subtitle && (
-        <p className="text-slate-600 mt-2">{subtitle}</p>
+        <p className="text-white/80 mt-3 text-lg font-medium">{subtitle}</p>
       )}
     </div>
   )
@@ -28,28 +28,28 @@ function CourseCard({ title, level, price, image, _id, isEnrolled = false, cours
   )
   
   return (
-    <a href={`/courses/${_id}`} className="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-4 border border-slate-100 hover:border-sky-200 relative">
+    <a href={`/courses/${_id}`} className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-4 border border-white/20 hover:border-[#FFD700] relative overflow-hidden">
       <div className="relative overflow-hidden rounded-xl">
-        <img src={image} alt={title} className="h-40 w-full object-cover group-hover:scale-105 transition-transform duration-300" />
-        <div className="absolute top-3 right-3 bg-sky-600 text-white px-2 py-1 rounded-full text-xs font-medium z-10">
+        <img src={image} alt={title} className="h-40 w-full object-cover group-hover:scale-110 transition-transform duration-500" />
+        <div className="absolute top-3 right-3 bg-black text-[#FFD700] px-3 py-1 rounded-full text-xs font-bold z-10">
           {level}
         </div>
         {isEnrolled && (
-          <div className="absolute bottom-3 right-3 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 z-10 animate-fade-in shadow-lg">
+          <div className="absolute bottom-3 right-3 bg-[#FFD700] text-black px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 z-10 animate-fade-in shadow-lg">
             <span className="text-sm">✓</span>
             <span>Already Enrolled</span>
           </div>
         )}
       </div>
       <div className="mt-3">
-        <h3 className="font-bold text-lg text-slate-800 group-hover:text-sky-700 transition-colors">{title}</h3>
+        <h3 className="font-cinema font-bold text-lg text-black group-hover:text-[#FFD700] transition-colors">{title}</h3>
         {hasTeacher && (
-          <p className="text-xs text-slate-500 flex items-center gap-1 mt-1">
+          <p className="text-xs text-black/70 flex items-center gap-1 mt-1 font-medium">
             <span>👩‍🏫</span>
             <span>{course.teacherName || 'Assigned Teacher'}</span>
             {course.teacherInstrument && (
               <>
-                <span className="text-slate-300">•</span>
+                <span className="text-black/50">•</span>
                 <span>{course.teacherInstrument}</span>
               </>
             )}
@@ -57,15 +57,15 @@ function CourseCard({ title, level, price, image, _id, isEnrolled = false, cours
         )}
         <div className="mt-3 flex items-center justify-between">
           {!isEnrolled && (
-            <span className="text-sky-600 font-semibold text-lg">₹{price}</span>
+            <span className="text-black font-bold text-lg">₹{price}</span>
           )}
           {isEnrolled && (
-            <span className="text-green-600 font-semibold text-sm flex items-center gap-1">
+            <span className="text-[#FFD700] font-bold text-sm flex items-center gap-1">
               <span>✓</span>
               <span>Enrolled</span>
             </span>
           )}
-          <span className="px-3 py-1.5 rounded-full bg-sky-600 text-white text-sm group-hover:bg-sky-700 transition-colors">
+          <span className="px-4 py-1.5 rounded-full bg-black text-[#FFD700] text-sm font-bold group-hover:bg-[#FFD700] group-hover:text-black transition-all duration-300">
             View Details
           </span>
         </div>
@@ -76,15 +76,15 @@ function CourseCard({ title, level, price, image, _id, isEnrolled = false, cours
 
 function TeacherCard({ name, instrument, avatar }) {
   return (
-    <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-100 text-center group">
+    <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border border-white/20 text-center group hover:border-[#FFD700]">
       <div className="relative inline-block">
-        <img src={avatar} alt={name} className="h-20 w-20 rounded-full object-cover mx-auto group-hover:scale-110 transition-transform duration-300" />
-        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white"></div>
+        <img src={avatar} alt={name} className="h-20 w-20 rounded-full object-cover mx-auto group-hover:scale-110 transition-transform duration-300 ring-2 ring-[#FFD700]/30 group-hover:ring-[#FFD700]" />
+        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#FFD700] rounded-full border-2 border-white"></div>
       </div>
-      <h3 className="mt-4 font-bold text-slate-800">{name}</h3>
-      <p className="text-sm text-slate-600">{instrument} Expert</p>
+      <h3 className="mt-4 font-cinema font-bold text-black">{name}</h3>
+      <p className="text-sm text-black/70 font-medium">{instrument} Expert</p>
       <div className="mt-2 flex justify-center">
-        <div className="flex text-yellow-400">
+        <div className="flex text-[#FFD700]">
           {'★'.repeat(5)}
         </div>
       </div>
@@ -94,28 +94,28 @@ function TeacherCard({ name, instrument, avatar }) {
 
 function StatCard({ number, label, icon, color }) {
   return (
-    <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6 text-center border border-slate-100">
-      <div className={`w-16 h-16 ${color} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
+    <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 text-center border border-white/20 hover:border-[#FFD700]">
+      <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-[#FFD700] transition-colors">
         <span className="text-2xl">{icon}</span>
       </div>
-      <div className="text-3xl font-bold text-slate-900 mb-2">{number}</div>
-      <div className="text-slate-600">{label}</div>
+      <div className="text-4xl font-cinema font-bold text-black mb-2">{number}</div>
+      <div className="text-black/70 font-bold">{label}</div>
     </div>
   )
 }
 
 function TestimonialCard({ name, role, content, avatar }) {
   return (
-    <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-6 border border-slate-100">
+    <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border border-white/20 hover:border-[#FFD700]">
       <div className="flex items-center mb-4">
-        <img src={avatar} alt={name} className="h-12 w-12 rounded-full object-cover" />
+        <img src={avatar} alt={name} className="h-12 w-12 rounded-full object-cover ring-2 ring-[#FFD700]/30" />
         <div className="ml-3">
-          <div className="font-semibold text-slate-800">{name}</div>
-          <div className="text-sm text-slate-600">{role}</div>
+          <div className="font-cinema font-bold text-black">{name}</div>
+          <div className="text-sm text-black/70 font-medium">{role}</div>
         </div>
       </div>
-      <p className="text-slate-700 italic">"{content}"</p>
-      <div className="mt-3 flex text-yellow-400">
+      <p className="text-black italic leading-relaxed font-medium">"{content}"</p>
+      <div className="mt-3 flex text-[#FFD700]">
         {'★'.repeat(5)}
       </div>
     </div>
@@ -334,15 +334,15 @@ function EnrollForm() {
 	}
 
 	return (
-		<form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-6 lg:p-8 grid md:grid-cols-2 gap-6 border border-slate-100" noValidate>
+		<form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-6 lg:p-8 grid md:grid-cols-2 gap-6 border border-white/20" noValidate>
 			<div className="md:col-span-2 text-center mb-2">
-				<h3 className="text-xl lg:text-2xl font-bold text-slate-800 mb-2">Start Your Musical Journey 🎵</h3>
-				<p className="text-slate-600">Join hundreds of students learning music with us</p>
+				<h3 className="text-xl lg:text-3xl font-cinema font-bold text-black mb-2">Start Your Musical Journey 🎵</h3>
+				<p className="text-black/70 font-medium">Join hundreds of students learning music with us</p>
 			</div>
 			
 			{/* Full Name */}
 			<div>
-				<label htmlFor="enroll-fullName" className="block text-sm font-medium text-slate-700 mb-2">
+				<label htmlFor="enroll-fullName" className="block text-sm font-bold text-black mb-2">
 					Full Name <span className="text-red-500">*</span>
 				</label>
 				<input
@@ -355,12 +355,12 @@ function EnrollForm() {
 					onBlur={handleBlur}
 					placeholder="Enter your full name"
 					maxLength={100}
-					className={`w-full border rounded-lg p-3 transition-all duration-200 ${
+					className={`w-full border rounded-lg p-3 transition-all duration-200 bg-white font-medium ${
 						errors.fullName && touched.fullName
 							? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'
 							: formData.fullName && !errors.fullName
-							? 'border-green-300 bg-green-50/30 focus:ring-2 focus:ring-green-500 focus:border-green-500'
-							: 'border-slate-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500'
+							? 'border-[#FFD700] bg-[#FFD700]/5 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
+							: 'border-black/20 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
 					}`}
 					required
 					aria-invalid={errors.fullName && touched.fullName ? 'true' : 'false'}
@@ -384,7 +384,7 @@ function EnrollForm() {
 
 			{/* Email */}
 			<div>
-				<label htmlFor="enroll-email" className="block text-sm font-medium text-slate-700 mb-2">
+				<label htmlFor="enroll-email" className="block text-sm font-bold text-black mb-2">
 					Email Address <span className="text-red-500">*</span>
 				</label>
 				<input
@@ -395,12 +395,12 @@ function EnrollForm() {
 					onChange={handleChange}
 					onBlur={handleBlur}
 					placeholder="your.email@example.com"
-					className={`w-full border rounded-lg p-3 transition-all duration-200 ${
+					className={`w-full border rounded-lg p-3 transition-all duration-200 bg-white font-medium ${
 						errors.email && touched.email
 							? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'
 							: formData.email && !errors.email
-							? 'border-green-300 bg-green-50/30 focus:ring-2 focus:ring-green-500 focus:border-green-500'
-							: 'border-slate-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500'
+							? 'border-[#FFD700] bg-[#FFD700]/5 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
+							: 'border-black/20 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
 					}`}
 					required
 					aria-invalid={errors.email && touched.email ? 'true' : 'false'}
@@ -419,8 +419,8 @@ function EnrollForm() {
 
 			{/* WhatsApp */}
 			<div>
-				<label htmlFor="enroll-whatsapp" className="block text-sm font-medium text-slate-700 mb-2">
-					WhatsApp Number <span className="text-slate-400 text-xs">(Optional)</span>
+				<label htmlFor="enroll-whatsapp" className="block text-sm font-bold text-black mb-2">
+					WhatsApp Number <span className="text-black/60 text-xs font-normal">(Optional)</span>
 				</label>
 				<input
 					id="enroll-whatsapp"
@@ -431,12 +431,12 @@ function EnrollForm() {
 					onBlur={handleBlur}
 					placeholder="+91 98765 43210"
 					maxLength={17}
-					className={`w-full border rounded-lg p-3 transition-all duration-200 ${
+					className={`w-full border rounded-lg p-3 transition-all duration-200 bg-white font-medium ${
 						errors.whatsapp && touched.whatsapp
 							? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'
 							: formData.whatsapp && !errors.whatsapp
-							? 'border-green-300 bg-green-50/30 focus:ring-2 focus:ring-green-500 focus:border-green-500'
-							: 'border-slate-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500'
+							? 'border-[#FFD700] bg-[#FFD700]/5 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
+							: 'border-black/20 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
 					}`}
 					aria-invalid={errors.whatsapp && touched.whatsapp ? 'true' : 'false'}
 					aria-describedby={errors.whatsapp && touched.whatsapp ? 'enroll-whatsapp-error' : undefined}
@@ -449,15 +449,15 @@ function EnrollForm() {
 					<p className="mt-1 text-xs text-green-600 flex items-center gap-1">
 						<span>✓</span> Valid phone number
 					</p>
-				) : (
-					<p className="mt-1 text-xs text-slate-500">We'll use this to contact you quickly</p>
-				)}
+					) : (
+						<p className="mt-1 text-xs text-[#2c2c2c]">We'll use this to contact you quickly</p>
+					)}
 			</div>
 
 			{/* Country */}
 			<div>
-				<label htmlFor="enroll-country" className="block text-sm font-medium text-slate-700 mb-2">
-					Country <span className="text-slate-400 text-xs">(Optional)</span>
+				<label htmlFor="enroll-country" className="block text-sm font-bold text-black mb-2">
+					Country <span className="text-black/60 text-xs font-normal">(Optional)</span>
 				</label>
 				<input
 					id="enroll-country"
@@ -467,12 +467,12 @@ function EnrollForm() {
 					onChange={handleChange}
 					onBlur={handleBlur}
 					placeholder="e.g., India, USA, UK"
-					className={`w-full border rounded-lg p-3 transition-all duration-200 ${
+					className={`w-full border rounded-lg p-3 transition-all duration-200 bg-white font-medium ${
 						errors.country && touched.country
 							? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'
 							: formData.country && !errors.country
-							? 'border-green-300 bg-green-50/30 focus:ring-2 focus:ring-green-500 focus:border-green-500'
-							: 'border-slate-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500'
+							? 'border-[#FFD700] bg-[#FFD700]/5 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
+							: 'border-black/20 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
 					}`}
 					aria-invalid={errors.country && touched.country ? 'true' : 'false'}
 					aria-describedby={errors.country && touched.country ? 'enroll-country-error' : undefined}
@@ -488,10 +488,10 @@ function EnrollForm() {
 			<button
 				type="submit"
 				disabled={submitting}
-				className={`md:col-span-2 px-6 py-3 rounded-lg font-semibold transition-all duration-300 shadow-lg relative overflow-hidden ${
+				className={`md:col-span-2 px-6 py-3 rounded-lg font-bold transition-all duration-300 shadow-lg relative overflow-hidden ${
 					submitting
-						? 'bg-slate-400 text-white cursor-not-allowed'
-						: 'bg-gradient-to-r from-sky-600 to-blue-600 text-white hover:from-sky-700 hover:to-blue-700 hover:shadow-xl active:scale-95'
+						? 'bg-black text-white cursor-not-allowed'
+						: 'bg-[#FFD700] text-black hover:bg-[#FFC700] hover:shadow-xl active:scale-95'
 				}`}
 			>
 				{submitting ? (
@@ -512,11 +512,174 @@ function EnrollForm() {
 			</button>
 
 			{/* Helper Text */}
-			<p className="md:col-span-2 text-xs text-slate-500 text-center">
+			<p className="md:col-span-2 text-xs text-black/70 text-center font-medium">
 				🔒 Your information is secure and will only be used for enrollment purposes
 			</p>
 		</form>
 	)
+}
+
+// Hero Carousel Component
+function HeroCarousel() {
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const carouselSlides = [
+    {
+      image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1920&q=80',
+      title: 'Learn, Play, and Shine',
+      subtitle: 'Master Guitar, Piano, Vocals and more with our expert instructors',
+      badge: 'Trusted by 500+ Students'
+    },
+    {
+      image: 'https://images.unsplash.com/photo-1511735111819-9a3f7709049c?w=1920&q=80',
+      title: 'Expert Teachers',
+      subtitle: 'Learn from the best musicians and educators in the industry',
+      badge: '15+ Professional Instructors'
+    },
+    {
+      image: 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=1920&q=80',
+      title: 'Flexible Learning',
+      subtitle: 'After-school and weekend classes designed for ages 9–22',
+      badge: '95% Success Rate'
+    },
+    {
+      image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=1920&q=80',
+      title: 'Start Your Journey',
+      subtitle: 'Join hundreds of students learning music with us today',
+      badge: '6 Instruments Available'
+    }
+  ]
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % carouselSlides.length)
+    }, 5000) // Auto-slide every 5 seconds
+
+    return () => clearInterval(interval)
+  }, [carouselSlides.length])
+
+  const goToSlide = (index) => {
+    setCurrentIndex(index)
+  }
+
+  const goToPrevious = () => {
+    setCurrentIndex((prev) => (prev - 1 + carouselSlides.length) % carouselSlides.length)
+  }
+
+  const goToNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % carouselSlides.length)
+  }
+
+  return (
+    <div className="relative w-full h-screen min-h-[300px] max-h-[600px] overflow-hidden">
+      {/* Carousel Images with Overlay Text */}
+      <div className="relative w-full h-full">
+        {carouselSlides.map((slide, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+              index === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
+            }`}
+          >
+            <img
+              src={slide.image}
+              alt={slide.title}
+              className="w-full h-full object-cover"
+            />
+            {/* Dark overlay for text readability */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70"></div>
+            
+            {/* Text Content Overlay */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <div className="inline-flex items-center px-4 py-2 rounded-full bg-[#FFD700]/20 border border-[#FFD700]/40 text-[#FFD700] text-sm font-bold mb-6 backdrop-blur-sm">
+                  <span className="mr-2">🎵</span>
+                  {slide.badge}
+                </div>
+                <h1 className="text-5xl md:text-7xl lg:text-8xl font-cinema font-bold leading-tight text-white mb-6">
+                  {slide.title.split(' ').map((word, i, arr) => (
+                    <span key={i}>
+                      {i === arr.length - 1 ? (
+                        <span className="text-[#FFD700]">{word}</span>
+                      ) : (
+                        <>{word} </>
+                      )}
+                    </span>
+                  ))}
+                </h1>
+                <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed font-medium max-w-3xl mx-auto">
+                  {slide.subtitle}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <a 
+                    href="#enroll" 
+                    onClick={(e) => {
+                      e.preventDefault()
+                      const element = document.getElementById('enroll')
+                      if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      }
+                    }}
+                    className="px-8 py-4 rounded-lg bg-[#FFD700] text-black hover:bg-[#FFC700] font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 text-center"
+                  >
+                    Start Learning Today
+                  </a>
+                  <a 
+                    href="#courses" 
+                    onClick={(e) => {
+                      e.preventDefault()
+                      const element = document.getElementById('courses')
+                      if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      }
+                    }}
+                    className="px-8 py-4 rounded-lg bg-transparent border-2 border-[#FFD700] hover:bg-[#FFD700]/10 font-bold text-[#FFD700] text-lg transition-all duration-300 text-center"
+                  >
+                    Browse Courses
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Navigation Arrows */}
+      <button
+        onClick={goToPrevious}
+        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-[#FFD700] p-3 rounded-full transition-all duration-300 hover:scale-110 z-20 backdrop-blur-sm border border-[#FFD700]/30 sm:block hidden"
+        aria-label="Previous slide"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <button
+        onClick={goToNext}
+        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-[#FFD700] p-3 rounded-full transition-all duration-300 hover:scale-110 z-20 backdrop-blur-sm border border-[#FFD700]/30 sm:block hidden"
+        aria-label="Next slide"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+
+      {/* Dots Indicator */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+        {carouselSlides.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => goToSlide(index)}
+            className={`h-3 rounded-full transition-all duration-300 ${
+              index === currentIndex
+                ? 'bg-[#FFD700] w-8 border-2 border-white'
+                : 'bg-white/50 hover:bg-white/70 border border-[#FFD700]/50 w-3'
+            }`}
+            aria-label={`Go to slide ${index + 1}`}
+          />
+        ))}
+      </div>
+    </div>
+  )
 }
 
 function App() {
@@ -584,78 +747,31 @@ function App() {
   }, [isSignedIn, getToken])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-pink-50">
+    <div className="min-h-screen bg-black overflow-x-hidden">
       <Navbar />
 
-      <main className="pb-16">
-        {/* Hero Section */}
-        <section className="max-w-6xl mx-auto px-4 pt-12 md:pt-12">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-sky-100 text-sky-700 text-sm font-medium mb-6">
-                <span className="mr-2">🎵</span>
-                Trusted by 500+ Students
-              </div>
-              <h1 className="text-5xl md:text-7xl font-extrabold leading-tight text-slate-900 mb-6">
-                Learn, Play, and 
-                <span className="bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent"> Shine</span>
-              </h1>
-              <p className="text-xl text-slate-700 mb-8 leading-relaxed">
-                Fun and modern music lessons for ages 9–22. Master Guitar 🎸, Piano 🎹, Vocals 🎤 and more with our expert instructors!
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <a 
-                  href="#enroll" 
-                  onClick={(e) => {
-                    e.preventDefault()
-                    const element = document.getElementById('enroll')
-                    if (element) {
-                      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
-                  }}
-                  className="px-8 py-4 rounded-full bg-gradient-to-r from-sky-600 to-blue-600 text-white hover:from-sky-700 hover:to-blue-700 font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 text-center"
-                >
-                  Start Learning Today
-                </a>
-                <a 
-                  href="#courses" 
-                  onClick={(e) => {
-                    e.preventDefault()
-                    const element = document.getElementById('courses')
-                    if (element) {
-                      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
-                  }}
-                  className="px-8 py-4 rounded-full bg-white border-2 border-slate-200 hover:border-sky-300 font-semibold text-slate-800 text-lg transition-all duration-300 text-center"
-                >
-                  Browse Courses
-                </a>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="h-32 md:h-40 rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center text-5xl hover:scale-105 cursor-pointer">🎸</div>
-              <div className="h-32 md:h-40 rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center text-5xl hover:scale-105 cursor-pointer">🎹</div>
-              <div className="h-32 md:h-40 rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center text-5xl hover:scale-105 cursor-pointer">🎤</div>
-              <div className="h-32 md:h-40 rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center text-5xl hover:scale-105 cursor-pointer">🥁</div>
-              <div className="h-32 md:h-40 rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center text-5xl hover:scale-105 cursor-pointer">🎻</div>
-              <div className="h-32 md:h-40 rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center text-5xl hover:scale-105 cursor-pointer">🎷</div>
+      <main className="pb-20 md:pb-16">
+        {/* Hero Section - Full Width Carousel with Text Overlay */}
+        <section className="w-full">
+          <HeroCarousel />
+        </section>
+
+        {/* Stats Section - White background */}
+        <section className="bg-white py-20 w-full">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <StatCard number="500+" label="Happy Students" icon="👥" color="bg-black" />
+              <StatCard number="15+" label="Expert Teachers" icon="👩‍🏫" color="bg-black" />
+              <StatCard number="6" label="Instruments" icon="🎵" color="bg-black" />
+              <StatCard number="95%" label="Success Rate" icon="⭐" color="bg-black" />
             </div>
           </div>
         </section>
 
-        {/* Stats Section */}
-        <section className="max-w-6xl mx-auto px-4 mt-20">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <StatCard number="500+" label="Happy Students" icon="👥" color="bg-blue-100" />
-            <StatCard number="15+" label="Expert Teachers" icon="👩‍🏫" color="bg-green-100" />
-            <StatCard number="6" label="Instruments" icon="🎵" color="bg-purple-100" />
-            <StatCard number="95%" label="Success Rate" icon="⭐" color="bg-yellow-100" />
-          </div>
-        </section>
-
-        {/* Courses Section */}
-        <section id="courses" className="max-w-6xl mx-auto px-4 mt-20">
-          <SectionTitle emoji="🎵" title="Featured Courses" subtitle="Choose your instrument and start your musical journey" />
+        {/* Courses Section - Black background */}
+        <section id="courses" className="bg-black py-20 w-full">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <SectionTitle emoji="🎵" title="Featured Courses" subtitle="Choose your instrument and start your musical journey" />
           {courses.length > 0 ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {courses.slice(0, 6).map((course) => {
@@ -678,21 +794,29 @@ function App() {
           ) : (
             <div className="text-center py-16">
               <div className="text-6xl mb-4">🎵</div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">No courses available yet</h3>
-              <p className="text-slate-600 mb-6">Check back soon for exciting music courses!</p>
+              <h3 className="text-xl font-cinema font-bold text-white mb-2">No courses available yet</h3>
+              <p className="text-white/80 mb-6 font-medium">Check back soon for exciting music courses!</p>
             </div>
           )}
           <div className="text-center mt-8">
-            <a href="/courses" className="inline-flex items-center px-6 py-3 rounded-full bg-white border-2 border-sky-200 text-sky-700 font-semibold hover:border-sky-300 hover:bg-sky-50 transition-all duration-300">
+            <a href="/courses" className="inline-flex items-center px-6 py-3 rounded-lg bg-[#FFD700] text-black font-bold hover:bg-[#FFC700] transition-all duration-300 shadow-lg hover:shadow-xl">
               View All Courses
               <span className="ml-2">→</span>
             </a>
           </div>
+          </div>
         </section>
 
-        {/* Teachers Section */}
-        <section id="teachers" className="max-w-6xl mx-auto px-4 mt-20">
-          <SectionTitle emoji="👩‍🏫" title="Meet Our Expert Teachers" subtitle="Learn from the best musicians and educators" />
+        {/* Teachers Section - White background */}
+        <section id="teachers" className="bg-white py-20 w-full">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-5xl mx-auto text-center mb-8">
+              <h2 className="text-3xl md:text-5xl font-cinema font-bold tracking-wide text-black">
+                <span className="mr-2">👩‍🏫</span>
+                Meet Our Expert Teachers
+              </h2>
+              <p className="text-black/70 mt-3 text-lg font-medium">Learn from the best musicians and educators</p>
+            </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {teachers.length > 0 ? (
               teachers.map((teacher) => (
@@ -711,11 +835,13 @@ function App() {
               </>
             )}
           </div>
+          </div>
         </section>
 
-        {/* Testimonials Section */}
-        <section className="max-w-6xl mx-auto px-4 mt-20">
-          <SectionTitle emoji="💬" title="What Our Students Say" subtitle="Real feedback from our music community" />
+        {/* Testimonials Section - Black background */}
+        <section className="bg-black py-20 w-full">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <SectionTitle emoji="💬" title="What Our Students Say" subtitle="Real feedback from our music community" />
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <TestimonialCard 
               name="Priya Sharma" 
@@ -736,52 +862,29 @@ function App() {
               avatar="https://i.pravatar.cc/150?img=3"
             />
           </div>
+          </div>
         </section>
 
-        {/* Schedule Section */}
-        <section id="schedule" className="max-w-6xl mx-auto px-4 mt-20">
-          <SectionTitle emoji="📅" title="Class Schedule" subtitle="Flexible timings for after-school and weekend learning" />
-          <div className="bg-white rounded-2xl shadow-lg p-8 border border-slate-100">
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="text-center p-4 rounded-xl bg-sky-50">
-                <div className="text-2xl mb-2">🎸</div>
-                <div className="font-semibold text-slate-800">Guitar</div>
-                <div className="text-sm text-slate-600 mt-1">Mon & Wed</div>
-                <div className="text-sm text-slate-600">5:00 PM - 6:30 PM</div>
-              </div>
-              <div className="text-center p-4 rounded-xl bg-green-50">
-                <div className="text-2xl mb-2">🎹</div>
-                <div className="font-semibold text-slate-800">Piano</div>
-                <div className="text-sm text-slate-600 mt-1">Tue & Thu</div>
-                <div className="text-sm text-slate-600">5:00 PM - 6:30 PM</div>
-              </div>
-              <div className="text-center p-4 rounded-xl bg-purple-50">
-                <div className="text-2xl mb-2">🎤</div>
-                <div className="font-semibold text-slate-800">Vocals</div>
-                <div className="text-sm text-slate-600 mt-1">Saturday</div>
-                <div className="text-sm text-slate-600">10:00 AM - 12:00 PM</div>
-              </div>
-              <div className="text-center p-4 rounded-xl bg-orange-50">
-                <div className="text-2xl mb-2">🥁</div>
-                <div className="font-semibold text-slate-800">Drums</div>
-                <div className="text-sm text-slate-600 mt-1">Sunday</div>
-                <div className="text-sm text-slate-600">11:00 AM - 1:00 PM</div>
-              </div>
+        {/* Enrollment Section - Black background */}
+        <section id="enroll" className="bg-black py-20 w-full">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <SectionTitle emoji="📝" title="Ready to Start?" subtitle="Join our music family today" />
+            <div className="max-w-4xl mx-auto">
+              <EnrollForm />
             </div>
           </div>
         </section>
 
-        {/* Enrollment Section */}
-        <section id="enroll" className="max-w-6xl mx-auto px-4 mt-20">
-          <SectionTitle emoji="📝" title="Ready to Start?" subtitle="Join our music family today" />
-          <div className="max-w-4xl mx-auto">
-            <EnrollForm />
-          </div>
-        </section>
-
-        {/* Gallery Section */}
-        <section id="gallery" className="max-w-6xl mx-auto px-4 mt-20">
-          <SectionTitle emoji="📸" title="Gallery" subtitle="Moments from our classes and performances" />
+        {/* Gallery Section - White background */}
+        <section id="gallery" className="bg-white py-20 w-full">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-5xl mx-auto text-center mb-8">
+              <h2 className="text-3xl md:text-5xl font-cinema font-bold tracking-wide text-black">
+                <span className="mr-2">📸</span>
+                Gallery
+              </h2>
+              <p className="text-black/70 mt-3 text-lg font-medium">Moments from our classes and performances</p>
+            </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="aspect-square rounded-2xl bg-white shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
@@ -792,6 +895,7 @@ function App() {
                 />
               </div>
             ))}
+          </div>
           </div>
         </section>
       </main>

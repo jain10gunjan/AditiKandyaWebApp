@@ -1195,6 +1195,31 @@ export default function AdminPage() {
                   <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-sky-700 transition-colors">New Enrollment Leads</h3>
                   <p className="text-sm text-slate-600">View recently submitted leads</p>
                 </a>
+                <a href="/admin/contacts" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-green-300 active:scale-95">
+                  <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">📧</div>
+                  <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-green-700 transition-colors">Contact Submissions</h3>
+                  <p className="text-sm text-slate-600">View contact form submissions</p>
+                </a>
+                <a href="/admin/faqs" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-purple-300 active:scale-95">
+                  <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">❓</div>
+                  <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-purple-700 transition-colors">Manage FAQs</h3>
+                  <p className="text-sm text-slate-600">Create and manage FAQs</p>
+                </a>
+                <a href="/admin/consultations" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-orange-300 active:scale-95">
+                  <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">📅</div>
+                  <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-orange-700 transition-colors">Consultations</h3>
+                  <p className="text-sm text-slate-600">View consultation requests</p>
+                </a>
+                <a href="/admin/workshops" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-indigo-300 active:scale-95">
+                  <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">🎓</div>
+                  <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-indigo-700 transition-colors">Workshops</h3>
+                  <p className="text-sm text-slate-600">Manage workshops</p>
+                </a>
+                <a href="/admin/workshop-enrollments" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-teal-300 active:scale-95">
+                  <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">📝</div>
+                  <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-teal-700 transition-colors">Workshop Enrollments</h3>
+                  <p className="text-sm text-slate-600">View workshop enrollments</p>
+                </a>
               </div>
             </div>
 

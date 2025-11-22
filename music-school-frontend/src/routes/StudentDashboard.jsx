@@ -13,7 +13,6 @@ function Sidebar({ activeTab, onTabChange, isOpen, onClose }) {
     { id: 'calendar', label: 'Calendar', icon: '📅', href: '/student/calendar' },
     { id: 'attendance', label: 'Attendance', icon: '📊', href: '/student/attendance' },
     { id: 'resources', label: 'Resources', icon: '📖', href: '/student/resources' },
-    { id: 'schedule', label: 'Schedule', icon: '⏰', href: '/student/schedule' },
   ]
 
   return (
@@ -27,74 +26,90 @@ function Sidebar({ activeTab, onTabChange, isOpen, onClose }) {
       )}
       
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-56 lg:w-60 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+      <div className={`fixed inset-y-0 left-0 z-50 w-56 lg:w-60 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        <div className="h-full overflow-y-auto">
-          {/* Header */}
-          <div className="p-4 lg:p-6 border-b border-slate-200">
-            <div className="flex items-center justify-between">
+        <div className="h-screen flex flex-col">
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto">
+            {/* Header */}
+            <div className="p-4 lg:p-6 border-b border-slate-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 lg:gap-3">
+                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg lg:rounded-xl flex items-center justify-center">
+                    <span className="text-white font-bold text-sm lg:text-lg">🎶</span>
+                  </div>
+                  <div>
+                    <h1 className="font-bold text-slate-900 text-sm lg:text-base">TheMusinest</h1>
+                    <p className="text-xs text-slate-600">By - Aditi Kandya</p>
+                  </div>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="lg:hidden p-2 rounded-lg hover:bg-slate-100"
+                >
+                  <span className="text-xl">✕</span>
+                </button>
+              </div>
+            </div>
+
+            {/* User Profile */}
+            <div className="p-4 lg:p-6 border-b border-slate-200">
               <div className="flex items-center gap-2 lg:gap-3">
-                <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg lg:rounded-xl flex items-center justify-center">
-                  <span className="text-white font-bold text-sm lg:text-lg">🎶</span>
+                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-sm lg:text-lg">
+                    {user?.firstName?.[0] || user?.emailAddresses?.[0]?.emailAddress?.[0] || 'U'}
+                  </span>
                 </div>
-                <div>
-                  <h1 className="font-bold text-slate-900 text-sm lg:text-base">Music Academy</h1>
-                  <p className="text-xs text-slate-600">Student Dashboard</p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-slate-900 truncate text-sm lg:text-base">
+                    {user?.firstName && user?.lastName 
+                      ? `${user.firstName} ${user.lastName}` 
+                      : user?.firstName || user?.fullName || 'Student'}
+                  </p>
+                  <p className="text-xs text-slate-600 truncate">
+                    {user?.emailAddresses?.[0]?.emailAddress || 'student@example.com'}
+                  </p>
                 </div>
-              </div>
-              <button
-                onClick={onClose}
-                className="lg:hidden p-2 rounded-lg hover:bg-slate-100"
-              >
-                <span className="text-xl">✕</span>
-              </button>
-            </div>
-          </div>
-
-          {/* User Profile */}
-          <div className="p-4 lg:p-6 border-b border-slate-200">
-            <div className="flex items-center gap-2 lg:gap-3">
-              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm lg:text-lg">
-                  {user?.firstName?.[0] || user?.emailAddresses?.[0]?.emailAddress?.[0] || 'U'}
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-slate-900 truncate text-sm lg:text-base">
-                  {user?.firstName || 'Student'}
-                </p>
-                <p className="text-xs text-slate-600 truncate">
-                  {user?.emailAddresses?.[0]?.emailAddress || 'student@example.com'}
-                </p>
               </div>
             </div>
+
+            {/* Navigation Menu */}
+            <nav className="p-3 lg:p-4 pb-20 lg:pb-20">
+              <ul className="space-y-1 lg:space-y-2">
+                {menuItems.map((item) => {
+                  // Only Overview and My Courses should change tabs, others should navigate
+                  const isDashboardTab = item.id === 'overview' || item.id === 'courses'
+                  
+                  return (
+                    <li key={item.id}>
+                      <a
+                        href={item.href}
+                        onClick={(e) => {
+                          if (isDashboardTab) {
+                            e.preventDefault()
+                            onTabChange(item.id)
+                          }
+                          onClose()
+                        }}
+                        className={`flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 rounded-lg lg:rounded-xl transition-all duration-200 ${
+                          activeTab === item.id
+                            ? 'bg-sky-50 text-sky-700 border border-sky-200'
+                            : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                        }`}
+                      >
+                        <span className="text-lg lg:text-xl">{item.icon}</span>
+                        <span className="font-medium text-sm lg:text-base">{item.label}</span>
+                      </a>
+                    </li>
+                  )
+                })}
+              </ul>
+            </nav>
           </div>
 
-          {/* Navigation Menu */}
-          <nav className="p-3 lg:p-4">
-            <ul className="space-y-1 lg:space-y-2">
-              {menuItems.map((item) => (
-                <li key={item.id}>
-                  <a
-                    href={item.href}
-                    onClick={() => onClose()}
-                    className={`flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 rounded-lg lg:rounded-xl transition-all duration-200 ${
-                      activeTab === item.id
-                        ? 'bg-sky-50 text-sky-700 border border-sky-200'
-                        : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
-                    }`}
-                  >
-                    <span className="text-lg lg:text-xl">{item.icon}</span>
-                    <span className="font-medium text-sm lg:text-base">{item.label}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          {/* Footer */}
-          <div className="absolute bottom-0 left-0 right-0 p-3 lg:p-4 border-t border-slate-200">
+          {/* Footer - Fixed at bottom */}
+          <div className="flex-shrink-0 p-3 lg:p-4 border-t border-slate-200 bg-white">
             <div className="flex items-center justify-between">
               <a href="/" className="flex items-center gap-1 lg:gap-2 text-xs lg:text-sm text-slate-600 hover:text-slate-900">
                 <span className="text-sm lg:text-base">🏠</span>
@@ -125,6 +140,109 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
     )
   }
 
+  // My Courses View
+  if (activeTab === 'courses') {
+    return (
+      <div className="flex-1 p-4 lg:p-6 xl:p-8">
+        {/* Mobile Header */}
+        <div className="lg:hidden mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={onMenuClick}
+              className="p-2 rounded-lg hover:bg-slate-100"
+            >
+              <span className="text-xl">☰</span>
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">🎶</span>
+              </div>
+              <span className="font-bold text-slate-900">My Courses</span>
+            </div>
+            <div className="w-8"></div>
+          </div>
+        </div>
+
+        {/* Header */}
+        <div className="mb-6 lg:mb-8">
+          <h1 className="text-2xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-2">
+            My Courses
+          </h1>
+          <p className="text-slate-600 text-sm lg:text-base">
+            All your enrolled courses in one place.
+          </p>
+        </div>
+
+        {/* Enrolled Courses List */}
+        {items.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
+            {items.map((it) => {
+              const prog = courseProgress[it.course._id] || { pct: 0, completed: 0, total: 0 }
+              return (
+                <a 
+                  key={it.course._id} 
+                  href={`/dashboard/course/${it.course._id}`}
+                  className="group bg-white rounded-xl lg:rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-200"
+                >
+                  <div className="relative">
+                    <img 
+                      src={it.course.thumbnailPath || it.course.image || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=400&auto=format&fit=crop'} 
+                      className="h-40 lg:h-48 w-full object-cover group-hover:scale-105 transition-transform duration-200" 
+                      alt={it.course.title}
+                    />
+                    <div className="absolute top-3 right-3 lg:top-4 lg:right-4 bg-green-500 text-white px-2 py-1 lg:px-3 lg:py-1 rounded-full text-xs font-medium">
+                      Enrolled
+                    </div>
+                  </div>
+                  <div className="p-4 lg:p-6">
+                    <h3 className="font-bold text-slate-900 mb-2 group-hover:text-sky-700 transition-colors text-sm lg:text-base">
+                      {it.course.title}
+                    </h3>
+                    <p className="text-xs lg:text-sm text-slate-600 mb-4 line-clamp-2">
+                      {it.course.description || 'Continue your musical journey with this course.'}
+                    </p>
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-slate-600">Progress</span>
+                        <span className="text-xs font-semibold text-sky-700">{prog.pct}%</span>
+                      </div>
+                      <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                        <div 
+                          className="h-2 bg-gradient-to-r from-sky-500 to-blue-600 rounded-full transition-all duration-500" 
+                          style={{ width: `${prog.pct}%` }} 
+                        />
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">
+                        {prog.completed} of {prog.total} lessons completed
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                      <span className="text-xs lg:text-sm text-slate-500">Click to continue</span>
+                      <span className="text-sky-600 group-hover:text-sky-700">→</span>
+                    </div>
+                  </div>
+                </a>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl lg:rounded-2xl p-8 lg:p-12 text-center border border-slate-200">
+            <div className="text-4xl lg:text-6xl mb-4">🎵</div>
+            <h3 className="text-lg lg:text-xl font-semibold text-slate-900 mb-2">No Courses Yet</h3>
+            <p className="text-sm lg:text-base text-slate-600 mb-6">Start your musical journey by enrolling in a course!</p>
+            <a 
+              href="/courses" 
+              className="inline-block px-4 py-2 lg:px-6 lg:py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors font-medium text-sm lg:text-base"
+            >
+              Browse Courses
+            </a>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Overview View (default)
   return (
     <div className="flex-1 p-4 lg:p-6 xl:p-8">
       {/* Mobile Header */}
@@ -989,16 +1107,16 @@ export default function StudentDashboard() {
   // If courseId is present, show course learning view
   if (courseId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-hidden">
         <SignedIn>
-          <div className="flex">
+          <div className="flex h-screen">
             <Sidebar 
               activeTab="courses" 
               onTabChange={setActiveTab} 
               isOpen={sidebarOpen}
               onClose={() => setSidebarOpen(false)}
             />
-            <div className="lg:ml-16 xl:ml-20 flex-1 min-h-screen p-4 lg:p-6 xl:p-8">
+            <div className="lg:ml-16 xl:ml-20 flex-1 overflow-y-auto h-screen">
               <CourseLearningView 
                 courseId={courseId} 
                 onBack={() => navigate('/dashboard')}
@@ -1118,9 +1236,9 @@ export default function StudentDashboard() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-hidden">
       <SignedOut>
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center h-screen">
           <div className="text-center">
             <div className="text-6xl mb-6">🎶</div>
             <h1 className="text-2xl font-bold text-slate-900 mb-4">Welcome to Music Academy</h1>
@@ -1135,14 +1253,14 @@ export default function StudentDashboard() {
       </SignedOut>
       
       <SignedIn>
-        <div className="flex">
+        <div className="flex h-screen overflow-hidden">
           <Sidebar 
             activeTab={activeTab} 
             onTabChange={setActiveTab} 
             isOpen={sidebarOpen}
             onClose={() => setSidebarOpen(false)}
           />
-          <div className="lg:ml-16 xl:ml-20 flex-1 min-h-screen">
+          <div className="lg:ml-16 xl:ml-20 flex-1 overflow-y-auto">
             <DashboardContent 
               activeTab={activeTab} 
               items={items} 

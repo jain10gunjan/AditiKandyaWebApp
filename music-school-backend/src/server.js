@@ -242,6 +242,86 @@ const Lead = mongoose.model(
   )
 );
 
+const Contact = mongoose.model(
+  'Contact',
+  new mongoose.Schema(
+    {
+      name: String,
+      email: String,
+      phone: String,
+      subject: String,
+      message: String,
+      status: { type: String, enum: ['new', 'read', 'replied'], default: 'new' },
+    },
+    { timestamps: true }
+  )
+);
+
+const FAQ = mongoose.model(
+  'FAQ',
+  new mongoose.Schema(
+    {
+      question: String,
+      answer: String,
+      order: { type: Number, default: 0 },
+      isActive: { type: Boolean, default: true },
+    },
+    { timestamps: true }
+  )
+);
+
+const Consultation = mongoose.model(
+  'Consultation',
+  new mongoose.Schema(
+    {
+      name: String,
+      email: String,
+      phone: String,
+      preferredDate: String,
+      preferredTime: String,
+      message: String,
+      type: { type: String, default: 'consultation' },
+      status: { type: String, enum: ['new', 'scheduled', 'completed', 'cancelled'], default: 'new' },
+    },
+    { timestamps: true }
+  )
+);
+
+const Workshop = mongoose.model(
+  'Workshop',
+  new mongoose.Schema(
+    {
+      title: String,
+      description: String,
+      image: String,
+      date: String,
+      time: String,
+      duration: String,
+      location: String,
+      price: { type: Number, default: 0 },
+      maxParticipants: { type: Number, default: 20 },
+      isActive: { type: Boolean, default: true },
+    },
+    { timestamps: true }
+  )
+);
+
+const WorkshopEnrollment = mongoose.model(
+  'WorkshopEnrollment',
+  new mongoose.Schema(
+    {
+      workshopId: { type: mongoose.Schema.Types.ObjectId, ref: 'Workshop' },
+      userId: String, // Clerk user ID
+      name: String,
+      email: String,
+      phone: String,
+      message: String,
+      status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+    },
+    { timestamps: true }
+  )
+);
+
 const Progress = mongoose.model(
   'Progress',
   new mongoose.Schema(
@@ -1592,6 +1672,289 @@ app.get('/api/admin/leads', requireAdmin, async (req, res) => {
   if (!dbConnected) return res.json([])
   const items = await Lead.find().sort({ createdAt: -1 })
   res.json(items)
+})
+
+// ==================== CONTACT ENDPOINTS ====================
+
+// Public: create a new contact form submission
+app.post('/api/contact', async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const { name, email, phone, subject, message } = req.body || {}
+  if (!name || !email || !subject || !message) {
+    return res.status(400).json({ error: 'Missing required fields' })
+  }
+  const doc = await Contact.create({
+    name,
+    email,
+    phone: phone || '',
+    subject,
+    message,
+    status: 'new'
+  })
+  res.status(201).json({ id: doc._id, message: 'Contact form submitted' })
+})
+
+// Admin: list all contact submissions (newest first)
+app.get('/api/admin/contacts', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.json([])
+  const items = await Contact.find().sort({ createdAt: -1 })
+  res.json(items)
+})
+
+// Admin: update contact status
+app.put('/api/admin/contacts/:id', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const { status } = req.body || {}
+  const contact = await Contact.findByIdAndUpdate(
+    req.params.id,
+    { status: status || 'read' },
+    { new: true }
+  )
+  if (!contact) return res.status(404).json({ error: 'Contact not found' })
+  res.json(contact)
+})
+
+// Admin: delete contact submission
+app.delete('/api/admin/contacts/:id', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const contact = await Contact.findByIdAndDelete(req.params.id)
+  if (!contact) return res.status(404).json({ error: 'Contact not found' })
+  res.json({ message: 'Contact deleted' })
+})
+
+// ==================== FAQ ENDPOINTS ====================
+
+// Public: get all active FAQs
+app.get('/api/faqs', async (req, res) => {
+  if (!dbConnected) return res.json([])
+  const faqs = await FAQ.find({ isActive: true }).sort({ order: 1, createdAt: -1 })
+  res.json(faqs)
+})
+
+// Admin: get all FAQs (including inactive)
+app.get('/api/admin/faqs', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.json([])
+  const faqs = await FAQ.find().sort({ order: 1, createdAt: -1 })
+  res.json(faqs)
+})
+
+// Admin: create FAQ
+app.post('/api/admin/faqs', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const { question, answer, order, isActive } = req.body || {}
+  if (!question || !answer) {
+    return res.status(400).json({ error: 'Question and answer are required' })
+  }
+  const faq = await FAQ.create({
+    question,
+    answer,
+    order: order || 0,
+    isActive: isActive !== undefined ? isActive : true
+  })
+  res.status(201).json(faq)
+})
+
+// Admin: update FAQ
+app.put('/api/admin/faqs/:id', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const { question, answer, order, isActive } = req.body || {}
+  const faq = await FAQ.findByIdAndUpdate(
+    req.params.id,
+    { question, answer, order, isActive },
+    { new: true }
+  )
+  if (!faq) return res.status(404).json({ error: 'FAQ not found' })
+  res.json(faq)
+})
+
+// Admin: delete FAQ
+app.delete('/api/admin/faqs/:id', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const faq = await FAQ.findByIdAndDelete(req.params.id)
+  if (!faq) return res.status(404).json({ error: 'FAQ not found' })
+  res.json({ message: 'FAQ deleted' })
+})
+
+// ==================== CONSULTATION ENDPOINTS ====================
+
+// Public: create a new consultation request
+app.post('/api/consultations', async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const { name, email, phone, preferredDate, preferredTime, message, type } = req.body || {}
+  if (!name || !email || !phone || !preferredDate || !preferredTime) {
+    return res.status(400).json({ error: 'Missing required fields' })
+  }
+  const doc = await Consultation.create({
+    name,
+    email,
+    phone,
+    preferredDate,
+    preferredTime,
+    message: message || '',
+    type: type || 'consultation',
+    status: 'new'
+  })
+  res.status(201).json({ id: doc._id, message: 'Consultation request submitted' })
+})
+
+// Admin: list all consultations (newest first)
+app.get('/api/admin/consultations', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.json([])
+  const items = await Consultation.find().sort({ createdAt: -1 })
+  res.json(items)
+})
+
+// Admin: update consultation status
+app.put('/api/admin/consultations/:id', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const { status } = req.body || {}
+  const consultation = await Consultation.findByIdAndUpdate(
+    req.params.id,
+    { status: status || 'new' },
+    { new: true }
+  )
+  if (!consultation) return res.status(404).json({ error: 'Consultation not found' })
+  res.json(consultation)
+})
+
+// Admin: delete consultation
+app.delete('/api/admin/consultations/:id', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const consultation = await Consultation.findByIdAndDelete(req.params.id)
+  if (!consultation) return res.status(404).json({ error: 'Consultation not found' })
+  res.json({ message: 'Consultation deleted' })
+})
+
+// ==================== WORKSHOP ENDPOINTS ====================
+
+// Public: get all active workshops
+app.get('/api/workshops', async (req, res) => {
+  if (!dbConnected) return res.json([])
+  const workshops = await Workshop.find({ isActive: true }).sort({ createdAt: -1 })
+  res.json(workshops)
+})
+
+// Public: get single workshop
+app.get('/api/workshops/:id', async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const workshop = await Workshop.findById(req.params.id)
+  if (!workshop) return res.status(404).json({ error: 'Workshop not found' })
+  res.json(workshop)
+})
+
+// Admin: get all workshops (including inactive)
+app.get('/api/admin/workshops', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.json([])
+  const workshops = await Workshop.find().sort({ createdAt: -1 })
+  res.json(workshops)
+})
+
+// Admin: create workshop
+app.post('/api/admin/workshops', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const { title, description, image, date, time, duration, location, price, maxParticipants, isActive } = req.body || {}
+  if (!title || !description) return res.status(400).json({ error: 'Missing required fields' })
+  const workshop = await Workshop.create({
+    title,
+    description,
+    image: image || '',
+    date: date || '',
+    time: time || '',
+    duration: duration || '',
+    location: location || '',
+    price: Number(price) || 0,
+    maxParticipants: Number(maxParticipants) || 20,
+    isActive: isActive !== undefined ? isActive : true
+  })
+  res.status(201).json(workshop)
+})
+
+// Admin: update workshop
+app.put('/api/admin/workshops/:id', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const { title, description, image, date, time, duration, location, price, maxParticipants, isActive } = req.body || {}
+  const workshop = await Workshop.findByIdAndUpdate(
+    req.params.id,
+    {
+      title,
+      description,
+      image,
+      date,
+      time,
+      duration,
+      location,
+      price: Number(price) || 0,
+      maxParticipants: Number(maxParticipants) || 20,
+      isActive: isActive !== undefined ? isActive : true
+    },
+    { new: true }
+  )
+  if (!workshop) return res.status(404).json({ error: 'Workshop not found' })
+  res.json(workshop)
+})
+
+// Admin: delete workshop
+app.delete('/api/admin/workshops/:id', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const workshop = await Workshop.findByIdAndDelete(req.params.id)
+  if (!workshop) return res.status(404).json({ error: 'Workshop not found' })
+  res.json({ message: 'Workshop deleted' })
+})
+
+// ==================== WORKSHOP ENROLLMENT ENDPOINTS ====================
+
+// Authenticated: enroll in workshop
+app.post('/api/workshops/:id/enroll', requireAuthGuarded, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const userId = req.auth.userId
+  const { name, email, phone, message } = req.body || {}
+  if (!name || !email || !phone) {
+    return res.status(400).json({ error: 'Missing required fields' })
+  }
+  const workshop = await Workshop.findById(req.params.id)
+  if (!workshop) return res.status(404).json({ error: 'Workshop not found' })
+  if (!workshop.isActive) return res.status(400).json({ error: 'Workshop is not active' })
+  
+  const enrollment = await WorkshopEnrollment.create({
+    workshopId: req.params.id,
+    userId,
+    name,
+    email,
+    phone,
+    message: message || '',
+    status: 'pending'
+  })
+  res.status(201).json({ id: enrollment._id, message: 'Enrollment submitted successfully' })
+})
+
+// Admin: get all workshop enrollments
+app.get('/api/admin/workshop-enrollments', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.json([])
+  const enrollments = await WorkshopEnrollment.find()
+    .populate('workshopId', 'title')
+    .sort({ createdAt: -1 })
+  res.json(enrollments)
+})
+
+// Admin: update enrollment status
+app.put('/api/admin/workshop-enrollments/:id', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const { status } = req.body || {}
+  const enrollment = await WorkshopEnrollment.findByIdAndUpdate(
+    req.params.id,
+    { status: status || 'pending' },
+    { new: true }
+  ).populate('workshopId', 'title')
+  if (!enrollment) return res.status(404).json({ error: 'Enrollment not found' })
+  res.json(enrollment)
+})
+
+// Admin: delete enrollment
+app.delete('/api/admin/workshop-enrollments/:id', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const enrollment = await WorkshopEnrollment.findByIdAndDelete(req.params.id)
+  if (!enrollment) return res.status(404).json({ error: 'Enrollment not found' })
+  res.json({ message: 'Enrollment deleted' })
 })
 
 const port = process.env.PORT || 4000

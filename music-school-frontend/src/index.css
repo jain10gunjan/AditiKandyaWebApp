@@ -2,6 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Cinema Sunday Font - Add font files to public/fonts/ if you have them */
+@font-face {
+  font-family: 'Cinema Sunday';
+  src: url('/fonts/cinema-sunday.woff2') format('woff2'),
+       url('/fonts/cinema-sunday.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Fallback to elegant serif fonts if Cinema Sunday not available */
+.font-cinema {
+  font-family: 'Cinema Sunday', 'Playfair Display', 'Cormorant Garamond', serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* Ensure consistent font weights across the site */
+body {
+  font-weight: 500;
+  overflow-x: hidden;
+}
+
+html {
+  overflow-x: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+}
+
+button, a {
+  font-weight: 700;
+}
+
+/* Ensure full-width sections don't cause horizontal scroll */
+section {
+  width: 100%;
+  max-width: 100vw;
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;
