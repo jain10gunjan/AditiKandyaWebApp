@@ -604,7 +604,6 @@ function CourseLearningView({ courseId, onBack }) {
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
   const [expandedModules, setExpandedModules] = useState(new Set())
   const [lastWatched, setLastWatched] = useState(null)
-  const videoRef = useRef(null)
 
   useEffect(() => {
     if (courseId) {
@@ -1058,18 +1057,16 @@ function CourseLearningView({ courseId, onBack }) {
                 <span className="text-2xl">✕</span>
               </button>
             </div>
-            <div className="relative bg-black">
-              <video
-                ref={videoRef}
-                className="w-full h-auto max-h-[70vh]"
-                controls
-                autoPlay
-                onEnded={handleVideoEnd}
-                src={currentVideo.url}
-              >
-                Your browser does not support the video tag.
-              </video>
+            <div className="relative bg-black" style={{ paddingBottom: '56.25%', height: 0, overflow: 'hidden' }}>
+              <iframe
+                src={`${window.location.origin}/video/${courseId}/${currentVideo.moduleIndex}/${currentVideo.lessonIndex}`}
+                className="absolute top-0 left-0 w-full h-full border-0"
+                allow="autoplay; encrypted-media; fullscreen"
+                allowFullScreen
+                title={currentVideo.title}
+              />
             </div>
+            {console.log(`${window.location.origin}/video/${courseId}/${currentVideo.moduleIndex}/${currentVideo.lessonIndex}`)}
             <div className="p-4 bg-slate-50 border-t border-slate-200">
               <div className="flex items-center justify-between text-sm text-slate-600">
                 <span>Press ESC to close</span>

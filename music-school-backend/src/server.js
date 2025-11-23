@@ -1048,7 +1048,25 @@ app.get('/api/media/video/:courseId/:mIdx/:lIdx', async (req, res) => {
     
     // Access control: free preview OR free course OR enrolled user
     let allowed = Boolean(lesson.freePreview)
-    const userId = (req.auth && req.auth.userId) || req.query.userHint || req.headers['x-user-id']
+    
+    // Get userId from multiple sources (for iframe support)
+    let userId = null
+    if (req.auth && req.auth.userId) {
+      userId = req.auth.userId
+    } else if (req.query.userHint) {
+      userId = req.query.userHint
+    } else if (req.query.token && hasClerk) {
+      // If token is provided in query (for iframe), try to verify it
+      try {
+        // Note: This is a simplified approach. For production, you might want to verify the token properly
+        // For now, we'll rely on userHint or auth middleware
+        console.log('Token provided in query, but using userHint is preferred')
+      } catch (e) {
+        console.warn('Could not verify token from query:', e)
+      }
+    } else if (req.headers['x-user-id']) {
+      userId = req.headers['x-user-id']
+    }
     
     console.log('Video access check:', {
       courseId: req.params.courseId,

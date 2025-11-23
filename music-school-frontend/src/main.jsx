@@ -30,6 +30,7 @@ import AdminConsultations from './routes/AdminConsultations.jsx'
 import AdminWorkshops from './routes/AdminWorkshops.jsx'
 import AdminWorkshopEnrollments from './routes/AdminWorkshopEnrollments.jsx'
 import AdminManualEnrollments from './routes/AdminManualEnrollments.jsx'
+import VideoPlayer from './routes/VideoPlayer.jsx'
 import AboutPage from './routes/AboutPage.jsx'
 import WorkshopsPage from './routes/WorkshopsPage.jsx'
 import { Toaster } from 'react-hot-toast'
@@ -70,6 +71,8 @@ const router = createBrowserRouter([
   { path: '/admin/workshops', element: <AdminWorkshops /> },
   { path: '/admin/workshop-enrollments', element: <AdminWorkshopEnrollments /> },
   { path: '/admin/manual-enrollments', element: <AdminManualEnrollments /> },
+  { path: '/video/:courseId/:moduleIndex/:lessonIndex', element: <VideoPlayer /> },
+  { path: '/video', element: <VideoPlayer /> },
   { path: '/dashboard', element: <StudentDashboard /> },
   { path: '/dashboard/course/:id', element: <StudentDashboard /> },
   { path: '/student/attendance', element: <StudentAttendance /> },

@@ -538,52 +538,21 @@ function VideoModal({
   isOpen,
   onClose
 }) {
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
-  const [progress, setProgress] = useState(0)
-  const [showControls, setShowControls] = useState(true)
-  const videoRef = useRef(null)
+  const iframeRef = useRef(null)
 
+  // Listen for messages from iframe (video completion)
   useEffect(() => {
-    if (currentVideo && videoRef.current) {
-      videoRef.current.load()
-    }
-  }, [currentVideo])
-
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      const current = videoRef.current.currentTime
-      const total = videoRef.current.duration
-      setCurrentTime(current)
-      setDuration(total)
-      setProgress((current / total) * 100)
-    }
-  }
-
-  const handleVideoEnd = () => {
-    setIsPlaying(false)
-    if (enrolled && currentVideo) {
-      onVideoComplete(currentVideo.moduleIndex, currentVideo.lessonIndex)
-    }
-  }
-
-  const togglePlayPause = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause()
-      } else {
-        videoRef.current.play()
+    const handleMessage = (event) => {
+      if (event.data && event.data.type === 'VIDEO_COMPLETED') {
+        if (currentVideo && enrolled) {
+          onVideoComplete(currentVideo.moduleIndex, currentVideo.lessonIndex)
+        }
       }
-      setIsPlaying(!isPlaying)
     }
-  }
 
-  const formatTime = (time) => {
-    const minutes = Math.floor(time / 60)
-    const seconds = Math.floor(time % 60)
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`
-  }
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [currentVideo, enrolled, onVideoComplete])
 
   const handleKeyDown = (e) => {
     if (e.key === 'Escape') {
@@ -604,6 +573,13 @@ function VideoModal({
       document.body.style.overflow = 'unset'
     }
   }, [isOpen])
+
+  // Construct iframe URL
+  const getIframeUrl = () => {
+    if (!currentVideo || !course) return ''
+    const baseUrl = window.location.origin
+    return `${baseUrl}/video/${course._id}/${currentVideo.moduleIndex}/${currentVideo.lessonIndex}`
+  }
 
   if (!isOpen || !currentVideo) return null
 
@@ -626,22 +602,16 @@ function VideoModal({
           </button>
         </div>
 
-        {/* Video Player */}
-        <div className="relative bg-black">
-          <video
-            ref={videoRef}
-            className="w-full h-auto max-h-[70vh]"
-            onTimeUpdate={handleTimeUpdate}
-            onEnded={handleVideoEnd}
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-            onClick={togglePlayPause}
-            poster={course.image}
-            controls
-          >
-            <source src={currentVideo.url} type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
+        {/* Video Player - Using iframe */}
+        <div className="relative bg-black" style={{ paddingBottom: '56.25%', height: 0, overflow: 'hidden' }}>
+          <iframe
+            ref={iframeRef}
+            src={getIframeUrl()}
+            className="absolute top-0 left-0 w-full h-full border-0"
+            allow="autoplay; encrypted-media; fullscreen"
+            allowFullScreen
+            title={currentVideo.title}
+          />
 
           {/* Navigation Arrows */}
           {hasPrevious && (
