@@ -11,7 +11,10 @@ dotenv.config()
 // Allowed origins for CORS
 const allowedOrigins = [
   'https://themusinest.com',
-  'http://localhost:5173'
+  'https://www.themusinest.com', // Also allow www subdomain
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://localhost:4000'
 ]
 
 // CORS configuration with error handling
@@ -20,14 +23,20 @@ const corsOptions = {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true)
     
+    // Check if origin is in allowed list
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true)
     } else {
+      // Log for debugging
+      console.warn('CORS blocked origin:', origin)
       callback(new Error(`Not allowed by CORS. Origin: ${origin} is not in the allowed list: ${allowedOrigins.join(', ')}`))
     }
   },
   credentials: true,
-  optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
+  optionsSuccessStatus: 200, // Some legacy browsers (IE11, various SmartTVs) choke on 204
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-File-Compressed', 'X-Original-Filename', 'X-User-Id'],
+  exposedHeaders: ['Content-Range', 'Accept-Ranges']
 }
 
 const app = express()
@@ -37,20 +46,16 @@ app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ limit: '50mb', extended: true }))
 
 // CORS middleware with error handling
+app.use(cors(corsOptions))
+
+// Additional CORS headers for edge cases
 app.use((req, res, next) => {
-  cors(corsOptions)(req, res, (err) => {
-    if (err) {
-      // Handle CORS errors
-      console.error('CORS error:', err.message, 'Origin:', req.headers.origin)
-      return res.status(403).json({ 
-        error: 'CORS policy violation', 
-        message: err.message,
-        allowedOrigins: allowedOrigins,
-        requestedOrigin: req.headers.origin
-      })
-    }
-    next()
-  })
+  const origin = req.headers.origin
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+    res.setHeader('Access-Control-Allow-Credentials', 'true')
+  }
+  next()
 })
 
 // General error handler
