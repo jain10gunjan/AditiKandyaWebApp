@@ -911,9 +911,9 @@ function getLessonFromCourse(course, mIdx, lIdx, cIdx = null) {
   const mi = Number(mIdx)
   const li = Number(lIdx)
   
-  // Try new chapters structure first (if cIdx is provided or chapters exist)
-  if (cIdx !== null || (course.chapters && course.chapters.length > 0)) {
-    const ci = cIdx !== null ? Number(cIdx) : 0 // Default to first chapter if not specified
+  // If cIdx is explicitly provided, use chapters structure
+  if (cIdx !== null) {
+    const ci = Number(cIdx)
     if (course.chapters && course.chapters[ci]) {
       const chapter = course.chapters[ci]
       if (chapter.modules && chapter.modules[mi]) {
@@ -923,13 +923,28 @@ function getLessonFromCourse(course, mIdx, lIdx, cIdx = null) {
         }
       }
     }
+    return null // If cIdx provided but not found, return null
   }
   
-  // Fallback to old modules structure
-  if (course.modules && course.modules[mi]) {
-    const module = course.modules[mi]
-    if (module.lessons && module.lessons[li]) {
-      return module.lessons[li]
+  // Try old modules structure first (most common)
+  if (course.modules && Array.isArray(course.modules) && course.modules.length > 0) {
+    if (course.modules[mi]) {
+      const module = course.modules[mi]
+      if (module.lessons && Array.isArray(module.lessons) && module.lessons[li]) {
+        return module.lessons[li]
+      }
+    }
+  }
+  
+  // Try chapters structure (if modules structure didn't work)
+  if (course.chapters && Array.isArray(course.chapters) && course.chapters.length > 0) {
+    // Try first chapter by default
+    const chapter = course.chapters[0]
+    if (chapter && chapter.modules && Array.isArray(chapter.modules) && chapter.modules[mi]) {
+      const module = chapter.modules[mi]
+      if (module.lessons && Array.isArray(module.lessons) && module.lessons[li]) {
+        return module.lessons[li]
+      }
     }
   }
   
@@ -943,33 +958,92 @@ async function isUserEnrolled(userId, courseId) {
   return Boolean(existing)
 }
 
+// Debug endpoint to check course structure
+app.get('/api/debug/course/:courseId/structure', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const course = await Course.findById(req.params.courseId)
+  if (!course) return res.status(404).json({ error: 'Course not found' })
+  
+  const structure = {
+    courseId: course._id,
+    title: course.title,
+    hasModules: course.modules ? course.modules.length : 0,
+    hasChapters: course.chapters ? course.chapters.length : 0,
+    modules: course.modules ? course.modules.map((m, idx) => ({
+      index: idx,
+      title: m.title,
+      lessonsCount: m.lessons ? m.lessons.length : 0,
+      lessons: m.lessons ? m.lessons.map((l, lidx) => ({
+        index: lidx,
+        title: l.title,
+        type: l.type,
+        videoPath: l.videoPath,
+        pdfPath: l.pdfPath
+      })) : []
+    })) : [],
+    chapters: course.chapters ? course.chapters.map((c, cidx) => ({
+      index: cidx,
+      title: c.title,
+      modules: c.modules ? c.modules.map((m, midx) => ({
+        index: midx,
+        title: m.title,
+        lessonsCount: m.lessons ? m.lessons.length : 0,
+        lessons: m.lessons ? m.lessons.map((l, lidx) => ({
+          index: lidx,
+          title: l.title,
+          type: l.type,
+          videoPath: l.videoPath,
+          pdfPath: l.pdfPath
+        })) : []
+      })) : []
+    })) : []
+  }
+  
+  res.json(structure)
+})
+
 // Video streaming with Range support and access control
 app.get('/api/media/video/:courseId/:mIdx/:lIdx', async (req, res) => {
   if (!dbConnected) {
     console.error('Database not connected')
-    return res.status(503).end()
+    return res.status(503).json({ error: 'Database unavailable' })
   }
   
   try {
     const course = await Course.findById(req.params.courseId)
     if (!course) {
       console.error('Course not found:', req.params.courseId)
-      return res.status(404).end()
+      return res.status(404).json({ error: 'Course not found', courseId: req.params.courseId })
     }
     
-    // Try to get lesson from chapters structure first, then modules
+    // Try to get lesson from modules or chapters structure
     const cIdx = req.query.cIdx !== undefined ? req.query.cIdx : null
     const lesson = getLessonFromCourse(course, req.params.mIdx, req.params.lIdx, cIdx)
     
     if (!lesson || lesson.type !== 'video' || !lesson.videoPath) {
+      // Enhanced error logging
       console.error('Lesson not found or invalid:', {
         courseId: req.params.courseId,
         mIdx: req.params.mIdx,
         lIdx: req.params.lIdx,
         cIdx: cIdx,
-        lesson: lesson ? { type: lesson.type, videoPath: lesson.videoPath } : null
+        courseHasModules: course.modules ? course.modules.length : 0,
+        courseHasChapters: course.chapters ? course.chapters.length : 0,
+        moduleExists: course.modules && course.modules[req.params.mIdx] ? true : false,
+        lessonExists: course.modules && course.modules[req.params.mIdx] && course.modules[req.params.mIdx].lessons ? course.modules[req.params.mIdx].lessons.length : 0,
+        lesson: lesson ? { type: lesson.type, videoPath: lesson.videoPath, title: lesson.title } : null
       })
-      return res.status(404).end()
+      
+      // Return more detailed error
+      return res.status(404).json({ 
+        error: 'Lesson not found',
+        courseId: req.params.courseId,
+        moduleIndex: req.params.mIdx,
+        lessonIndex: req.params.lIdx,
+        hasModules: course.modules ? course.modules.length : 0,
+        hasChapters: course.chapters ? course.chapters.length : 0,
+        message: 'The requested lesson does not exist at this index'
+      })
     }
     
     // Access control: free preview OR free course OR enrolled user
@@ -1017,10 +1091,38 @@ app.get('/api/media/video/:courseId/:mIdx/:lIdx', async (req, res) => {
       })
     }
     
-    const fsPath = path.join(uploadsDir, path.basename(lesson.videoPath))
+    // Handle video path - it might be stored as /uploads/filename or just filename
+    let fsPath
+    if (lesson.videoPath.startsWith('/uploads/')) {
+      // Path is /uploads/filename.ext, extract just filename
+      fsPath = path.join(uploadsDir, path.basename(lesson.videoPath))
+    } else if (lesson.videoPath.startsWith('uploads/')) {
+      // Path is uploads/filename.ext
+      fsPath = path.join(uploadsDir, lesson.videoPath.replace('uploads/', ''))
+    } else {
+      // Path is just filename.ext
+      fsPath = path.join(uploadsDir, lesson.videoPath)
+    }
+    
+    console.log('Looking for video file:', {
+      videoPath: lesson.videoPath,
+      fsPath: fsPath,
+      uploadsDir: uploadsDir,
+      exists: fs.existsSync(fsPath)
+    })
+    
     if (!fs.existsSync(fsPath)) {
-      console.error('Video file not found:', fsPath)
-      return res.status(404).end()
+      console.error('Video file not found:', {
+        videoPath: lesson.videoPath,
+        fsPath: fsPath,
+        uploadsDir: uploadsDir,
+        availableFiles: fs.existsSync(uploadsDir) ? fs.readdirSync(uploadsDir).slice(0, 5) : 'uploads dir does not exist'
+      })
+      return res.status(404).json({ 
+        error: 'Video file not found',
+        videoPath: lesson.videoPath,
+        message: 'The video file does not exist on the server'
+      })
     }
     
     const stat = fs.statSync(fsPath)
