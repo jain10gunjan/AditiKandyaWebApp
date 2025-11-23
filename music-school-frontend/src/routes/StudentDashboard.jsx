@@ -1189,6 +1189,11 @@ export default function StudentDashboard() {
         let total=0, present=0, absent=0, waived=0
         if (enrollmentsData.length > 0) {
           for (const it of enrollmentsData) {
+            // Skip if course is missing (might have been deleted)
+            if (!it.course || !it.course._id) {
+              console.warn('Skipping enrollment with missing course:', it.enrollmentId)
+              continue
+            }
             const attUrl = new URL(`${import.meta.env.VITE_API_BASE_URL}/me/attendance/${it.course._id}`)
             if (!token && userHint) attUrl.searchParams.set('userHint', userHint)
             attUrl.searchParams.set('month', month); attUrl.searchParams.set('year', year)
@@ -1208,16 +1213,34 @@ export default function StudentDashboard() {
         if (enrollmentsData.length > 0) {
           const progressMap = {}
           for (const it of enrollmentsData) {
+            // Skip if course is missing (might have been deleted)
+            if (!it.course || !it.course._id) {
+              console.warn('Skipping enrollment with missing course for progress:', it.enrollmentId)
+              continue
+            }
             try {
               const tokenAuth = token
               if (!tokenAuth) continue
               const pr = await fetch(`${import.meta.env.VITE_API_BASE_URL}/courses/${it.course._id}/progress`, { headers })
               if (pr.ok) {
                 const data = await pr.json()
-                // Count lessons in course
+                // Count lessons in course (support both modules and chapters structure)
                 const modules = it.course.modules || []
+                const chapters = it.course.chapters || []
                 let totalLessons = 0
+                
+                // Count from modules (old structure)
                 modules.forEach(m => totalLessons += (m.lessons||[]).length)
+                
+                // Count from chapters (new structure)
+                chapters.forEach(chapter => {
+                  if (chapter.modules) {
+                    chapter.modules.forEach(m => {
+                      totalLessons += (m.lessons||[]).length
+                    })
+                  }
+                })
+                
                 let completed = 0
                 Object.values(data || {}).forEach(lessonMap => {
                   Object.values(lessonMap).forEach(v => { if (v.completed) completed++ })
@@ -1225,7 +1248,9 @@ export default function StudentDashboard() {
                 const pct = totalLessons>0 ? Math.round((completed/totalLessons)*100) : 0
                 progressMap[it.course._id] = { pct, completed, total: totalLessons }
               }
-            } catch {}
+            } catch (err) {
+              console.error('Error loading progress for course:', it.course._id, err)
+            }
           }
           setCourseProgress(progressMap)
         }

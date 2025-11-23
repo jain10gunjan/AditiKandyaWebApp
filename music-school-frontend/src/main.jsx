@@ -29,6 +29,7 @@ import AdminFAQs from './routes/AdminFAQs.jsx'
 import AdminConsultations from './routes/AdminConsultations.jsx'
 import AdminWorkshops from './routes/AdminWorkshops.jsx'
 import AdminWorkshopEnrollments from './routes/AdminWorkshopEnrollments.jsx'
+import AdminManualEnrollments from './routes/AdminManualEnrollments.jsx'
 import AboutPage from './routes/AboutPage.jsx'
 import WorkshopsPage from './routes/WorkshopsPage.jsx'
 import { Toaster } from 'react-hot-toast'
@@ -68,6 +69,7 @@ const router = createBrowserRouter([
   { path: '/admin/consultations', element: <AdminConsultations /> },
   { path: '/admin/workshops', element: <AdminWorkshops /> },
   { path: '/admin/workshop-enrollments', element: <AdminWorkshopEnrollments /> },
+  { path: '/admin/manual-enrollments', element: <AdminManualEnrollments /> },
   { path: '/dashboard', element: <StudentDashboard /> },
   { path: '/dashboard/course/:id', element: <StudentDashboard /> },
   { path: '/student/attendance', element: <StudentAttendance /> },

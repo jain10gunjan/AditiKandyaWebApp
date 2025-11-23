@@ -4,13 +4,69 @@ const morgan = require('morgan')
 const dotenv = require('dotenv')
 const mongoose = require('mongoose')
 const { clerkMiddleware, requireAuth, clerkClient } = require('@clerk/express')
+const zlib = require('zlib')
 
 dotenv.config()
 
+// Allowed origins for CORS
+const allowedOrigins = [
+  'https://themusinest.com',
+  'http://localhost:5173'
+]
+
+// CORS configuration with error handling
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true)
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error(`Not allowed by CORS. Origin: ${origin} is not in the allowed list: ${allowedOrigins.join(', ')}`))
+    }
+  },
+  credentials: true,
+  optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
+}
 
 const app = express()
-app.use(express.json())
-app.use(cors({ origin: process.env.CLIENT_ORIGIN || '*', credentials: true }))
+
+// Increase payload size limits to 50mb
+app.use(express.json({ limit: '50mb' }))
+app.use(express.urlencoded({ limit: '50mb', extended: true }))
+
+// CORS middleware with error handling
+app.use((req, res, next) => {
+  cors(corsOptions)(req, res, (err) => {
+    if (err) {
+      // Handle CORS errors
+      console.error('CORS error:', err.message, 'Origin:', req.headers.origin)
+      return res.status(403).json({ 
+        error: 'CORS policy violation', 
+        message: err.message,
+        allowedOrigins: allowedOrigins,
+        requestedOrigin: req.headers.origin
+      })
+    }
+    next()
+  })
+})
+
+// General error handler
+app.use((err, req, res, next) => {
+  console.error('Error:', err)
+  if (err.message && err.message.includes('CORS')) {
+    return res.status(403).json({ 
+      error: 'CORS policy violation', 
+      message: err.message,
+      allowedOrigins: allowedOrigins,
+      requestedOrigin: req.headers.origin
+    })
+  }
+  res.status(500).json({ error: 'Internal server error', message: err.message })
+})
+
 app.use(morgan('dev'))
 // Serve local uploads
 const path = require('path')
@@ -469,18 +525,81 @@ const requireAdmin = hasClerk
     }
   : (req, res) => res.status(501).json({ error: 'Auth not configured' })
 
-// Multer for local uploads
+// Multer for local uploads with increased file size limit (50mb)
 const multer = require('multer')
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, uploadsDir)
   },
   filename: function (req, file, cb) {
-    const safeName = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${file.originalname.replace(/[^a-zA-Z0-9.\-_/]/g, '_')}`
+    // Check if file is compressed (has .gz extension or compressed flag in metadata)
+    const isCompressed = req.headers['x-file-compressed'] === 'true' || file.originalname.endsWith('.gz')
+    const originalName = file.originalname.replace(/\.gz$/, '') // Remove .gz if present
+    const safeName = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${originalName.replace(/[^a-zA-Z0-9.\-_/]/g, '_')}`
     cb(null, safeName)
   },
 })
-const upload = multer({ storage })
+const upload = multer({ 
+  storage,
+  limits: {
+    fileSize: 50 * 1024 * 1024 // 50MB limit
+  }
+})
+
+// Middleware to decompress uploaded files if they're compressed
+async function decompressFileIfNeeded(req, res, next) {
+  if (!req.file) {
+    return next()
+  }
+
+  const isCompressed = req.headers['x-file-compressed'] === 'true'
+  
+  if (isCompressed) {
+    try {
+      const filePath = req.file.path
+      const originalFilename = req.headers['x-original-filename'] || req.file.originalname.replace(/\.gz$/, '')
+      
+      // Determine the decompressed file path
+      // Remove .gz extension if present, otherwise use original filename
+      let decompressedPath = filePath
+      if (filePath.endsWith('.gz')) {
+        decompressedPath = filePath.slice(0, -3) // Remove .gz
+      } else {
+        // If no .gz extension, create new path with original filename
+        const dir = path.dirname(filePath)
+        decompressedPath = path.join(dir, path.basename(originalFilename))
+      }
+      
+      // Read compressed file
+      const compressedData = fs.readFileSync(filePath)
+      
+      // Decompress using gunzip
+      const decompressedData = zlib.gunzipSync(compressedData)
+      
+      // Write decompressed file
+      fs.writeFileSync(decompressedPath, decompressedData)
+      
+      // Remove compressed file
+      if (filePath !== decompressedPath) {
+        fs.unlinkSync(filePath)
+      }
+      
+      // Update req.file to reflect the decompressed file
+      req.file.path = decompressedPath
+      req.file.filename = path.basename(decompressedPath)
+      req.file.originalname = originalFilename
+      req.file.size = decompressedData.length
+      
+      const compressionRatio = ((1 - compressedData.length / decompressedData.length) * 100).toFixed(2)
+      console.log(`Decompressed file: ${originalFilename} (${(compressedData.length / 1024).toFixed(2)}KB -> ${(decompressedData.length / 1024).toFixed(2)}KB, ${compressionRatio}% compression)`)
+    } catch (error) {
+      console.error('Error decompressing file:', error)
+      return res.status(500).json({ error: 'Failed to decompress file', details: error.message })
+    }
+  }
+  
+  next()
+}
 
 app.get('/api/payments/key', (req, res) => {
   if (!razorKeyId) return res.status(501).json({ error: 'Razorpay key not configured' })
@@ -671,7 +790,7 @@ app.delete('/api/courses/:id', requireAdmin, async (req, res) => {
 })
 
 // Upload thumbnail for a course
-app.post('/api/courses/:id/thumbnail', requireAdmin, upload.single('file'), async (req, res) => {
+app.post('/api/courses/:id/thumbnail', requireAdmin, upload.single('file'), decompressFileIfNeeded, async (req, res) => {
   if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
   const doc = await Course.findByIdAndUpdate(
     req.params.id,
@@ -683,7 +802,7 @@ app.post('/api/courses/:id/thumbnail', requireAdmin, upload.single('file'), asyn
 })
 
 // Upload a curriculum video item
-app.post('/api/courses/:id/curriculum', requireAdmin, upload.single('file'), async (req, res) => {
+app.post('/api/courses/:id/curriculum', requireAdmin, upload.single('file'), decompressFileIfNeeded, async (req, res) => {
   if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
   const { title, freePreview, durationSec } = req.body || {}
   const update = {
@@ -713,7 +832,7 @@ app.post('/api/courses/:id/modules', requireAdmin, async (req, res) => {
 })
 
 // Lesson upload (video/pdf) into a module index
-app.post('/api/courses/:id/modules/:mIdx/lessons', requireAdmin, upload.single('file'), async (req, res) => {
+app.post('/api/courses/:id/modules/:mIdx/lessons', requireAdmin, upload.single('file'), decompressFileIfNeeded, async (req, res) => {
   if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
   const { title, type, freePreview, durationSec, order } = req.body || {}
   const course = await Course.findById(req.params.id)
@@ -759,7 +878,7 @@ app.post('/api/courses/:id/chapters/:cIdx/modules', requireAdmin, async (req, re
   res.json(course)
 })
 
-app.post('/api/courses/:id/chapters/:cIdx/modules/:mIdx/lessons', requireAdmin, upload.single('file'), async (req, res) => {
+app.post('/api/courses/:id/chapters/:cIdx/modules/:mIdx/lessons', requireAdmin, upload.single('file'), decompressFileIfNeeded, async (req, res) => {
   if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
   const { title, type, freePreview, durationSec, order } = req.body || {}
   const course = await Course.findById(req.params.id)
@@ -783,13 +902,33 @@ app.post('/api/courses/:id/chapters/:cIdx/modules/:mIdx/lessons', requireAdmin, 
   res.json(course)
 })
 
-function getLessonFromCourse(course, mIdx, lIdx) {
+function getLessonFromCourse(course, mIdx, lIdx, cIdx = null) {
   const mi = Number(mIdx)
   const li = Number(lIdx)
-  if (!course.modules || !course.modules[mi]) return null
-  const module = course.modules[mi]
-  if (!module.lessons || !module.lessons[li]) return null
-  return module.lessons[li]
+  
+  // Try new chapters structure first (if cIdx is provided or chapters exist)
+  if (cIdx !== null || (course.chapters && course.chapters.length > 0)) {
+    const ci = cIdx !== null ? Number(cIdx) : 0 // Default to first chapter if not specified
+    if (course.chapters && course.chapters[ci]) {
+      const chapter = course.chapters[ci]
+      if (chapter.modules && chapter.modules[mi]) {
+        const module = chapter.modules[mi]
+        if (module.lessons && module.lessons[li]) {
+          return module.lessons[li]
+        }
+      }
+    }
+  }
+  
+  // Fallback to old modules structure
+  if (course.modules && course.modules[mi]) {
+    const module = course.modules[mi]
+    if (module.lessons && module.lessons[li]) {
+      return module.lessons[li]
+    }
+  }
+  
+  return null
 }
 
 // Helper: check if user is enrolled
@@ -801,44 +940,114 @@ async function isUserEnrolled(userId, courseId) {
 
 // Video streaming with Range support and access control
 app.get('/api/media/video/:courseId/:mIdx/:lIdx', async (req, res) => {
-  if (!dbConnected) return res.status(503).end()
-  const course = await Course.findById(req.params.courseId)
-  if (!course) return res.status(404).end()
-  const lesson = getLessonFromCourse(course, req.params.mIdx, req.params.lIdx)
-  if (!lesson || lesson.type !== 'video' || !lesson.videoPath) return res.status(404).end()
-  // Access: free preview OR enrolled user
-  let allowed = Boolean(lesson.freePreview)
-  const userId = (req.auth && req.auth.userId) || req.query.userHint
-  if (!allowed) {
-    if (Number(course.price || 0) === 0) allowed = true
-    else if (userId) allowed = await isUserEnrolled(userId, course.id)
+  if (!dbConnected) {
+    console.error('Database not connected')
+    return res.status(503).end()
   }
-  if (!allowed) return res.status(401).end()
-  const fsPath = path.join(uploadsDir, path.basename(lesson.videoPath))
-  if (!fs.existsSync(fsPath)) return res.status(404).end()
-  const stat = fs.statSync(fsPath)
-  const range = req.headers.range
-  const mime = 'video/mp4'
-  if (range) {
-    const parts = range.replace(/bytes=/, '').split('-')
-    const start = parseInt(parts[0], 10)
-    const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1
-    const chunkSize = end - start + 1
-    const file = fs.createReadStream(fsPath, { start, end })
-    res.writeHead(206, {
-      'Content-Range': `bytes ${start}-${end}/${stat.size}`,
-      'Accept-Ranges': 'bytes',
-      'Content-Length': chunkSize,
-      'Content-Type': mime,
+  
+  try {
+    const course = await Course.findById(req.params.courseId)
+    if (!course) {
+      console.error('Course not found:', req.params.courseId)
+      return res.status(404).end()
+    }
+    
+    // Try to get lesson from chapters structure first, then modules
+    const cIdx = req.query.cIdx !== undefined ? req.query.cIdx : null
+    const lesson = getLessonFromCourse(course, req.params.mIdx, req.params.lIdx, cIdx)
+    
+    if (!lesson || lesson.type !== 'video' || !lesson.videoPath) {
+      console.error('Lesson not found or invalid:', {
+        courseId: req.params.courseId,
+        mIdx: req.params.mIdx,
+        lIdx: req.params.lIdx,
+        cIdx: cIdx,
+        lesson: lesson ? { type: lesson.type, videoPath: lesson.videoPath } : null
+      })
+      return res.status(404).end()
+    }
+    
+    // Access control: free preview OR free course OR enrolled user
+    let allowed = Boolean(lesson.freePreview)
+    const userId = (req.auth && req.auth.userId) || req.query.userHint || req.headers['x-user-id']
+    
+    console.log('Video access check:', {
+      courseId: req.params.courseId,
+      userId: userId || 'none',
+      freePreview: lesson.freePreview,
+      coursePrice: course.price,
+      courseIsFree: course.isFree
     })
-    file.pipe(res)
-  } else {
-    res.writeHead(200, {
-      'Content-Length': stat.size,
-      'Content-Type': mime,
-      'Accept-Ranges': 'bytes',
-    })
-    fs.createReadStream(fsPath).pipe(res)
+    
+    if (!allowed) {
+      // Free course (price = 0 or isFree flag)
+      if (Number(course.price || 0) === 0 || course.isFree === true) {
+        allowed = true
+        console.log('Access granted: Free course')
+      } else if (userId) {
+        // Check enrollment
+        allowed = await isUserEnrolled(userId, course.id)
+        console.log('Enrollment check:', { userId, allowed })
+      } else {
+        console.log('Access denied: No userId provided')
+      }
+    } else {
+      console.log('Access granted: Free preview')
+    }
+    
+    if (!allowed) {
+      console.error('Access denied for video:', {
+        courseId: req.params.courseId,
+        userId: userId || 'none',
+        lessonTitle: lesson.title,
+        freePreview: lesson.freePreview,
+        coursePrice: course.price,
+        courseIsFree: course.isFree
+      })
+      return res.status(401).json({ 
+        error: 'Unauthorized', 
+        message: 'You must be enrolled to access this video',
+        courseId: req.params.courseId,
+        userId: userId || null
+      })
+    }
+    
+    const fsPath = path.join(uploadsDir, path.basename(lesson.videoPath))
+    if (!fs.existsSync(fsPath)) {
+      console.error('Video file not found:', fsPath)
+      return res.status(404).end()
+    }
+    
+    const stat = fs.statSync(fsPath)
+    const range = req.headers.range
+    const mime = 'video/mp4'
+    
+    if (range) {
+      const parts = range.replace(/bytes=/, '').split('-')
+      const start = parseInt(parts[0], 10)
+      const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1
+      const chunkSize = end - start + 1
+      const file = fs.createReadStream(fsPath, { start, end })
+      res.writeHead(206, {
+        'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': chunkSize,
+        'Content-Type': mime,
+        'Cache-Control': 'public, max-age=3600'
+      })
+      file.pipe(res)
+    } else {
+      res.writeHead(200, {
+        'Content-Length': stat.size,
+        'Content-Type': mime,
+        'Accept-Ranges': 'bytes',
+        'Cache-Control': 'public, max-age=3600'
+      })
+      fs.createReadStream(fsPath).pipe(res)
+    }
+  } catch (error) {
+    console.error('Error serving video:', error)
+    return res.status(500).json({ error: 'Internal server error', message: error.message })
   }
 })
 
@@ -1004,6 +1213,65 @@ app.post('/api/admin/enrollments/:id/approve', requireAdmin, async (req, res) =>
   const doc = await Enrollment.findByIdAndUpdate(req.params.id, { approved: true }, { new: true })
   if (!doc) return res.status(404).json({ error: 'Not found' })
   res.json(doc)
+})
+
+// Admin: Update an enrollment
+app.put('/api/admin/enrollments/:id', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const { name, email, courseId, approved, instrument } = req.body || {}
+  
+  const updateData = {}
+  if (name !== undefined) updateData.name = name
+  if (email !== undefined) updateData.email = email.trim().toLowerCase()
+  if (courseId !== undefined) updateData.courseId = courseId
+  if (approved !== undefined) updateData.approved = Boolean(approved)
+  if (instrument !== undefined) updateData.instrument = instrument
+  
+  // Validate email if provided
+  if (email !== undefined) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email.trim().toLowerCase())) {
+      return res.status(400).json({ error: 'Invalid email format' })
+    }
+  }
+  
+  // Check if course exists if courseId is being updated
+  if (courseId !== undefined) {
+    const course = await Course.findById(courseId)
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' })
+    }
+  }
+  
+  const doc = await Enrollment.findByIdAndUpdate(req.params.id, updateData, { new: true })
+  if (!doc) return res.status(404).json({ error: 'Not found' })
+  res.json(doc)
+})
+
+// Admin: Delete an enrollment
+app.delete('/api/admin/enrollments/:id', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const doc = await Enrollment.findByIdAndDelete(req.params.id)
+  if (!doc) return res.status(404).json({ error: 'Not found' })
+  res.json({ message: 'Enrollment deleted successfully', id: doc._id })
+})
+
+// Admin: Get enrollments filtered by manual enrollment (paymentId = 'manual-enrollment')
+app.get('/api/admin/enrollments/manual', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.json([])
+  const items = await Enrollment.find({ paymentId: 'manual-enrollment' }).sort({ createdAt: -1 })
+  
+  // Populate course information
+  const courseIds = items.map(e => e.courseId).filter(Boolean)
+  const courses = await Course.find({ _id: { $in: courseIds } })
+  const idToCourse = new Map(courses.map(c => [String(c._id), c]))
+  
+  const result = items.map(e => ({
+    ...e.toObject(),
+    course: idToCourse.get(String(e.courseId)) || null
+  }))
+  
+  res.json(result)
 })
 
 // Admin: Manually enroll a student by email
@@ -1370,7 +1638,7 @@ app.get('/api/me/schedules', requireAuthGuarded, async (req, res) => {
 // ==================== RESOURCES ENDPOINTS ====================
 
 // Admin: Upload a resource
-app.post('/api/admin/resources', requireAdmin, upload.single('file'), async (req, res) => {
+app.post('/api/admin/resources', requireAdmin, upload.single('file'), decompressFileIfNeeded, async (req, res) => {
   if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
   const { courseId, title, description, type, isPublic, order } = req.body || {}
   if (!courseId || !title) return res.status(400).json({ error: 'Missing required fields' })

@@ -13,6 +13,7 @@
     "@clerk/clerk-react": "^5.48.1",
     "@clerk/clerk-js": "^5.95.0",
     "axios": "^1.7.7",
+    "pako": "^2.1.0",
     "react-hot-toast": "^2.4.1",
     "react-player": "^2.16.0",
     "react-pdf": "^9.1.0",

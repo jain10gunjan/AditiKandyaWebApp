@@ -1195,6 +1195,11 @@ export default function AdminPage() {
                   <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-sky-700 transition-colors">New Enrollment Leads</h3>
                   <p className="text-sm text-slate-600">View recently submitted leads</p>
                 </a>
+                <a href="/admin/manual-enrollments" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-emerald-300 active:scale-95">
+                  <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">✏️</div>
+                  <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-emerald-700 transition-colors">Manual Enrollments</h3>
+                  <p className="text-sm text-slate-600">Manage manual enrollments</p>
+                </a>
                 <a href="/admin/contacts" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-green-300 active:scale-95">
                   <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">📧</div>
                   <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-green-700 transition-colors">Contact Submissions</h3>
