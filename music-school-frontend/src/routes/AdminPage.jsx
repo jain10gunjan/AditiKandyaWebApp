@@ -1163,11 +1163,11 @@ export default function AdminPage() {
                   <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-sky-700 transition-colors">Resources</h3>
                   <p className="text-sm text-slate-600">Upload and manage course resources</p>
                 </a>
-                <a href="/admin/courses/new" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-sky-300 active:scale-95">
+                {/* <a href="/admin/courses/new" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-sky-300 active:scale-95">
                   <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">➕</div>
                   <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-sky-700 transition-colors">Course Builder</h3>
                   <p className="text-sm text-slate-600">Build detailed course content</p>
-                </a>
+                </a> */}
                 <a 
                   href="/admin/teachers"
                   className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-green-300 active:scale-95 text-left relative overflow-hidden"
@@ -1275,7 +1275,7 @@ export default function AdminPage() {
               )}
             </div>
 
-            {/* Enrollment Management */}
+            {/* Enrollment Management
             <div className="mb-8">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-slate-900">Enrollment Management</h2>
@@ -1289,17 +1289,17 @@ export default function AdminPage() {
               </div>
 
               {/* Manual Enrollment Form */}
-              {showManualEnroll && (
+              {/* {showManualEnroll && (
                 <ManualEnrollmentForm
                   courses={courses}
                   onEnroll={handleManualEnroll}
                   onCancel={() => setShowManualEnroll(false)}
                   loading={enrolling}
                 />
-              )}
+              )} */}
 
               {/* Search and Filter */}
-              {enrollments.length > 0 && (
+              {/* {enrollments.length > 0 && (
                 <div className="mb-4 flex flex-col sm:flex-row gap-3">
                   <div className="flex-1 relative">
                     <input
@@ -1321,9 +1321,9 @@ export default function AdminPage() {
                     <option value="pending">Pending Only</option>
                   </select>
                 </div>
-              )}
+              )} */}
 
-              <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+              {/* <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
                 {enrollments.length === 0 ? (
                   <div className="p-8 text-center text-slate-500">
                     <div className="text-4xl mb-4">📝</div>
@@ -1441,8 +1441,8 @@ export default function AdminPage() {
                     </div>
                   )
                 })()}
-              </div>
-            </div>
+              </div> */}
+            {/* </div> } */}
           </div>
         </main>
 

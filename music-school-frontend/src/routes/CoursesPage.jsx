@@ -28,7 +28,23 @@ function CourseCard({ course, isEnrolled = false }) {
     >
       <div className="relative overflow-hidden rounded-xl">
         <img 
-          src={course.image || course.thumbnailPath || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=600&auto=format&fit=crop'} 
+          src={(() => {
+            // Build image URL - handle both full URLs and relative paths
+            if (course.image && (course.image.startsWith('http://') || course.image.startsWith('https://'))) {
+              return course.image
+            }
+            if (course.thumbnailPath) {
+              // thumbnailPath is stored as /uploads/filename, need to prepend API base URL
+              const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+              return `${baseUrl}${course.thumbnailPath}`
+            }
+            if (course.image) {
+              // If image is a relative path, prepend API base URL
+              const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+              return course.image.startsWith('/') ? `${baseUrl}${course.image}` : `${baseUrl}/${course.image}`
+            }
+            return 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=600&auto=format&fit=crop'
+          })()}
           alt={course.title} 
           className="h-40 w-full object-cover group-hover:scale-110 transition-transform duration-500" 
           onError={(e) => {

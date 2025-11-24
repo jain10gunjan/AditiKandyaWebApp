@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth, useUser, SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
-import { apiGet, apiPost, apiPut } from '../lib/api'
+import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api'
 import toast from 'react-hot-toast'
 
 function AdminGuard({ children }) {
@@ -360,10 +360,20 @@ function CourseBasicInfoForm({ course, teachers, onSave, loading }) {
   )
 }
 
-function ModuleCard({ module, moduleIndex, courseId, onAddLesson, onDeleteModule, onReload, getToken }) {
+function ModuleCard({ module, moduleIndex, courseId, onAddLesson, onDeleteModule, onReload, getToken, totalModules, onReorder, sortedIndex, sortedModules }) {
   const [expanded, setExpanded] = useState(true)
   const [showLessonForm, setShowLessonForm] = useState({ type: null })
   const [uploading, setUploading] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState(module.title)
+  const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  useEffect(() => {
+    if (!isEditing) {
+      setEditTitle(module.title)
+    }
+  }, [module.title, isEditing])
 
   const handleAddLesson = async (formData, file) => {
     try {
@@ -389,7 +399,7 @@ function ModuleCard({ module, moduleIndex, courseId, onAddLesson, onDeleteModule
       
       toast.success('Lesson added successfully! ✅')
       setShowLessonForm({ type: null })
-      onReload()
+      onReload(true) // preserveScroll = true
     } catch (error) {
       console.error('Failed to add lesson:', error)
       toast.error('Failed to add lesson. Please try again.')
@@ -398,11 +408,78 @@ function ModuleCard({ module, moduleIndex, courseId, onAddLesson, onDeleteModule
     }
   }
 
+  const handleEditModule = async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!editTitle.trim()) {
+      toast.error('Module title cannot be empty')
+      return
+    }
+    try {
+      setSaving(true)
+      const token = await getToken()
+      await apiPut(`/courses/${courseId}/modules/${moduleIndex}`, { title: editTitle.trim() }, token)
+      toast.success('Module updated successfully! ✅')
+      setIsEditing(false)
+      onReload(true) // preserveScroll = true
+    } catch (error) {
+      console.error('Failed to update module:', error)
+      toast.error('Failed to update module. Please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDeleteModule = async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!confirm(`Delete module "${module.title}"? This will also delete all ${module.lessons?.length || 0} lessons in this module. This action cannot be undone.`)) {
+      return
+    }
+    try {
+      setDeleting(true)
+      const token = await getToken()
+      await apiDelete(`/courses/${courseId}/modules/${moduleIndex}`, token)
+      toast.success('Module deleted successfully! ✅')
+      onReload(true) // preserveScroll = true
+    } catch (error) {
+      console.error('Failed to delete module:', error)
+      toast.error('Failed to delete module. Please try again.')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const handleReorder = async (direction) => {
+    const newSortedIndex = direction === 'up' ? sortedIndex - 1 : sortedIndex + 1
+    if (newSortedIndex < 0 || newSortedIndex >= totalModules) return
+    
+    // Find the original index of the module at the new sorted position
+    const targetModule = sortedModules[newSortedIndex]
+    
+    // Use original indices for the API call
+    const fromOriginalIndex = moduleIndex
+    const toOriginalIndex = targetModule.originalIndex
+    
+    try {
+      const token = await getToken()
+      await apiPost(`/courses/${courseId}/modules/reorder`, {
+        fromIndex: fromOriginalIndex,
+        toIndex: toOriginalIndex
+      }, token)
+      toast.success('Module order updated! ✅')
+      onReload(true) // preserveScroll = true
+    } catch (error) {
+      console.error('Failed to reorder module:', error)
+      toast.error('Failed to reorder module. Please try again.')
+    }
+  }
+
   return (
     <div className="bg-white rounded-xl border-2 border-slate-200 hover:border-sky-300 transition-all duration-300 shadow-sm hover:shadow-md">
       <div 
         className="p-4 cursor-pointer hover:bg-slate-50 transition-colors"
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => !isEditing && setExpanded(!expanded)}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 flex-1">
@@ -410,19 +487,89 @@ function ModuleCard({ module, moduleIndex, courseId, onAddLesson, onDeleteModule
               <span className="text-sky-600 font-bold">{moduleIndex + 1}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-slate-900 text-lg mb-1">{module.title}</h3>
-              <div className="flex items-center gap-4 text-sm text-slate-600">
-                <span>{module.lessons?.length || 0} lessons</span>
-                <span className="text-sky-600 font-medium">
-                  {module.lessons?.filter(l => l.type === 'video').length || 0} videos
-                </span>
-                <span className="text-emerald-600 font-medium">
-                  {module.lessons?.filter(l => l.type === 'pdf').length || 0} PDFs
-                </span>
-              </div>
+              {isEditing ? (
+                <form onSubmit={handleEditModule} onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="w-full border border-sky-300 rounded-lg p-2 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all font-semibold text-lg mb-1"
+                    autoFocus
+                    onBlur={() => {
+                      if (editTitle.trim() === module.title) {
+                        setIsEditing(false)
+                        setEditTitle(module.title)
+                      }
+                    }}
+                  />
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="px-3 py-1 bg-sky-600 text-white rounded-lg text-sm hover:bg-sky-700 transition-all disabled:opacity-50"
+                    >
+                      {saving ? 'Saving...' : 'Save'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setIsEditing(false)
+                        setEditTitle(module.title)
+                      }}
+                      disabled={saving}
+                      className="px-3 py-1 bg-slate-200 text-slate-700 rounded-lg text-sm hover:bg-slate-300 transition-all disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <h3 className="font-semibold text-slate-900 text-lg mb-1">{module.title}</h3>
+                  <div className="flex items-center gap-4 text-sm text-slate-600">
+                    <span>{module.lessons?.length || 0} lessons</span>
+                    <span className="text-sky-600 font-medium">
+                      {module.lessons?.filter(l => l.type === 'video').length || 0} videos
+                    </span>
+                    <span className="text-emerald-600 font-medium">
+                      {module.lessons?.filter(l => l.type === 'pdf').length || 0} PDFs
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {/* Reorder Buttons */}
+            <div className="flex flex-col gap-1">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleReorder('up')
+                }}
+                disabled={sortedIndex === 0 || isEditing || deleting}
+                className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded text-slate-600 hover:text-slate-800 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Move up"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleReorder('down')
+                }}
+                disabled={sortedIndex === totalModules - 1 || isEditing || deleting}
+                className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded text-slate-600 hover:text-slate-800 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Move down"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
             <span className="text-slate-400 text-xl transform transition-transform duration-300">
               {expanded ? '▼' : '▶'}
             </span>
@@ -435,29 +582,52 @@ function ModuleCard({ module, moduleIndex, courseId, onAddLesson, onDeleteModule
           {/* Add Lesson Buttons */}
           <div className="flex gap-2 flex-wrap">
             <button
-              onClick={() => setShowLessonForm({ type: 'video' })}
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowLessonForm({ type: 'video' })
+              }}
               className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-all font-medium text-sm shadow-sm hover:shadow-md active:scale-95 flex items-center gap-2"
             >
               <span>🎥</span>
-              <span>Add Video</span>
+              <span>Add Lessons</span>
             </button>
             <button
-              onClick={() => setShowLessonForm({ type: 'pdf' })}
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowLessonForm({ type: 'pdf' })
+              }}
               className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all font-medium text-sm shadow-sm hover:shadow-md active:scale-95 flex items-center gap-2"
             >
               <span>📄</span>
               <span>Add PDF</span>
             </button>
             <button
-              onClick={async () => {
-                if (confirm(`Delete module "${module.title}"? This will also delete all lessons in this module.`)) {
-                  // Delete module logic would go here
-                  toast.error('Module deletion not implemented yet')
-                }
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsEditing(true)
               }}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-medium text-sm shadow-sm hover:shadow-md active:scale-95"
+              disabled={isEditing || deleting}
+              className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-all font-medium text-sm shadow-sm hover:shadow-md active:scale-95 disabled:opacity-50 flex items-center gap-2"
             >
-              Delete Module
+              <span>✏️</span>
+              <span>Edit Module</span>
+            </button>
+            <button
+              onClick={handleDeleteModule}
+              disabled={deleting || isEditing}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-medium text-sm shadow-sm hover:shadow-md active:scale-95 disabled:opacity-50 flex items-center gap-2"
+            >
+              {deleting ? (
+                <>
+                  <span className="animate-spin">⏳</span>
+                  <span>Deleting...</span>
+                </>
+              ) : (
+                <>
+                  <span>🗑️</span>
+                  <span>Delete Module</span>
+                </>
+              )}
             </button>
           </div>
 
@@ -737,26 +907,54 @@ export default function AdminCourseBuilderUnified() {
   const [mOrder, setMOrder] = useState('')
   const [addingModule, setAddingModule] = useState(false)
 
-  const reload = async () => {
+  const reload = async (preserveScroll = false) => {
     try {
-      setLoading(true)
+      // Save scroll position if requested
+      const scrollY = preserveScroll ? window.scrollY : null
+      
+      // Don't show loading spinner for minor updates to prevent UI flicker
+      if (!preserveScroll) {
+        setLoading(true)
+      }
+      
       const [courseData, teachersData] = await Promise.all([
         apiGet(`/courses/${id}`),
         apiGet('/teachers')
       ])
       setCourse(courseData)
       setTeachers(teachersData)
+      
+      // Restore scroll position after state update
+      if (preserveScroll && scrollY !== null) {
+        // Use multiple attempts to ensure scroll position is restored
+        // React may batch state updates, so we need to wait for render
+        const restoreScroll = () => {
+          window.scrollTo({ top: scrollY, left: 0, behavior: 'instant' })
+          document.documentElement.scrollTop = scrollY
+          document.body.scrollTop = scrollY
+        }
+        
+        // Try immediately and after render cycles
+        requestAnimationFrame(() => {
+          restoreScroll()
+          setTimeout(restoreScroll, 0)
+          setTimeout(restoreScroll, 10)
+          setTimeout(restoreScroll, 50)
+        })
+      }
     } catch (error) {
       console.error('Failed to load data:', error)
       toast.error('Failed to load course data')
     } finally {
-      setLoading(false)
+      if (!preserveScroll) {
+        setLoading(false)
+      }
     }
   }
 
   useEffect(() => {
     if (id) {
-      reload()
+      reload(false) // Initial load, don't preserve scroll
     }
   }, [id])
 
@@ -766,7 +964,7 @@ export default function AdminCourseBuilderUnified() {
       const token = await getToken()
       await apiPut(`/courses/${id}`, formData, token)
       toast.success('Course information saved successfully! ✅')
-      reload()
+      reload(true) // preserveScroll = true
     } catch (error) {
       console.error('Failed to save course:', error)
       toast.error('Failed to save course. Please try again.')
@@ -787,7 +985,7 @@ export default function AdminCourseBuilderUnified() {
       toast.success('Module added successfully! ✅')
       setMTitle('')
       setMOrder('')
-      reload()
+      reload(true) // preserveScroll = true
     } catch (error) {
       console.error('Failed to add module:', error)
       toast.error('Failed to add module. Please try again.')
@@ -950,18 +1148,28 @@ export default function AdminCourseBuilderUnified() {
               {/* Modules List */}
               {course.modules && course.modules.length > 0 ? (
                 <div className="space-y-4">
-                  {course.modules.map((module, moduleIndex) => (
-                    <ModuleCard
-                      key={moduleIndex}
-                      module={module}
-                      moduleIndex={moduleIndex}
-                      courseId={course._id}
-                      onAddLesson={() => {}}
-                      onDeleteModule={() => {}}
-                      onReload={reload}
-                      getToken={getToken}
-                    />
-                  ))}
+                  {(() => {
+                    const sortedModules = [...course.modules]
+                      .map((module, index) => ({ module, originalIndex: index }))
+                      .sort((a, b) => (a.module.order || a.originalIndex) - (b.module.order || b.originalIndex))
+                    
+                    return sortedModules.map(({ module, originalIndex }, sortedIndex) => (
+                      <ModuleCard
+                        key={originalIndex}
+                        module={module}
+                        moduleIndex={originalIndex}
+                        courseId={course._id}
+                        onAddLesson={() => {}}
+                        onDeleteModule={() => {}}
+                        onReload={reload}
+                        getToken={getToken}
+                        totalModules={course.modules.length}
+                        onReorder={reload}
+                        sortedIndex={sortedIndex}
+                        sortedModules={sortedModules}
+                      />
+                    ))
+                  })()}
                 </div>
               ) : (
                 <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-slate-200">

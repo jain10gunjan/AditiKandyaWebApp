@@ -782,7 +782,7 @@ export default function AdminCourseBuilder() {
                           onClick={() => startAddLesson(moduleIndex, 'video')}
                           className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors font-medium"
                         >
-                          + Add Video
+                          + Add Lessons
                         </button>
                         <button
                           onClick={() => startAddLesson(moduleIndex, 'pdf')}

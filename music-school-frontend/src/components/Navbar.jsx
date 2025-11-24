@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from '@clerk/clerk-react'
-import logo from '../assets/logo.png'
+//import logo from '../assets/logo.jpg'
+import logo3 from '../assets/logo3.jpg'
+import logo4 from '../assets/logo4.jpg'
 
-export default function Navbar({ subtitle = '- By Aditi Kandya' }) {
+export default function Navbar({ subtitle = 'Aditi Kandya' }) {
   const { user, isSignedIn } = useUser()
   const isAdmin = user?.emailAddresses?.[0]?.emailAddress === 'themusinest@gmail.com'
   const [dropdownOpen, setDropdownOpen] = useState(null)
@@ -65,16 +67,25 @@ export default function Navbar({ subtitle = '- By Aditi Kandya' }) {
           {/* Desktop Navbar */}
           <div className="hidden md:flex items-center justify-center h-20 relative">
             {/* Logo - Absolute Left */}
-            <div className="absolute left-4 flex items-center gap-3">
+            <div className="absolute left-4 flex items-center gap-3 ">
               <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                <img 
-                  src={logo} 
+                {/* <img 
+                  src={logo4} 
                   alt="Themusinest Logo" 
-                  className="h-12 w-auto object-contain"
-                />
+                  className="h-10 w-auto object-contain pt-2"
+                /> */}
                 <div>
-                  <span className="font-cinema text-white text-lg font-bold">The Musinest</span>
-                  <div className="text-xs text-white/70 font-medium">{subtitle}</div>
+                  <span className="font-cinema text-white text-lg"
+                  style={{
+                    fontFamily: "'Satisfy', cursive"
+                  }}
+                  >The Musinest
+                  <sub><p className="text-[11px] text-white/70 text-center"
+                   style={{
+                    fontFamily: "'Dancing Script', cursive"
+                  }}
+                  >{subtitle}</p></sub>
+                  </span>
                 </div>
               </a>
             </div>
@@ -85,7 +96,10 @@ export default function Navbar({ subtitle = '- By Aditi Kandya' }) {
                 <a
                   key={link.href}
                   href={link.href}
-                  className="text-white/90 hover:text-[#FFD700] font-bold transition-colors text-sm uppercase tracking-wide whitespace-nowrap"
+                  className="text-white/90 hover:text-[#FFD700] transition-colors text-sm uppercase tracking-wide whitespace-nowrap"
+                  style={{
+                    fontFamily: "'Cinzel', serif",
+                  }}
                 >
                   {link.label}
                 </a>
@@ -95,7 +109,10 @@ export default function Navbar({ subtitle = '- By Aditi Kandya' }) {
               <div className="relative dropdown-container">
                 <button
                   onClick={() => setDropdownOpen(dropdownOpen === 'programs' ? null : 'programs')}
-                  className="text-white/90 hover:text-[#FFD700] font-bold transition-colors text-sm uppercase tracking-wide whitespace-nowrap flex items-center gap-1"
+                  className="text-white/90 hover:text-[#FFD700] transition-colors text-sm uppercase tracking-wide whitespace-nowrap flex items-center gap-1"
+                  style={{
+                    fontFamily: "'Cinzel', serif"
+                  }}
                 >
                   Programs
                   <svg className={`w-4 h-4 transition-transform ${dropdownOpen === 'programs' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,6 +127,9 @@ export default function Navbar({ subtitle = '- By Aditi Kandya' }) {
                         href={link.href}
                         className="block px-4 py-2 text-white/90 hover:text-[#FFD700] hover:bg-white/10 transition-colors text-sm font-medium"
                         onClick={() => setDropdownOpen(null)}
+                        style={{
+                          fontFamily: "'Dancing Script', cursive"
+                        }}
                       >
                         {link.label}
                       </a>
@@ -123,6 +143,9 @@ export default function Navbar({ subtitle = '- By Aditi Kandya' }) {
                 <button
                   onClick={() => setDropdownOpen(dropdownOpen === 'about' ? null : 'about')}
                   className="text-white/90 hover:text-[#FFD700] font-bold transition-colors text-sm uppercase tracking-wide whitespace-nowrap flex items-center gap-1"
+                  style={{
+                    fontFamily: "'Cinzel', serif",
+                  }}
                 >
                   About
                   <svg className={`w-4 h-4 transition-transform ${dropdownOpen === 'about' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,6 +171,9 @@ export default function Navbar({ subtitle = '- By Aditi Kandya' }) {
               <a
                 href="/contact"
                 className="text-white/90 hover:text-[#FFD700] font-bold transition-colors text-sm uppercase tracking-wide whitespace-nowrap"
+                style={{
+                  fontFamily: "'Cinzel', serif",
+                }}
               >
                 Contact
               </a>
@@ -156,6 +182,9 @@ export default function Navbar({ subtitle = '- By Aditi Kandya' }) {
                 <a
                   href="/dashboard"
                   className="text-white/90 hover:text-[#FFD700] font-bold transition-colors text-sm uppercase tracking-wide whitespace-nowrap"
+                  style={{
+                    fontFamily: "'Cinzel', serif",
+                  }}
                 >
                   Dashboard
                 </a>
@@ -164,7 +193,10 @@ export default function Navbar({ subtitle = '- By Aditi Kandya' }) {
               {isAdmin && (
                 <a
                   href="/admin"
-                  className="text-white/90 hover:text-[#FFD700] font-bold transition-colors text-sm uppercase tracking-wide whitespace-nowrap"
+                  className="text-white/90 hover:text-[#F5E6E0] font-bold transition-colors text-sm uppercase tracking-wide whitespace-nowrap"
+                  style={{
+                    fontFamily: "'Cinzel', serif",
+                  }}
                 >
                   Admin
                 </a>
@@ -190,7 +222,7 @@ export default function Navbar({ subtitle = '- By Aditi Kandya' }) {
           <div className="md:hidden flex items-center justify-between h-16">
             <a href="/" className="flex items-center gap-2">
               <img 
-                src={logo} 
+                src={logo3} 
                 alt="Themusinest Logo" 
                 className="h-10 w-auto object-contain"
               />

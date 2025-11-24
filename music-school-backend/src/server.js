@@ -298,6 +298,8 @@ const Lead = mongoose.model(
       email: String,
       whatsapp: String,
       country: String,
+      courseId: String, // Course ID for which the user is enrolling
+      courseTitle: String, // Course title for reference
     },
     { timestamps: true }
   )
@@ -834,6 +836,62 @@ app.post('/api/courses/:id/modules', requireAdmin, async (req, res) => {
   const doc = await Course.findByIdAndUpdate(req.params.id, update, { new: true })
   if (!doc) return res.status(404).json({ error: 'Not found' })
   res.json(doc)
+})
+
+// Update module
+app.put('/api/courses/:id/modules/:mIdx', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const { title, order } = req.body || {}
+  const course = await Course.findById(req.params.id)
+  if (!course) return res.status(404).json({ error: 'Course not found' })
+  const mIdx = Number(req.params.mIdx)
+  if (!course.modules || !course.modules[mIdx]) return res.status(400).json({ error: 'Invalid module index' })
+  
+  if (title !== undefined) course.modules[mIdx].title = title
+  if (order !== undefined) course.modules[mIdx].order = Number(order)
+  
+  await course.save()
+  res.json(course)
+})
+
+// Delete module
+app.delete('/api/courses/:id/modules/:mIdx', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const course = await Course.findById(req.params.id)
+  if (!course) return res.status(404).json({ error: 'Course not found' })
+  const mIdx = Number(req.params.mIdx)
+  if (!course.modules || !course.modules[mIdx]) return res.status(400).json({ error: 'Invalid module index' })
+  
+  course.modules.splice(mIdx, 1)
+  await course.save()
+  res.json(course)
+})
+
+// Reorder modules (swap two modules)
+app.post('/api/courses/:id/modules/reorder', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const { fromIndex, toIndex } = req.body || {}
+  const course = await Course.findById(req.params.id)
+  if (!course) return res.status(404).json({ error: 'Course not found' })
+  
+  const from = Number(fromIndex)
+  const to = Number(toIndex)
+  
+  if (!course.modules || from < 0 || to < 0 || from >= course.modules.length || to >= course.modules.length) {
+    return res.status(400).json({ error: 'Invalid module indices' })
+  }
+  
+  // Swap modules
+  const [movedModule] = course.modules.splice(from, 1)
+  course.modules.splice(to, 0, movedModule)
+  
+  // Update order values to match new positions
+  course.modules.forEach((module, index) => {
+    module.order = index
+  })
+  
+  await course.save()
+  res.json(course)
 })
 
 // Lesson upload (video/pdf) into a module index
@@ -2054,9 +2112,16 @@ app.post('/api/dev/seed', async (req, res) => {
 // Public: create a new enrollment lead
 app.post('/api/leads', async (req, res) => {
   if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
-  const { fullName, email, whatsapp, country } = req.body || {}
+  const { fullName, email, whatsapp, country, courseId, courseTitle } = req.body || {}
   if (!fullName || !email) return res.status(400).json({ error: 'Missing required fields' })
-  const doc = await Lead.create({ fullName, email, whatsapp: whatsapp || '', country: country || '' })
+  const doc = await Lead.create({ 
+    fullName, 
+    email, 
+    whatsapp: whatsapp || '', 
+    country: country || '',
+    courseId: courseId || '',
+    courseTitle: courseTitle || ''
+  })
   res.status(201).json({ id: doc._id, message: 'Lead captured' })
 })
 

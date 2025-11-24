@@ -3,6 +3,25 @@ import { apiPost } from '../lib/api.js'
 import toast from 'react-hot-toast'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
+import aditiProfileImage01 from '../assets/profileImages/image1.jpg'
+
+// Static teachers data
+const staticTeachers = [
+  {
+    id: 1,
+    name: 'Aditi Kandya',
+    instrument: 'Piano & Vocals',
+    description: 'A pianist, classical vocalist, and passionate music educator. With years of training and a deep love for music, I bring expertise in both Western classical piano (ABRSM Grade 8) and Indian classical vocals.',
+    image: aditiProfileImage01
+  },
+  {
+    id: 2,
+    name: 'Expert Instructor',
+    instrument: 'Guitar & Drums',
+    description: 'An experienced musician and educator specializing in guitar and drums. Dedicated to helping students discover their musical potential through personalized instruction and innovative teaching methods.',
+    image: aditiProfileImage01 // You can replace this with another image
+  }
+]
 
 export default function TeachersPage() {
   const [showConsultationForm, setShowConsultationForm] = useState(false)
@@ -178,7 +197,7 @@ export default function TeachersPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen">
       <Navbar />
       
       <main className="pb-20 md:pb-16">
@@ -194,239 +213,168 @@ export default function TeachersPage() {
           </div>
         </section>
 
-        {/* Teacher Introduction */}
-        <section className="bg-white py-16 md:py-20">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-black rounded-2xl shadow-2xl p-8 md:p-12 border border-[#FFD700]/30">
-              <div className="text-center mb-8">
-                <div className="w-48 h-48 md:w-56 md:h-56 rounded-full mx-auto mb-6 overflow-hidden border-4 border-[#FFD700]/50 shadow-2xl">
-                  <img 
-                    src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80" 
-                    alt="Aditi Kandya" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <h2 className="text-3xl md:text-4xl font-cinema font-bold text-white mb-4">
-                  Hi, I'm Aditi Kandya
-                </h2>
-                <p className="text-xl text-white/90 font-medium mb-6">
-                  A pianist, classical vocalist, and passionate music educator
-                </p>
-                <p className="text-lg text-white/80 leading-relaxed">
-                  With years of training and a deep love for music, I have:
-                </p>
-              </div>
+        {/* Teachers Section - Alternating Layout */}
+        <section className="py-16 md:py-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="space-y-0">
+            <div
+                    
+                    className={`flex flex-col ${'md:flex-row-reverse'} min-h-[600px] md:min-h-[700px]`}
+                  >
+                    {/* Image Section - No rounded corners */}
+                    <div className="w-full md:w-1/2 flex-shrink-0 relative bg-slate-900">
+                      <img
+                        src={aditiProfileImage01}
+                        alt={`Aditi Kandya`}
+                        className="w-full h-full object-cover"
+                        style={{ 
+                          minHeight: '600px',
+                          maxHeight: '700px'
+                        }}
+                        onError={(e) => {
+                          e.target.src = aditiProfileImage01
+                        }}
+                      />
+                    </div>
+                    
+                    {/* Content Section */}
+                    <div className="w-full md:w-1/2 flex-shrink-0 bg-black flex items-center">
+                      <div className="p-8 md:p-12 lg:p-16 w-full">
+                        <h2 className="text-4xl md:text-5xl lg:text-6xl font-cinema font-bold text-white mb-6 md:mb-8">
+                        Aditi Kandya
+                        </h2>
+                        <p className="text-xl md:text-2xl text-white/90 font-medium mb-6 md:mb-8"
+                          style={{
+                            fontFamily: "'Satisfy', cursive"
+                          }}
+                        >
+                        Pianist, Vocalist & Music Educator
+                        </p>
+                        <p className="text-base md:text-lg text-white/80 leading-relaxed mb-8 md:mb-10"
+                          style={{
+                            fontFamily: "'Bitter', serif"
+                          }}
+                        >
+                          Hi, I'm Aditi Kandya — a pianist, classical vocalist, and passionate music educator. With years of training and a deep love for music, I have completed ABRSM Grade 8 in Piano and am also a trained Indian classical vocalist. My learning journey has taken me beyond performance and teaching.
+                        </p>
+                        <button
+                          onClick={() => {
+                            setShowConsultationForm(true)
+                            setTimeout(() => {
+                              nameInputRef.current?.focus()
+                            }, 100)
+                          }}
+                          className="px-8 py-4 bg-white text-black hover:bg-white/90 font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl"
+                        >
+                          CONTACT US
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+            </div>
+          </div>
+        </section>
+
+         {/* Teachers Section - Alternating Layout */}
+         <section className="py-4 md:py-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="space-y-0">
+            <div
+                    
+                    className={`flex flex-col ${'md:flex-row-reverse'} min-h-[600px] md:min-h-[700px]`}
+                  >
+
+                      {/* Content Section */}
+                      <div className="w-full md:w-1/2 flex-shrink-0 bg-black flex items-center">
+                      <div className="p-8 md:p-12 lg:p-16 w-full">
+                         
               
-              <div className="grid md:grid-cols-2 gap-6 mb-8">
-                <div className="bg-white/10 rounded-xl p-6 border border-[#FFD700]/30">
-                  <div className="text-3xl mb-3">🎹</div>
-                  <h3 className="text-xl font-bold text-white mb-2">Completed ABRSM Grade 8</h3>
-                  <p className="text-white/80 font-medium">Piano certification</p>
-                </div>
-                <div className="bg-white/10 rounded-xl p-6 border border-[#FFD700]/30">
-                  <div className="text-3xl mb-3">🎤</div>
-                  <h3 className="text-xl font-bold text-white mb-2">Indian Classical Vocalist</h3>
-                  <p className="text-white/80 font-medium">Trained in classical vocals</p>
-                </div>
-              </div>
+                        <p className="text-base md:text-lg text-white/80 leading-relaxed mb-8 md:mb-10"
+                          style={{
+                            fontFamily: "'Bitter', serif"
+                          }}
+                        >
+                          I have attended a 21-day summer course in composition at KM Music Conservatory, Chennai, and completed a 2-week intensive course in Sound Engineering, expanding my skills in both creative and technical aspects of music. My journey has taken me from being a curious learner to becoming a mentor who helps students of all ages discover the joy of playing and understanding music.
+                        </p>
+                        <button
+                          onClick={() => {
+                            setShowConsultationForm(true)
+                            setTimeout(() => {
+                              nameInputRef.current?.focus()
+                            }, 100)
+                          }}
+                          className="px-8 py-4 bg-white text-black hover:bg-white/90 font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl"
+                        >
+                          CONTACT US
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Image Section - No rounded corners */}
+                    <div className="w-full md:w-1/2 flex-shrink-0 relative bg-slate-900">
+                      <img
+                        src={aditiProfileImage01}
+                        alt={`Aditi Kandya`}
+                        className="w-full h-full object-cover"
+                        style={{ 
+                          minHeight: '600px',
+                          maxHeight: '700px'
+                        }}
+                        onError={(e) => {
+                          e.target.src = aditiProfileImage01
+                        }}
+                      />
+                    </div>
+                    
+                  
+                  </div>
             </div>
           </div>
         </section>
 
-        {/* Learning Journey */}
-        <section className="bg-black py-16 md:py-20">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl md:text-4xl font-cinema font-bold text-white text-center mb-12">
-              My Learning Journey
-            </h2>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-white rounded-2xl shadow-xl p-8 border border-white/20">
-                <div className="text-4xl mb-4">🎓</div>
-                <h3 className="text-2xl font-bold text-black mb-3">KM Music Conservatory</h3>
-                <p className="text-black/70 font-medium">
-                  Attended a 21-day summer course in Composition at KM Music Conservatory, Chennai
-                </p>
-              </div>
-              <div className="bg-white rounded-2xl shadow-xl p-8 border border-white/20">
-                <div className="text-4xl mb-4">🎚️</div>
-                <h3 className="text-2xl font-bold text-black mb-3">Sound Engineering</h3>
-                <p className="text-black/70 font-medium">
-                  Completed a 2-week intensive course in Sound Engineering
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Recognition & Achievements */}
-        <section className="bg-white py-16 md:py-20">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl md:text-4xl font-cinema font-bold text-black text-center mb-12">
-              Recognition & Achievements
-            </h2>
-            <div className="bg-black rounded-2xl shadow-2xl p-8 border border-[#FFD700]/30">
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="text-center p-6 bg-white/10 rounded-xl border border-[#FFD700]/30">
-                  <div className="text-4xl mb-3">🎹</div>
-                  <div className="text-3xl font-bold text-[#FFD700] mb-2">ABRSM</div>
-                  <div className="text-lg font-bold text-white mb-1">Grade 8</div>
-                  <div className="text-sm text-white/80 font-medium">Piano certification</div>
-                </div>
-                <div className="text-center p-6 bg-white/10 rounded-xl border border-[#FFD700]/30">
-                  <div className="text-4xl mb-3">👥</div>
-                  <div className="text-3xl font-bold text-[#FFD700] mb-2">50+</div>
-                  <div className="text-lg font-bold text-white mb-1">Students</div>
-                  <div className="text-sm text-white/80 font-medium">Taught across various ages</div>
-                </div>
-                <div className="text-center p-6 bg-white/10 rounded-xl border border-[#FFD700]/30">
-                  <div className="text-4xl mb-3">🎤</div>
-                  <div className="text-3xl font-bold text-[#FFD700] mb-2">Indian</div>
-                  <div className="text-lg font-bold text-white mb-1">Classical</div>
-                  <div className="text-sm text-white/80 font-medium">Vocal training completed</div>
-                </div>
-                <div className="text-center p-6 bg-white/10 rounded-xl border border-[#FFD700]/30">
-                  <div className="text-4xl mb-3">⏱️</div>
-                  <div className="text-3xl font-bold text-[#FFD700] mb-2">4+</div>
-                  <div className="text-lg font-bold text-white mb-1">Years</div>
-                  <div className="text-sm text-white/80 font-medium">Teaching experience</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+         
 
         {/* Teaching Philosophy */}
-        <section className="bg-black py-16 md:py-20">
+        <section className="py-8 md:py-8">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl md:text-4xl font-cinema font-bold text-white text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-cinema font-bold text-center mb-12">
               My Teaching Philosophy
             </h2>
             <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-white rounded-2xl shadow-xl p-8 border border-white/20">
+              <div className="bg-black text-white  shadow-xl p-8 border border-white/20">
                 <div className="text-4xl mb-4">❤️</div>
-                <h3 className="text-2xl font-bold text-black mb-3">Passion-Driven</h3>
-                <p className="text-black/70 font-medium">
+                <h3 className="text-2xl font-bold mb-3">Passion-Driven</h3>
+                <p className="font-medium">
                   Every lesson is infused with genuine love for music and dedication to student success.
                 </p>
               </div>
-              <div className="bg-white rounded-2xl shadow-xl p-8 border border-white/20">
+              <div className="bg-black text-white shadow-xl p-8 border border-white/20">
                 <div className="text-4xl mb-4">🎯</div>
-                <h3 className="text-2xl font-bold text-black mb-3">Goal-Oriented</h3>
-                <p className="text-black/70 font-medium">
+                <h3 className="text-2xl font-bold mb-3">Goal-Oriented</h3>
+                <p className="  font-medium">
                   Clear, achievable milestones keep you motivated and steadily progressing.
                 </p>
               </div>
-              <div className="bg-white rounded-2xl shadow-xl p-8 border border-white/20">
+              <div className="bg-black text-white shadow-xl p-8 border border-white/20">
                 <div className="text-4xl mb-4">⚖️</div>
-                <h3 className="text-2xl font-bold text-black mb-3">Balanced Approach</h3>
-                <p className="text-black/70 font-medium">
+                <h3 className="text-2xl font-bold mb-3">Balanced Approach</h3>
+                <p className=" font-medium">
                   Striking the perfect balance between structure and creativity in music learning.
                 </p>
               </div>
-              <div className="bg-white rounded-2xl shadow-xl p-8 border border-white/20">
+              <div className="bg-black text-white shadow-xl p-8 border border-white/20">
                 <div className="text-4xl mb-4">🌱</div>
-                <h3 className="text-2xl font-bold text-black mb-3">Personal Growth</h3>
-                <p className="text-black/70 font-medium">
+                <h3 className="text-2xl font-bold mb-3">Personal Growth</h3>
+                <p className=" font-medium">
                   Creating a safe space where mistakes are part of the journey, not something to fear.
                 </p>
               </div>
             </div>
           </div>
         </section>
+ 
 
-        {/* Testimonials */}
-        <section className="bg-white py-16 md:py-20">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl md:text-4xl font-cinema font-bold text-black text-center mb-12">
-              What My Students Say
-            </h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="bg-black rounded-2xl shadow-xl p-8 border border-[#FFD700]/30">
-                <div className="flex text-[#FFD700] mb-4">
-                  {'★'.repeat(5)}
-                </div>
-                <p className="text-white/90 italic mb-6 font-medium leading-relaxed">
-                  "Aditi's teaching method is incredible! I went from complete beginner to ABRSM Grade 3 in just 2 years. Her patience and expertise are unmatched!"
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-[#FFD700]/20 rounded-full flex items-center justify-center">
-                    <span className="text-xl">👤</span>
-                  </div>
-                  <div>
-                    <div className="font-bold text-white">Priya Sharma</div>
-                    <div className="text-sm text-white/70 font-medium">Piano Student</div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-black rounded-2xl shadow-xl p-8 border border-[#FFD700]/30">
-                <div className="flex text-[#FFD700] mb-4">
-                  {'★'.repeat(5)}
-                </div>
-                <p className="text-white/90 italic mb-6 font-medium leading-relaxed">
-                  "Learning Indian classical vocals from Aditi has been transformative. She makes complex ragas accessible and enjoyable for beginners."
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-[#FFD700]/20 rounded-full flex items-center justify-center">
-                    <span className="text-xl">👤</span>
-                  </div>
-                  <div>
-                    <div className="font-bold text-white">Arjun Patel</div>
-                    <div className="text-sm text-white/70 font-medium">Vocal Student</div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-black rounded-2xl shadow-xl p-8 border border-[#FFD700]/30">
-                <div className="flex text-[#FFD700] mb-4">
-                  {'★'.repeat(5)}
-                </div>
-                <p className="text-white/90 italic mb-6 font-medium leading-relaxed">
-                  "Aditi's Bollywood piano lessons are amazing! She breaks down complex songs into simple steps that anyone can follow."
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-[#FFD700]/20 rounded-full flex items-center justify-center">
-                    <span className="text-xl">👤</span>
-                  </div>
-                  <div>
-                    <div className="font-bold text-white">Zara Khan</div>
-                    <div className="text-sm text-white/70 font-medium">Bollywood Piano Student</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Musical Setup */}
-        <section className="bg-black py-16 md:py-20">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl md:text-4xl font-cinema font-bold text-white text-center mb-12">
-              My Musical Setup
-            </h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="bg-white rounded-2xl shadow-xl p-8 border border-white/20 text-center">
-                <div className="text-5xl mb-4">🎹</div>
-                <h3 className="text-xl font-bold text-black mb-3">Professional Piano</h3>
-                <p className="text-black/70 font-medium">
-                  Quality piano for classical and contemporary music learning
-                </p>
-              </div>
-              <div className="bg-white rounded-2xl shadow-xl p-8 border border-white/20 text-center">
-                <div className="text-5xl mb-4">📚</div>
-                <h3 className="text-xl font-bold text-black mb-3">Learning Materials</h3>
-                <p className="text-black/70 font-medium">
-                  Comprehensive resources for ABRSM, Trinity, and RSL examinations
-                </p>
-              </div>
-              <div className="bg-white rounded-2xl shadow-xl p-8 border border-white/20 text-center">
-                <div className="text-5xl mb-4">🎤</div>
-                <h3 className="text-xl font-bold text-black mb-3">Vocal Training</h3>
-                <p className="text-black/70 font-medium">
-                  Indian classical vocal training and contemporary singing techniques
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+       
 
         {/* Contact Section */}
         <section className="bg-white py-16 md:py-20">

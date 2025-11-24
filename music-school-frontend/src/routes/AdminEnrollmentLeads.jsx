@@ -68,6 +68,7 @@ export default function AdminEnrollmentLeads() {
                     <tr>
                       <th className="text-left text-xs font-semibold text-slate-600 uppercase tracking-wider px-6 py-3">Full Name</th>
                       <th className="text-left text-xs font-semibold text-slate-600 uppercase tracking-wider px-6 py-3">Email</th>
+                      <th className="text-left text-xs font-semibold text-slate-600 uppercase tracking-wider px-6 py-3">Course</th>
                       <th className="text-left text-xs font-semibold text-slate-600 uppercase tracking-wider px-6 py-3">WhatsApp</th>
                       <th className="text-left text-xs font-semibold text-slate-600 uppercase tracking-wider px-6 py-3">Country</th>
                       <th className="text-left text-xs font-semibold text-slate-600 uppercase tracking-wider px-6 py-3">Received</th>
@@ -78,6 +79,25 @@ export default function AdminEnrollmentLeads() {
                       <tr key={lead._id} className="hover:bg-slate-50">
                         <td className="px-6 py-3 text-slate-900 font-medium">{lead.fullName}</td>
                         <td className="px-6 py-3"><a href={`mailto:${lead.email}`} className="text-sky-700 hover:underline">{lead.email}</a></td>
+                        <td className="px-6 py-3">
+                          {lead.courseTitle ? (
+                            <div>
+                              <div className="font-medium text-slate-900">{lead.courseTitle}</div>
+                              {lead.courseId && (
+                                <a 
+                                  href={`/admin/courses/${lead.courseId}`}
+                                  className="text-xs text-sky-600 hover:underline"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  View Course →
+                                </a>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-slate-400 italic">Not specified</span>
+                          )}
+                        </td>
                         <td className="px-6 py-3">{lead.whatsapp || '-'}</td>
                         <td className="px-6 py-3">{lead.country || '-'}</td>
                         <td className="px-6 py-3 text-slate-600 text-sm">{new Date(lead.createdAt).toLocaleString()}</td>

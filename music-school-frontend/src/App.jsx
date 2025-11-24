@@ -27,10 +27,38 @@ function CourseCard({ title, level, price, image, _id, isEnrolled = false, cours
     (course.teacherName && course.teacherName.trim() !== '' && course.teacherName !== 'Expert Instructor')
   )
   
+  // Build image URL - handle both full URLs and relative paths
+  const getImageUrl = () => {
+    if (!image && !course?.thumbnailPath) {
+      return 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=600&auto=format&fit=crop'
+    }
+    if (image && (image.startsWith('http://') || image.startsWith('https://'))) {
+      return image
+    }
+    if (course?.thumbnailPath) {
+      // thumbnailPath is stored as /uploads/filename, need to prepend API base URL
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+      return `${baseUrl}${course.thumbnailPath}`
+    }
+    if (image) {
+      // If image is a relative path, prepend API base URL
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+      return image.startsWith('/') ? `${baseUrl}${image}` : `${baseUrl}/${image}`
+    }
+    return 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=600&auto=format&fit=crop'
+  }
+  
   return (
     <a href={`/courses/${_id}`} className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-4 border border-white/20 hover:border-[#F5E6E0] relative overflow-hidden">
       <div className="relative overflow-hidden rounded-xl">
-        <img src={image} alt={title} className="h-40 w-full object-cover group-hover:scale-110 transition-transform duration-500" />
+        <img 
+          src={getImageUrl()} 
+          alt={title} 
+          className="h-40 w-full object-cover group-hover:scale-110 transition-transform duration-500"
+          onError={(e) => {
+            e.target.src = 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=600&auto=format&fit=crop'
+          }}
+        />
         <div className="absolute top-3 right-3 bg-black text-[#F5E6E0] px-3 py-1 rounded-full text-xs font-bold z-10">
           {level}
         </div>
@@ -525,26 +553,26 @@ function HeroCarousel() {
   const carouselSlides = [
     {
       image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1920&q=80',
-      title: 'Learn, Play, and Shine',
-      subtitle: 'Master Guitar, Piano, Vocals and more with our expert instructors',
+      title: 'The Musinest',
+      subtitle: 'Structured piano lessons designed for growth, skill-building, and musical confidence',
       badge: 'Trusted by 500+ Students'
     },
     {
       image: 'https://images.unsplash.com/photo-1511735111819-9a3f7709049c?w=1920&q=80',
-      title: 'Expert Teachers',
-      subtitle: 'Learn from the best musicians and educators in the industry',
+      title: 'Meet Your Teacher',
+      subtitle: 'Aditi — dedicated to providing patient, professional, and personalised music training by Aditi',
       badge: '15+ Professional Instructors'
     },
     {
       image: 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=1920&q=80',
-      title: 'Flexible Learning',
-      subtitle: 'After-school and weekend classes designed for ages 9–22',
+      title: 'Music Arrangements & Notations',
+      subtitle: 'Clean, accurate, and crafted for musicians',
       badge: '95% Success Rate'
     },
     {
       image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=1920&q=80',
-      title: 'Start Your Journey',
-      subtitle: 'Join hundreds of students learning music with us today',
+      title: 'Lessons & Performances',
+      subtitle: 'Contact me for piano lessons, event performances, and collaboration opportunities by Aditi',
       badge: '6 Instruments Available'
     }
   ]
@@ -595,18 +623,28 @@ function HeroCarousel() {
                   <span className="mr-2">🎵</span>
                   {slide.badge}
                 </div>
-                <h1 className="text-5xl md:text-7xl lg:text-8xl font-cinema font-bold leading-tight text-white mb-6">
+                <h1 
+                  className="text-5xl md:text-7xl lg:text-8xl font-cinema font-bold leading-tight text-white mb-6"
+                  style={{
+                    fontFamily: "'Dancing Script', cursive"
+                  }}
+                >
                   {slide.title.split(' ').map((word, i, arr) => (
                     <span key={i}>
                       {i === arr.length - 1 ? (
-                        <span className="text-[#F5E6E0]">{word}</span>
+                        <span className="text-[#F5E6E0] font-bold">{word}</span>
                       ) : (
                         <>{word} </>
                       )}
                     </span>
                   ))}
                 </h1>
-                <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed font-medium max-w-3xl mx-auto">
+                <p 
+                  className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed font-medium max-w-3xl mx-auto"
+                  style={{
+                    fontFamily: "'Satisfy', cursive"
+                  }}
+                >
                   {slide.subtitle}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
