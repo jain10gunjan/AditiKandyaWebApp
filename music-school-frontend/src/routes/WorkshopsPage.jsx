@@ -7,7 +7,7 @@ import toast from 'react-hot-toast'
 
 function WorkshopCard({ workshop, onEnrollClick }) {
   return (
-    <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-4 border border-white/20 hover:border-[#FFD700] relative overflow-hidden">
+    <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-4 border border-white/20 hover:border-[#F5E6E0] relative overflow-hidden">
       <div className="relative overflow-hidden rounded-xl">
         <img 
           src={workshop.image || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=600&auto=format&fit=crop'} 
@@ -29,7 +29,7 @@ function WorkshopCard({ workshop, onEnrollClick }) {
         )}
       </div>
       <div className="mt-3">
-        <h3 className="font-cinema font-bold text-lg text-black group-hover:text-[#FFD700] transition-colors mb-1">
+        <h3 className="font-cinema font-bold text-lg text-black group-hover:text-gray-700 transition-colors mb-1">
           {workshop.title}
         </h3>
         <p className="text-black/70 text-sm line-clamp-2 leading-relaxed mb-3 font-medium">
@@ -65,7 +65,7 @@ function WorkshopCard({ workshop, onEnrollClick }) {
         
         <button
           onClick={() => onEnrollClick(workshop)}
-          className="w-full px-4 py-2 rounded-lg bg-black text-[#FFD700] text-sm font-bold group-hover:bg-[#FFD700] group-hover:text-black transition-all duration-300"
+          className="w-full px-4 py-2 rounded-lg bg-black text-[#F5E6E0] text-sm font-bold group-hover:bg-[#F5E6E0] group-hover:text-black transition-all duration-300"
         >
           Enroll Now
         </button>
@@ -424,11 +424,17 @@ export default function WorkshopsPage() {
         <section className="bg-black py-16 md:py-20">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h1 className="text-4xl md:text-6xl font-cinema font-bold text-white mb-4">
+              <h1 className="text-4xl md:text-6xl font-cinema font-bold text-white mb-4"
+              style={{
+                fontFamily: "'Dancing Script', cursive"
+              }}>
                 Workshops
               </h1>
-              <div className="w-24 h-1 bg-[#FFD700] mx-auto mb-6"></div>
-              <p className="text-xl md:text-2xl text-white/90 font-medium max-w-3xl mx-auto leading-relaxed">
+              <div className="w-24 h-1 bg-[#F5E6E0] mx-auto mb-6"></div>
+              <p className="text-xl md:text-2xl text-white/90 font-medium max-w-3xl mx-auto leading-relaxed"
+              style={{
+                fontFamily: "'Satisfy', cursive"
+              }}>
                 Join our intensive workshops and master new skills with expert guidance
               </p>
             </div>

@@ -10,37 +10,99 @@ export default function Footer({ showAdminTools = false }) {
         {/* Desktop Footer */}
         <div className="hidden md:grid md:grid-cols-4 gap-8">
           <div>
-            <div className="flex items-center gap-3 mb-4">
-              <img 
-                src={logo} 
-                alt="Themusinest Logo" 
-                className="h-14 w-auto object-contain"
-              />
-              <span className="font-cinema font-bold text-white text-lg">The Musinest.com</span>
+          <a href="/" className="flex items-center gap-2">
+          <div className="relative bg-black px-4 py-1.5 flex flex-col items-center justify-center">
+            {/* Top full border */}
+            <div className="absolute top-0 left-0 right-0 h-0 border-t-2 border-white"></div>
+            
+            {/* Left side border */}
+            <div className="absolute top-0 left-0 bottom-0 w-0 border-l-2 border-white"></div>
+            
+            {/* Right side border */}
+            <div className="absolute top-0 right-0 bottom-0 w-0 border-r-2 border-white"></div>
+            
+            {/* Bottom left corner */}
+            <div className="absolute bottom-0 left-0 w-12 h-0 border-b-2 border-white"></div>
+            
+            {/* Bottom right corner */}
+            <div className="absolute bottom-0 right-0 w-12 h-0 border-b-2 border-white"></div>
+            
+            <span 
+              className="text-white text-lg leading-none"
+              style={{
+                fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive",
+                fontWeight: 400,
+                fontStyle: 'italic'
+              }}
+            >
+              The Musinest
+            </span>
+            <div className="w-full flex justify-center mt-0.5">
+              <span 
+                className="text-white text-xs leading-none"
+                style={{
+                  fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive",
+                  fontWeight: 300,
+                  fontStyle: 'italic'
+                }}
+              >
+                Aditi Kandya
+              </span>
             </div>
-            <p className="text-white/70 text-sm font-medium">Bringing Music Lessons to Your Screen.</p>
+          </div>
+        </a>
+            <p className="text-white/70 text-sm font-medium pt-4"
+            style={{
+              fontFamily: "'Satisfy', cursive"
+            }}>Bringing Music Lessons to Your Screen.</p>
           </div>
           <div>
-            <h3 className="font-bold text-white mb-4">Quick Links</h3>
+            <h3 className="font-bold text-white mb-4"
+            style={{
+              fontFamily: "'Dancing Script', cursive"
+            }}>Quick Links</h3>
             <ul className="space-y-2 text-sm text-white/70">
-              <li><a href="/" className="hover:text-[#F5E6E0] transition-colors font-medium">Home</a></li>
-              <li><a href="/workshops" className="hover:text-[#F5E6E0] transition-colors font-medium">Workshops</a></li>
-              <li><a href="/courses" className="hover:text-[#F5E6E0] transition-colors font-medium">Courses</a></li>
-              <li><a href="/teachers" className="hover:text-[#F5E6E0] transition-colors font-medium">Meet the Teacher</a></li>
-              <li><a href="/about" className="hover:text-[#F5E6E0] transition-colors font-medium">About</a></li>
-              <li><a href="/contact" className="hover:text-[#F5E6E0] transition-colors font-medium">Contact Us</a></li>
+              <li><a href="/" className="hover:text-[#F5E6E0] transition-colors font-medium"
+              style={{
+                fontFamily: "'Cinzel', serif"
+              }}              >Home</a></li>
+              <li><a href="/workshops" className="hover:text-[#F5E6E0] transition-colors font-medium"
+              style={{
+                fontFamily: "'Cinzel', serif"
+              }}       >Workshops</a></li>
+              <li><a href="/courses" className="hover:text-[#F5E6E0] transition-colors font-medium"style={{
+                fontFamily: "'Cinzel', serif"
+              }}       >Courses</a></li>
+              <li><a href="/teachers" className="hover:text-[#F5E6E0] transition-colors font-medium"style={{
+                fontFamily: "'Cinzel', serif"
+              }}       >Meet the Teacher</a></li>
+              <li><a href="/about" className="hover:text-[#F5E6E0] transition-colors font-medium"style={{
+                fontFamily: "'Cinzel', serif"
+              }}       >About</a></li>
+              <li><a href="/contact" className="hover:text-[#F5E6E0] transition-colors font-medium"style={{
+                fontFamily: "'Cinzel', serif"
+              }}       >Contact Us</a></li>
             </ul>
           </div>
           <div>
-            <h3 className="font-bold text-white mb-4">Contact</h3>
-            <ul className="space-y-2 text-sm text-white/70 font-medium">
+            <h3 className="font-bold text-white mb-4"
+            style={{
+              fontFamily: "'Dancing Script', cursive"
+            }}       >Contact</h3>
+            <ul className="space-y-2 text-sm text-white/70 font-medium"
+            style={{
+              fontFamily: "'Satisfy', cursive"
+            }}       >
               <li>📧 aditikandya@gmail.com</li>
               <li>📞 +91 7024403520</li>
               <li>📍 Virtual Studio, Based in MP India</li>
             </ul>
           </div>
           <div>
-            <h3 className="font-bold text-white mb-4">Follow Us</h3>
+            <h3 className="font-bold text-white mb-4"
+            style={{
+              fontFamily: "'Dancing Script', cursive"
+            }}       >Follow Us</h3>
             <div className="flex gap-3 mb-4">
               <a 
                 href="https://www.instagram.com/the_musinest?igsh=MWp1b3BpazQ2NHFtZA==" 
@@ -83,12 +145,48 @@ export default function Footer({ showAdminTools = false }) {
           <div className="mb-4 pb-4 border-b border-[#F5E6E0]/30">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <img 
-                  src={logo} 
-                  alt="Themusinest Logo" 
-                  className="h-10 w-auto object-contain"
-                />
-                <span className="font-cinema font-bold text-white text-sm">Themusinest</span>
+              <a href="/" className="flex items-center gap-2">
+          <div className="relative bg-black px-4 py-1.5 flex flex-col items-center justify-center">
+            {/* Top full border */}
+            <div className="absolute top-0 left-0 right-0 h-0 border-t-2 border-white"></div>
+            
+            {/* Left side border */}
+            <div className="absolute top-0 left-0 bottom-0 w-0 border-l-2 border-white"></div>
+            
+            {/* Right side border */}
+            <div className="absolute top-0 right-0 bottom-0 w-0 border-r-2 border-white"></div>
+            
+            {/* Bottom left corner */}
+            <div className="absolute bottom-0 left-0 w-12 h-0 border-b-2 border-white"></div>
+            
+            {/* Bottom right corner */}
+            <div className="absolute bottom-0 right-0 w-12 h-0 border-b-2 border-white"></div>
+            
+            <span 
+              className="text-white text-lg leading-none"
+              style={{
+                fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive",
+                fontWeight: 400,
+                fontStyle: 'italic'
+              }}
+            >
+              The Musinest
+            </span>
+            <div className="w-full flex justify-center mt-0.5">
+              <span 
+                className="text-white text-xs leading-none"
+                style={{
+                  fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive",
+                  fontWeight: 300,
+                  fontStyle: 'italic'
+                }}
+              >
+                Aditi Kandya
+              </span>
+            </div>
+          </div>
+        </a>
+                 
               </div>
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -107,8 +205,16 @@ export default function Footer({ showAdminTools = false }) {
               </button>
             </div>
             <div>
-              <h3 className="font-bold text-white mb-2 text-sm">Contact</h3>
-              <ul className="space-y-1 text-sm text-white/70 font-medium">
+              <h3 className="font-bold text-white mb-2 text-sm"
+              style={{
+                fontFamily: "'Dancing Script', cursive"
+              }}
+              >Contact</h3>
+              <ul className="space-y-1 text-sm text-white/70 font-medium"
+              style={{
+                fontFamily: "'Satisfy', cursive"
+              }}
+              >
                 <li>📧 aditikandya@gmail.com</li>
                 <li>📞 +91 7024403520</li>
                 <li>📍 Virtual Studio, Based in MP India</li>
@@ -120,18 +226,50 @@ export default function Footer({ showAdminTools = false }) {
           {mobileMenuOpen && (
             <div className="space-y-4 pb-4">
               <div>
-                <h3 className="font-bold text-white mb-2 text-sm">Quick Links</h3>
+                <h3 className="font-bold text-white mb-2 text-sm"
+                style={{
+                  fontFamily: "'Dancing Script', cursive"
+                }}
+                >Quick Links</h3>
                 <ul className="space-y-1 text-sm text-white/70">
-                  <li><a href="/" className="hover:text-[#F5E6E0] transition-colors font-medium">Home</a></li>
-                  <li><a href="/workshops" className="hover:text-[#F5E6E0] transition-colors font-medium">Workshops</a></li>
-                  <li><a href="/courses" className="hover:text-[#F5E6E0] transition-colors font-medium">Courses</a></li>
-                  <li><a href="/teachers" className="hover:text-[#F5E6E0] transition-colors font-medium">Meet the Teacher</a></li>
-                  <li><a href="/about" className="hover:text-[#F5E6E0] transition-colors font-medium">About</a></li>
-                  <li><a href="/contact" className="hover:text-[#F5E6E0] transition-colors font-medium">Contact Us</a></li>
+                  <li><a href="/" className="hover:text-[#F5E6E0] transition-colors font-medium"
+                  style={{
+                    fontFamily: "'Cinzel', serif"
+                  }}
+                  >Home</a></li>
+                  <li><a href="/workshops" className="hover:text-[#F5E6E0] transition-colors font-medium"
+                  style={{
+                    fontFamily: "'Cinzel', serif"
+                  }}
+                  >Workshops</a></li>
+                  <li><a href="/courses" className="hover:text-[#F5E6E0] transition-colors font-medium"
+                  style={{
+                    fontFamily: "'Cinzel', serif"
+                  }}
+                  >Courses</a></li>
+                  <li><a href="/teachers" className="hover:text-[#F5E6E0] transition-colors font-medium"
+                  style={{
+                    fontFamily: "'Cinzel', serif"
+                  }}
+                  >Meet the Teacher</a></li>
+                  <li><a href="/about" className="hover:text-[#F5E6E0] transition-colors font-medium"
+                  style={{
+                    fontFamily: "'Cinzel', serif"
+                  }}
+                  >About</a></li>
+                  <li><a href="/contact" className="hover:text-[#F5E6E0] transition-colors font-medium"
+                  style={{
+                    fontFamily: "'Cinzel', serif"
+                  }}
+                  >Contact Us</a></li>
                 </ul>
               </div>
               <div>
-                <h3 className="font-bold text-white mb-2 text-sm">Follow Us</h3>
+                <h3 className="font-bold text-white mb-2 text-sm"
+                style={{
+                  fontFamily: "'Dancing Script', cursive"
+                }}
+                >Follow Us</h3>
                 <div className="flex gap-3">
                   <a 
                     href="https://www.instagram.com/the_musinest?igsh=MWp1b3BpazQ2NHFtZA==" 
@@ -157,7 +295,11 @@ export default function Footer({ showAdminTools = false }) {
           )}
         </div>
 
-        <div className="border-t border-[#F5E6E0]/30 mt-8 pt-6 text-center text-white/70 text-sm font-medium">
+        <div className="border-t border-[#F5E6E0]/30 mt-8 pt-6 text-center text-white/70 text-sm font-medium"
+        style={{
+          fontFamily: "'Satisfy', cursive"
+        }}
+        >
           © {new Date().getFullYear()} Themusinest.com • Made with 🎶 and ❤️
         </div>
       </div>

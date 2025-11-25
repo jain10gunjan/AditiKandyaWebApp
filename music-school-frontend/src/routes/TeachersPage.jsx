@@ -205,10 +205,13 @@ export default function TeachersPage() {
         <section className="bg-black py-16 md:py-20">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h1 className="text-4xl md:text-6xl font-cinema font-bold text-white mb-4">
+              <h1 className="text-4xl md:text-6xl font-cinema font-bold text-white mb-4"
+              style={{
+                fontFamily: "'Dancing Script', cursive"
+              }}>
                 Meet Your Teacher
               </h1>
-              <div className="w-24 h-1 bg-[#FFD700] mx-auto"></div>
+              <div className="w-24 h-1 bg-[#F5F5DC] mx-auto"></div>
             </div>
           </div>
         </section>
@@ -240,7 +243,10 @@ export default function TeachersPage() {
                     {/* Content Section */}
                     <div className="w-full md:w-1/2 flex-shrink-0 bg-black flex items-center">
                       <div className="p-8 md:p-12 lg:p-16 w-full">
-                        <h2 className="text-4xl md:text-5xl lg:text-6xl font-cinema font-bold text-white mb-6 md:mb-8">
+                        <h2 className="text-4xl md:text-5xl lg:text-6xl font-cinema font-bold text-white mb-6 md:mb-8"
+                        style={{
+                          fontFamily: "'Dancing Script', cursive"
+                        }}>
                         Aditi Kandya
                         </h2>
                         <p className="text-xl md:text-2xl text-white/90 font-medium mb-6 md:mb-8"
@@ -337,35 +343,60 @@ export default function TeachersPage() {
         {/* Teaching Philosophy */}
         <section className="py-8 md:py-8">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl md:text-4xl font-cinema font-bold text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-cinema font-bold text-center mb-12"
+            style={{
+              fontFamily: "'Dancing Script', cursive"
+            }}>
               My Teaching Philosophy
             </h2>
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-black text-white  shadow-xl p-8 border border-white/20">
                 <div className="text-4xl mb-4">❤️</div>
-                <h3 className="text-2xl font-bold mb-3">Passion-Driven</h3>
-                <p className="font-medium">
+                <h3 className="text-2xl font-bold mb-3"
+                style={{
+                  fontFamily: "'Satisfy', cursive"
+                }}>Passion-Driven</h3>
+                <p className="font-medium"
+                style={{
+                  fontFamily: "'Bitter', serif"
+                }}>
                   Every lesson is infused with genuine love for music and dedication to student success.
                 </p>
               </div>
               <div className="bg-black text-white shadow-xl p-8 border border-white/20">
                 <div className="text-4xl mb-4">🎯</div>
-                <h3 className="text-2xl font-bold mb-3">Goal-Oriented</h3>
-                <p className="  font-medium">
+                <h3 className="text-2xl font-bold mb-3"
+                style={{
+                  fontFamily: "'Satisfy', cursive"
+                }}>Goal-Oriented</h3>
+                <p className="  font-medium"
+                style={{
+                  fontFamily: "'Bitter', serif"
+                }}>
                   Clear, achievable milestones keep you motivated and steadily progressing.
                 </p>
               </div>
               <div className="bg-black text-white shadow-xl p-8 border border-white/20">
                 <div className="text-4xl mb-4">⚖️</div>
-                <h3 className="text-2xl font-bold mb-3">Balanced Approach</h3>
-                <p className=" font-medium">
+                <h3 className="text-2xl font-bold mb-3"
+                style={{
+                  fontFamily: "'Satisfy', cursive"
+                }}>Balanced Approach</h3>
+                <p className=" font-medium"style={{
+                  fontFamily: "'Biiter', serif"
+                }}>
                   Striking the perfect balance between structure and creativity in music learning.
                 </p>
               </div>
               <div className="bg-black text-white shadow-xl p-8 border border-white/20">
                 <div className="text-4xl mb-4">🌱</div>
-                <h3 className="text-2xl font-bold mb-3">Personal Growth</h3>
-                <p className=" font-medium">
+                <h3 className="text-2xl font-bold mb-3"
+                style={{
+                  fontFamily: "'Satisfy', cursive"
+                }}>Personal Growth</h3>
+                <p className=" font-medium"style={{
+                  fontFamily: "'Bitter', serif"
+                }}>
                   Creating a safe space where mistakes are part of the journey, not something to fear.
                 </p>
               </div>
@@ -380,29 +411,56 @@ export default function TeachersPage() {
         <section className="bg-white py-16 md:py-20">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="bg-black rounded-2xl shadow-2xl p-8 md:p-12 border border-[#FFD700]/30 text-center">
-              <h2 className="text-3xl md:text-4xl font-cinema font-bold text-white mb-6">
+              <h2 className="text-3xl md:text-4xl font-cinema font-bold text-white mb-6"
+              style={{
+                fontFamily: "'Dancing Script', cursive"
+              }}>
                 Let's Connect
               </h2>
-              <p className="text-lg text-white/80 mb-8 font-medium">
+              <p className="text-lg text-white/80 mb-8 font-medium"
+              style={{
+                fontFamily: "'Bitter', serif"
+              }}>
                 Ready to start your musical journey? Get in touch or follow my work on social media.
               </p>
               
               <div className="grid md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-white/10 rounded-xl p-6 border border-[#FFD700]/30">
                   <div className="text-3xl mb-3">📍</div>
-                  <h3 className="font-bold text-white mb-2">Location</h3>
-                  <p className="text-white/80 text-sm font-medium">MusiNest Studio</p>
-                  <p className="text-white/80 text-sm font-medium">Chennai, India</p>
+                  <h3 className="font-bold text-white mb-2"
+                  style={{
+                    fontFamily: "'Satisfy', cursive"
+                  }}>Location</h3>
+                  <p className="text-white/80 text-sm font-medium"
+                  style={{
+                    fontFamily: "'Bitter', serif"
+                  }}>MusiNest Studio</p>
+                  <p className="text-white/80 text-sm font-medium"
+                  style={{
+                    fontFamily: "'Bitter', serif"
+                  }}>Chennai, India</p>
                 </div>
                 <div className="bg-white/10 rounded-xl p-6 border border-[#FFD700]/30">
                   <div className="text-3xl mb-3">📞</div>
-                  <h3 className="font-bold text-white mb-2">Phone</h3>
-                  <p className="text-white/80 text-sm font-medium">+91 98765 43210</p>
+                  <h3 className="font-bold text-white mb-2"
+                  style={{
+                    fontFamily: "'Satisfy', cursive"
+                  }}>Phone</h3>
+                  <p className="text-white/80 text-sm font-medium"
+                  style={{
+                    fontFamily: "'Bitter', serif"
+                  }}>+91 98765 43210</p>
                 </div>
                 <div className="bg-white/10 rounded-xl p-6 border border-[#FFD700]/30">
                   <div className="text-3xl mb-3">📧</div>
-                  <h3 className="font-bold text-white mb-2">Email</h3>
-                  <p className="text-white/80 text-sm font-medium">aditi@musinest.com</p>
+                  <h3 className="font-bold text-white mb-2"
+                  style={{
+                    fontFamily: "'Satisfy', cursive"
+                  }}>Email</h3>
+                  <p className="text-white/80 text-sm font-medium"
+                  style={{
+                    fontFamily: "'Bitter', serif"
+                  }}>aditi@musinest.com</p>
                 </div>
               </div>
 
@@ -413,7 +471,10 @@ export default function TeachersPage() {
                     nameInputRef.current?.focus()
                   }, 100)
                 }}
-                className="px-8 py-4 rounded-lg bg-[#FFD700] text-black hover:bg-[#FFC700] font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                className="px-8 py-4 rounded-lg bg-[#F5E6E0] text-black hover:bg-[#FFC700] font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                style={{
+                  fontFamily: "'Dancing Script', cursive"
+                }}
               >
                 Book a Consultation
               </button>

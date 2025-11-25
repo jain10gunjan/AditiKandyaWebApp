@@ -187,13 +187,19 @@ export default function ContactPage() {
         <section className="bg-black py-16 md:py-20">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h1 className="text-4xl md:text-6xl font-cinema font-bold text-white mb-4">
+              <h1 className="text-4xl md:text-6xl font-cinema font-bold text-white mb-4"
+              style={{
+                fontFamily: "'Dancing Script', cursive"
+              }}>
                 Contact Us
               </h1>
-              <p className="text-xl text-white/80 font-medium">
+              <p className="text-xl text-white/80 font-medium"
+              style={{
+                fontFamily: "'Satisfy', cursive"
+              }}>
                 Get in touch with us. We're here to help!
               </p>
-              <div className="w-24 h-1 bg-[#FFD700] mx-auto mt-6"></div>
+              <div className="w-24 h-1 bg-[#F5E6E0] mx-auto mt-6"></div>
             </div>
           </div>
         </section>
@@ -204,36 +210,80 @@ export default function ContactPage() {
             <div className="grid md:grid-cols-3 gap-8 mb-12">
               <div className="bg-black rounded-2xl shadow-xl p-8 border border-[#FFD700]/30 text-center">
                 <div className="text-5xl mb-4">📍</div>
-                <h3 className="text-xl font-bold text-white mb-3">Location</h3>
-                <p className="text-white/80 font-medium">Virtual Studio</p>
-                <p className="text-white/80 font-medium">Based in MP India</p>
+                <h3 className="text-xl font-bold text-white mb-3"
+                style={{
+                  fontFamily: "'Dancing Script', cursive"
+                }}>Location</h3>
+                <p className="text-white/80 font-medium"
+                style={{
+                  fontFamily: "'Bitter', serif"
+                }}>Virtual Studio</p>
+                <p className="text-white/80 font-medium"
+                style={{
+                  fontFamily: "'Bitter', serif"
+                }}>Based in MP India</p>
               </div>
               <div className="bg-black rounded-2xl shadow-xl p-8 border border-[#FFD700]/30 text-center">
                 <div className="text-5xl mb-4">📞</div>
-                <h3 className="text-xl font-bold text-white mb-3">Phone</h3>
-                <p className="text-white/80 font-medium">+91 7024403520</p>
-                <p className="text-white/70 text-sm font-medium mt-2">Mon-Sat: 9 AM - 7 PM</p>
+                <h3 className="text-xl font-bold text-white mb-3"
+                style={{
+                  fontFamily: "'Dancing Script', cursive"
+                }}>Phone</h3>
+                <p className="text-white/80 font-medium"
+                style={{
+                  fontFamily: "'Bitter', serif"
+                }}>+91 7024403520</p>
+                <p className="text-white/70 text-sm font-medium mt-2"
+                style={{
+                  fontFamily: "'Bitter', serif"
+                }}>Mon-Sat: 9 AM - 7 PM</p>
               </div>
               <div className="bg-black rounded-2xl shadow-xl p-8 border border-[#FFD700]/30 text-center">
                 <div className="text-5xl mb-4">📧</div>
-                <h3 className="text-xl font-bold text-white mb-3">Email</h3>
-                <p className="text-white/80 font-medium">aditikandya@gmail.com</p>
+                <h3 className="text-xl font-bold text-white mb-3"
+                style={{
+                  fontFamily: "'Dancing Script', cursive"
+                }}>Email</h3>
+                <p className="text-white/80 font-medium"style={{
+                fontFamily: "'Bitter', serif"
+              }}>aditikandya@gmail.com</p>
               </div>
             </div>
 
             {/* Timings */}
             <div className="bg-black rounded-2xl shadow-xl p-8 border border-[#FFD700]/30">
-              <h2 className="text-2xl font-bold text-white mb-6 text-center">Studio Timings</h2>
+              <h2 className="text-2xl font-bold text-white mb-6 text-center"
+              style={{
+                fontFamily: "'Dancing Script', cursive"
+              }}>Studio Timings</h2>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="bg-white/10 rounded-xl p-6 border border-[#FFD700]/30">
-                  <h3 className="text-lg font-bold text-white mb-3">Weekdays</h3>
-                  <p className="text-white/80 font-medium">Monday - Friday</p>
-                  <p className="text-[#FFD700] font-bold text-lg">9:00 AM - 7:00 PM</p>
+                  <h3 className="text-lg font-bold text-white mb-3"
+                  style={{
+                    fontFamily: "'Satisfy', cursive"
+                  }}>Weekdays</h3>
+                  <p className="text-white/80 font-medium"
+                  style={{
+                    fontFamily: "'Bitter', serif"
+                  }}>Monday - Friday</p>
+                  <p className="text-[#F5E6E0] font-bold text-lg"
+                  style={{
+                    fontFamily: "'Bitter', serif"
+                  }}>9:00 AM - 7:00 PM</p>
                 </div>
                 <div className="bg-white/10 rounded-xl p-6 border border-[#FFD700]/30">
-                  <h3 className="text-lg font-bold text-white mb-3">Weekends</h3>
-                  <p className="text-white/80 font-medium">Saturday - Sunday</p>
-                  <p className="text-[#FFD700] font-bold text-lg">10:00 AM - 6:00 PM</p>
+                  <h3 className="text-lg font-bold text-white mb-3"
+                  style={{
+                    fontFamily: "'Satisfy', cursive"
+                  }}>Weekends</h3>
+                  <p className="text-white/80 font-medium"
+                  style={{
+                    fontFamily: "'Bitter', serif"
+                  }}>Saturday - Sunday</p>
+                  <p className="text-[#F5E6E0] font-bold text-lg"
+                  style={{
+                    fontFamily: "'Bitter', serif"
+                  }}>10:00 AM - 6:00 PM</p>
                 </div>
               </div>
             </div>
@@ -246,7 +296,10 @@ export default function ContactPage() {
             <div className="grid lg:grid-cols-2 gap-12">
               {/* Contact Form */}
               <div>
-                <h2 className="text-3xl font-cinema font-bold text-white mb-6">Send Us a Message</h2>
+                <h2 className="text-3xl font-cinema font-bold text-white mb-6"
+                style={{
+                  fontFamily: "'Dancing Script', cursive"
+                }}>Send Us a Message</h2>
                 <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-6 lg:p-8 border border-white/20" noValidate>
                   <div className="mb-4">
                     <label htmlFor="name" className="block text-sm font-bold text-black mb-2">
@@ -393,8 +446,11 @@ export default function ContactPage() {
                     className={`w-full px-6 py-3 rounded-lg font-bold transition-all duration-300 shadow-lg ${
                       submitting
                         ? 'bg-black text-white cursor-not-allowed'
-                        : 'bg-[#FFD700] text-black hover:bg-[#FFC700] hover:shadow-xl active:scale-95'
+                        : 'bg-[#F5E6E0] text-black hover:bg-[#F5E6E0] hover:shadow-xl active:scale-95'
                     }`}
+                    style={{
+                      fontFamily: "'Dancing Script', cursive"
+                    }}
                   >
                     {submitting ? 'Sending...' : 'Send Message'}
                   </button>
@@ -403,7 +459,10 @@ export default function ContactPage() {
 
               {/* FAQs */}
               <div>
-                <h2 className="text-3xl font-cinema font-bold text-white mb-6">Frequently Asked Questions</h2>
+                <h2 className="text-3xl font-cinema font-bold text-white mb-6"
+                style={{
+                  fontFamily: "'Dancing Script', cursive"
+                }}>Frequently Asked Questions</h2>
                 <div className="space-y-4">
                   {faqs.length > 0 ? (
                     faqs.map((faq, index) => (

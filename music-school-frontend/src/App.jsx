@@ -571,7 +571,7 @@ function HeroCarousel() {
     },
     {
       image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=1920&q=80',
-      title: 'Lessons & Performances',
+      title: 'Start Your Journey',
       subtitle: 'Contact me for piano lessons, event performances, and collaboration opportunities by Aditi',
       badge: '6 Instruments Available'
     }
@@ -619,10 +619,7 @@ function HeroCarousel() {
             {/* Text Content Overlay */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <div className="inline-flex items-center px-4 py-2 rounded-full bg-[#F5E6E0]/20 border border-[#F5E6E0]/40 text-[#F5E6E0] text-sm font-bold mb-6 backdrop-blur-sm">
-                  <span className="mr-2">🎵</span>
-                  {slide.badge}
-                </div>
+                 
                 <h1 
                   className="text-5xl md:text-7xl lg:text-8xl font-cinema font-bold leading-tight text-white mb-6"
                   style={{

@@ -520,12 +520,30 @@ function TeachersDetailModal({ isOpen, onClose, teachers }) {
   )
 }
 
-function EnrollmentsDetailModal({ isOpen, onClose, enrollments, courses, onApprove }) {
-  const pending = enrollments.filter(e => !e.approved)
+function EnrollmentsDetailModal({ isOpen, onClose, enrollments, leads, courses, onApprove, onApproveLead }) {
+  const pendingEnrollments = enrollments.filter(e => !e.approved)
+  // Filter leads that have a courseId (enrollment leads) and haven't been converted to approved enrollments
+  const enrollmentLeads = (leads || []).filter(lead => {
+    if (!lead) return false
+    const courseId = lead.courseId
+    if (!courseId || String(courseId).trim() === '' || courseId === null || courseId === undefined) {
+      return false
+    }
+    // Check if this lead has already been converted to an approved enrollment
+    const hasApprovedEnrollment = enrollments.some(e => 
+      e.approved && 
+      e.courseId === courseId && 
+      e.email && 
+      e.email.toLowerCase() === (lead.email || '').toLowerCase()
+    )
+    // Only include if not already approved
+    return !hasApprovedEnrollment
+  })
+  const allPending = [...pendingEnrollments, ...enrollmentLeads]
   
   return (
     <MetricModal isOpen={isOpen} onClose={onClose} title="Pending Enrollments" icon="⏳">
-      {pending.length === 0 ? (
+      {allPending.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">✅</div>
           <p className="text-slate-600 font-medium">All enrollments are approved!</p>
@@ -533,7 +551,40 @@ function EnrollmentsDetailModal({ isOpen, onClose, enrollments, courses, onAppro
         </div>
       ) : (
         <div className="space-y-4">
-          {pending.map((enrollment) => {
+          {/* Enrollment Leads (from course detail page) */}
+          {enrollmentLeads.map((lead) => {
+            const course = courses.find(c => c._id === lead.courseId)
+            return (
+              <div key={`lead-${lead._id}`} className="bg-yellow-50 rounded-xl p-4 border-2 border-yellow-200 hover:border-yellow-300 hover:shadow-md transition-all">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="font-semibold text-slate-900">{lead.fullName || 'Anonymous User'}</h3>
+                      <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">
+                        ⏳ New Lead
+                      </span>
+                    </div>
+                    <div className="text-sm text-slate-600 space-y-1">
+                      <p>📧 {lead.email || 'Not provided'}</p>
+                      <p>📚 {course?.title || lead.courseTitle || lead.courseId}</p>
+                      {lead.whatsapp && <p>📱 {lead.whatsapp}</p>}
+                      {lead.country && <p>🌍 {lead.country}</p>}
+                      <p>📅 {new Date(lead.createdAt).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { onApproveLead(lead); }}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-medium shadow-sm hover:shadow-md active:scale-95 ml-4"
+                  >
+                    ✓ Approve
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+          
+          {/* Regular Pending Enrollments */}
+          {pendingEnrollments.map((enrollment) => {
             const course = courses.find(c => c._id === enrollment.courseId)
             return (
               <div key={enrollment._id} className="bg-yellow-50 rounded-xl p-4 border-2 border-yellow-200 hover:border-yellow-300 hover:shadow-md transition-all">
@@ -929,6 +980,7 @@ export default function AdminPage() {
   const [courses, setCourses] = useState([])
   const [teachers, setTeachers] = useState([])
   const [enrollments, setEnrollments] = useState([])
+  const [leads, setLeads] = useState([])
   const [loading, setLoading] = useState(true)
   const [showCourseForm, setShowCourseForm] = useState(false)
   const [editingCourse, setEditingCourse] = useState(null)
@@ -948,10 +1000,34 @@ export default function AdminPage() {
       setTeachers(t)
       
       if (token) {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/enrollments`, { 
-          headers: { Authorization: `Bearer ${token}` } 
-        })
-        if (res.ok) setEnrollments(await res.json())
+        const [enrollmentsRes, leadsRes] = await Promise.all([
+          fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/enrollments`, { 
+            headers: { Authorization: `Bearer ${token}` } 
+          }),
+          fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/leads`, { 
+            headers: { Authorization: `Bearer ${token}` } 
+          })
+        ])
+        if (enrollmentsRes.ok) {
+          const enrollmentsData = await enrollmentsRes.json()
+          setEnrollments(enrollmentsData)
+          console.log('Loaded enrollments:', enrollmentsData.length)
+        }
+        if (leadsRes.ok) {
+          const leadsData = await leadsRes.json()
+          console.log('All leads from API:', leadsData)
+          setLeads(leadsData || [])
+          const enrollmentLeads = (leadsData || []).filter(lead => {
+            if (!lead) return false
+            const courseId = lead.courseId
+            return courseId && String(courseId).trim() !== '' && courseId !== null && courseId !== undefined
+          })
+          console.log('Total leads:', leadsData?.length || 0)
+          console.log('Enrollment leads (with courseId):', enrollmentLeads.length)
+          console.log('Enrollment leads data:', enrollmentLeads)
+        } else {
+          console.error('Failed to fetch leads:', leadsRes.status, leadsRes.statusText)
+        }
       }
     } catch (error) {
       console.error('Failed to load data:', error)
@@ -1048,6 +1124,53 @@ export default function AdminPage() {
     }
   }
 
+  const handleApproveLead = async (lead) => {
+    try {
+      const token = await getToken()
+      // Convert lead to enrollment (this creates an approved enrollment)
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/enrollments/manual`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          studentName: lead.fullName,
+          email: lead.email,
+          courseId: lead.courseId,
+          instrument: '' // Can be filled later
+        })
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to create enrollment')
+      }
+      
+      // Delete the lead after successful enrollment creation
+      try {
+        const deleteResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/leads/${lead._id}`, {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+        if (!deleteResponse.ok) {
+          console.warn('Failed to delete lead after approval, but enrollment was created')
+        }
+      } catch (deleteError) {
+        console.error('Error deleting lead:', deleteError)
+        // Don't fail the whole operation if lead deletion fails
+      }
+      
+      toast.success('Lead converted to enrollment and approved! ✅')
+      reload() // This will refresh and the lead will no longer appear in pending
+    } catch (error) {
+      console.error('Failed to approve lead:', error)
+      toast.error(error.message || 'Failed to approve lead. Please try again.')
+    }
+  }
+
   const handleManualEnroll = async (formData) => {
     try {
       setEnrolling(true)
@@ -1127,7 +1250,28 @@ export default function AdminPage() {
               />
               <StatsCard 
                 title="Pending Enrollments" 
-                value={enrollments.filter(e => !e.approved).length} 
+                value={(() => {
+                  const pendingEnrollments = enrollments.filter(e => !e.approved).length
+                  // Filter leads that have courseId and haven't been converted to approved enrollments
+                  const enrollmentLeads = (leads || []).filter(lead => {
+                    if (!lead) return false
+                    const courseId = lead.courseId
+                    if (!courseId || String(courseId).trim() === '' || courseId === null || courseId === undefined) {
+                      return false
+                    }
+                    // Check if this lead has already been converted to an approved enrollment
+                    const hasApprovedEnrollment = enrollments.some(e => 
+                      e.approved && 
+                      e.courseId === courseId && 
+                      e.email && 
+                      e.email.toLowerCase() === (lead.email || '').toLowerCase()
+                    )
+                    // Only include if not already approved
+                    return !hasApprovedEnrollment
+                  }).length
+                  const total = pendingEnrollments + enrollmentLeads
+                  return total
+                })()} 
                 icon="⏳" 
                 color="bg-yellow-100"
                 onClick={() => setActiveModal('enrollments')}
@@ -1464,8 +1608,10 @@ export default function AdminPage() {
           isOpen={activeModal === 'enrollments'}
           onClose={() => setActiveModal(null)}
           enrollments={enrollments}
+          leads={leads}
           courses={courses}
           onApprove={handleApproveEnrollment}
+          onApproveLead={handleApproveLead}
         />
         <StudentsDetailModal
           isOpen={activeModal === 'students'}

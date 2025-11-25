@@ -62,41 +62,61 @@ export default function Navbar({ subtitle = 'Aditi Kandya' }) {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-black border-b border-[#FFD700]/30 shadow-lg backdrop-blur-sm">
+      <header className="sticky top-0 z-50 bg-black border-b border-[#F5E6E0]/30 shadow-lg backdrop-blur-sm">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Desktop Navbar */}
           <div className="hidden md:flex items-center justify-center h-20 relative">
             {/* Logo - Absolute Left */}
-            <div className="absolute left-4 flex items-center gap-3 ">
-              <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                {/* <img 
-                  src={logo4} 
-                  alt="Themusinest Logo" 
-                  className="h-10 w-auto object-contain pt-2"
-                /> */}
-                <div>
-                  <span className="font-cinema text-white text-lg"
-                  style={{
-                    fontFamily: "'Satisfy', cursive"
-                  }}
-                  >The Musinest
-                  <sub><p className="text-[11px] text-white/70 text-center"
-                   style={{
-                    fontFamily: "'Dancing Script', cursive"
-                  }}
-                  >{subtitle}</p></sub>
-                  </span>
-                </div>
-              </a>
-            </div>
-
+            <div className="absolute left-4 flex items-center gap-3">
+      <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+        <div className="relative bg-black px-8 py-2 flex flex-col items-center justify-center">
+          {/* Top full border */}
+          <div className="absolute top-0 left-0 right-0 h-0 border-t-2 border-white"></div>
+          
+          {/* Left side border */}
+          <div className="absolute top-0 left-0 bottom-0 w-0 border-l-2 border-white"></div>
+          
+          {/* Right side border */}
+          <div className="absolute top-0 right-0 bottom-0 w-0 border-r-2 border-white"></div>
+          
+          {/* Bottom left corner */}
+          <div className="absolute bottom-0 left-0 w-16 h-0 border-b-2 border-white"></div>
+          
+          {/* Bottom right corner */}
+          <div className="absolute bottom-0 right-0 w-16 h-0 border-b-2 border-white"></div>
+          
+          <span 
+            className="text-white text-3xl leading-none"
+            style={{
+              fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive",
+              fontWeight: 400,
+              fontStyle: 'italic'
+            }}
+          >
+            The Musinest
+          </span>
+          <div className="w-full flex justify-center mt-1">
+            <span 
+              className="text-white text-sm leading-none"
+              style={{
+                fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive",
+                fontWeight: 300,
+                fontStyle: 'italic'
+              }}
+            >
+              Aditi Kandya
+            </span>
+          </div>
+        </div>
+      </a>
+    </div>
             {/* Centered Navigation Links */}
             <div className="flex items-center gap-4 lg:gap-6">
               {mainLinks.map((link) => (
                 <a
                   key={link.href}
                   href={link.href}
-                  className="text-white/90 hover:text-[#FFD700] transition-colors text-sm uppercase tracking-wide whitespace-nowrap"
+                  className="text-white/90 hover:text-[#F5E6E0] transition-colors text-sm uppercase tracking-wide whitespace-nowrap"
                   style={{
                     fontFamily: "'Cinzel', serif",
                   }}
@@ -109,7 +129,7 @@ export default function Navbar({ subtitle = 'Aditi Kandya' }) {
               <div className="relative dropdown-container">
                 <button
                   onClick={() => setDropdownOpen(dropdownOpen === 'programs' ? null : 'programs')}
-                  className="text-white/90 hover:text-[#FFD700] transition-colors text-sm uppercase tracking-wide whitespace-nowrap flex items-center gap-1"
+                  className="text-white/90 hover:text-[#F5E6E0] transition-colors text-sm uppercase tracking-wide whitespace-nowrap flex items-center gap-1"
                   style={{
                     fontFamily: "'Cinzel', serif"
                   }}
@@ -120,12 +140,12 @@ export default function Navbar({ subtitle = 'Aditi Kandya' }) {
                   </svg>
                 </button>
                 {dropdownOpen === 'programs' && (
-                  <div className="absolute top-full left-0 mt-2 w-48 bg-black border border-[#FFD700]/30 rounded-lg shadow-xl py-2 z-50">
+                  <div className="absolute top-full left-0 mt-2 w-48 bg-black border border-[#F5E6E0]/30 rounded-lg shadow-xl py-2 z-50">
                     {programsDropdown.map((link) => (
                       <a
                         key={link.href}
                         href={link.href}
-                        className="block px-4 py-2 text-white/90 hover:text-[#FFD700] hover:bg-white/10 transition-colors text-sm font-medium"
+                        className="block px-4 py-2 text-white/90 hover:text-[#F5E6E0] hover:bg-white/10 transition-colors text-sm font-medium"
                         onClick={() => setDropdownOpen(null)}
                         style={{
                           fontFamily: "'Dancing Script', cursive"
@@ -142,7 +162,7 @@ export default function Navbar({ subtitle = 'Aditi Kandya' }) {
               <div className="relative dropdown-container">
                 <button
                   onClick={() => setDropdownOpen(dropdownOpen === 'about' ? null : 'about')}
-                  className="text-white/90 hover:text-[#FFD700] font-bold transition-colors text-sm uppercase tracking-wide whitespace-nowrap flex items-center gap-1"
+                  className="text-white/90 hover:text-[#F5E6E0] font-bold transition-colors text-sm uppercase tracking-wide whitespace-nowrap flex items-center gap-1"
                   style={{
                     fontFamily: "'Cinzel', serif",
                   }}
@@ -153,12 +173,12 @@ export default function Navbar({ subtitle = 'Aditi Kandya' }) {
                   </svg>
                 </button>
                 {dropdownOpen === 'about' && (
-                  <div className="absolute top-full left-0 mt-2 w-56 bg-black border border-[#FFD700]/30 rounded-lg shadow-xl py-2 z-50">
+                  <div className="absolute top-full left-0 mt-2 w-56 bg-black border border-[#F5E6E0]/30 rounded-lg shadow-xl py-2 z-50">
                     {aboutDropdown.map((link) => (
                       <a
                         key={link.href}
                         href={link.href}
-                        className="block px-4 py-2 text-white/90 hover:text-[#FFD700] hover:bg-white/10 transition-colors text-sm font-medium"
+                        className="block px-4 py-2 text-white/90 hover:text-[#F5E6E0] hover:bg-white/10 transition-colors text-sm font-medium"
                         onClick={() => setDropdownOpen(null)}
                       >
                         {link.label}
@@ -170,7 +190,7 @@ export default function Navbar({ subtitle = 'Aditi Kandya' }) {
 
               <a
                 href="/contact"
-                className="text-white/90 hover:text-[#FFD700] font-bold transition-colors text-sm uppercase tracking-wide whitespace-nowrap"
+                className="text-white/90 hover:text-[#F5E6E0] font-bold transition-colors text-sm uppercase tracking-wide whitespace-nowrap"
                 style={{
                   fontFamily: "'Cinzel', serif",
                 }}
@@ -181,7 +201,7 @@ export default function Navbar({ subtitle = 'Aditi Kandya' }) {
               {isSignedIn && (
                 <a
                   href="/dashboard"
-                  className="text-white/90 hover:text-[#FFD700] font-bold transition-colors text-sm uppercase tracking-wide whitespace-nowrap"
+                  className="text-white/90 hover:text-[#F5E6E0] font-bold transition-colors text-sm uppercase tracking-wide whitespace-nowrap"
                   style={{
                     fontFamily: "'Cinzel', serif",
                   }}
@@ -207,7 +227,7 @@ export default function Navbar({ subtitle = 'Aditi Kandya' }) {
             <div className="absolute right-4 flex items-center gap-4">
               <SignedOut>
                 <SignInButton>
-                  <button className="px-5 py-2 rounded-lg bg-[#FFD700] text-black text-sm font-bold hover:bg-[#FFC700] transition-all duration-300 shadow-md hover:shadow-lg whitespace-nowrap">
+                  <button className="px-5 py-2 rounded-lg bg-[#F5E6E0] text-gray-700 text-sm font-bold hover:bg-[#E8D4C8] transition-all duration-300 shadow-md hover:shadow-lg whitespace-nowrap">
                     Sign In
                   </button>
                 </SignInButton>
@@ -219,34 +239,62 @@ export default function Navbar({ subtitle = 'Aditi Kandya' }) {
           </div>
 
           {/* Mobile Navbar - Top */}
-          <div className="md:hidden flex items-center justify-between h-16">
-            <a href="/" className="flex items-center gap-2">
-              <img 
-                src={logo3} 
-                alt="Themusinest Logo" 
-                className="h-10 w-auto object-contain"
-              />
-              <span className="font-cinema text-white text-lg font-bold">Themusinest</span>
-            </a>
+          {/* Mobile Logo */}
+      <div className="md:hidden flex items-center justify-between h-16 w-full px-0">
+        <a href="/" className="flex items-center gap-2">
+          <div className="relative bg-black px-4 py-1.5 flex flex-col items-center justify-center">
+            {/* Top full border */}
+            <div className="absolute top-0 left-0 right-0 h-0 border-t-2 border-white"></div>
             
-            <div className="flex items-center gap-3">
-              <SignedOut>
-                <SignInButton>
-                  <button className="px-4 py-2 rounded-lg bg-[#FFD700] text-black text-sm font-bold hover:bg-[#FFC700] transition-all duration-300 shadow-md whitespace-nowrap">
-                    Sign In
-                  </button>
-                </SignInButton>
-              </SignedOut>
-              <SignedIn>
-                <UserButton afterSignOutUrl="/" />
-              </SignedIn>
+            {/* Left side border */}
+            <div className="absolute top-0 left-0 bottom-0 w-0 border-l-2 border-white"></div>
+            
+            {/* Right side border */}
+            <div className="absolute top-0 right-0 bottom-0 w-0 border-r-2 border-white"></div>
+            
+            {/* Bottom left corner */}
+            <div className="absolute bottom-0 left-0 w-12 h-0 border-b-2 border-white"></div>
+            
+            {/* Bottom right corner */}
+            <div className="absolute bottom-0 right-0 w-12 h-0 border-b-2 border-white"></div>
+            
+            <span 
+              className="text-white text-lg leading-none"
+              style={{
+                fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive",
+                fontWeight: 400,
+                fontStyle: 'italic'
+              }}
+            >
+              The Musinest
+            </span>
+            <div className="w-full flex justify-center mt-0.5">
+              <span 
+                className="text-white text-xs leading-none"
+                style={{
+                  fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive",
+                  fontWeight: 300,
+                  fontStyle: 'italic'
+                }}
+              >
+                Aditi Kandya
+              </span>
             </div>
           </div>
+        </a>
+        
+        <div className="flex items-center gap-3">
+          {/* Add your SignedOut/SignedIn components here */}
+          <button className="px-4 py-2 rounded-lg bg-[#F5E6E0] text-gray-700 text-sm font-bold hover:bg-[#E8D4C8] transition-all duration-300 shadow-md whitespace-nowrap">
+            Sign In
+          </button>
+        </div>
+      </div>
         </nav>
       </header>
 
       {/* Mobile Bottom Menu */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-black border-t border-[#FFD700]/30 shadow-2xl backdrop-blur-sm">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-black border-t border-[#F5E6E0]/30 shadow-2xl backdrop-blur-sm">
         <div className="relative">
           <div className="flex items-center justify-around h-16">
             {/* Left side links */}
@@ -254,7 +302,7 @@ export default function Navbar({ subtitle = 'Aditi Kandya' }) {
               <a
                 key={link.href}
                 href={link.href}
-                className="flex flex-col items-center justify-center gap-1 text-white/70 hover:text-[#FFD700] transition-colors flex-1 h-full min-w-[60px] px-1"
+                className="flex flex-col items-center justify-center gap-1 text-white/70 hover:text-[#F5E6E0] transition-colors flex-1 h-full min-w-[60px] px-1"
               >
                 <span className="text-base">{link.icon}</span>
                 <span className="text-[9px] uppercase tracking-wide font-bold text-center leading-tight">
@@ -271,7 +319,7 @@ export default function Navbar({ subtitle = 'Aditi Kandya' }) {
                 e.stopPropagation()
                 setMobileMenuOpen(prev => !prev)
               }}
-              className="mobile-menu-button flex flex-col items-center justify-center gap-1 text-white/70 hover:text-[#FFD700] transition-colors flex-1 h-full min-w-[60px] px-1 relative z-10"
+              className="mobile-menu-button flex flex-col items-center justify-center gap-1 text-white/70 hover:text-[#F5E6E0] transition-colors flex-1 h-full min-w-[60px] px-1 relative z-10"
             >
               <span className="text-base">☰</span>
               <span className="text-[9px] uppercase tracking-wide font-bold text-center leading-tight">
@@ -283,7 +331,7 @@ export default function Navbar({ subtitle = 'Aditi Kandya' }) {
           {/* Mobile Menu Popup */}
           {mobileMenuOpen && (
             <div 
-              className="mobile-menu-popup absolute bottom-full left-0 right-0 bg-black border border-[#FFD700]/30 shadow-2xl backdrop-blur-sm max-h-[60vh] overflow-y-auto z-50"
+              className="mobile-menu-popup absolute bottom-full left-0 right-0 bg-black border border-[#F5E6E0]/30 shadow-2xl backdrop-blur-sm max-h-[60vh] overflow-y-auto z-50"
               style={{ bottom: '100%' }}
             >
               <div className="flex flex-col py-4">
@@ -295,7 +343,7 @@ export default function Navbar({ subtitle = 'Aditi Kandya' }) {
                       e.stopPropagation()
                       setMobileMenuOpen(false)
                     }}
-                    className="flex items-center gap-3 text-white/90 hover:text-[#FFD700] px-6 py-3 hover:bg-white/10 transition-colors text-sm uppercase tracking-wide font-bold"
+                    className="flex items-center gap-3 text-white/90 hover:text-[#F5E6E0] px-6 py-3 hover:bg-white/10 transition-colors text-sm uppercase tracking-wide font-bold"
                   >
                     <span className="text-lg">{link.icon}</span>
                     <span>{link.label}</span>

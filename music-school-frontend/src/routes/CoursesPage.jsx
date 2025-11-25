@@ -24,7 +24,7 @@ function CourseCard({ course, isEnrolled = false }) {
     <a 
       key={course._id} 
       href={`/courses/${course._id}`} 
-      className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-4 border border-white/20 hover:border-[#FFD700] relative overflow-hidden"
+      className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-4 border border-white/20 hover:border-[#F5E6E0] relative overflow-hidden"
     >
       <div className="relative overflow-hidden rounded-xl">
         <img 
@@ -51,7 +51,7 @@ function CourseCard({ course, isEnrolled = false }) {
             e.target.src = 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=600&auto=format&fit=crop'
           }}
         />
-        <div className="absolute top-3 right-3 bg-black text-[#FFD700] px-3 py-1 rounded-full text-xs font-bold z-10">
+        <div className="absolute top-3 right-3 bg-black text-[#F5E6E0] px-3 py-1 rounded-full text-xs font-bold z-10">
           {course.level || 'All Levels'}
         </div>
         {!isEnrolled && (
@@ -60,48 +60,48 @@ function CourseCard({ course, isEnrolled = false }) {
           </div>
         )}
         {isEnrolled && (
-          <div className="absolute bottom-3 right-3 bg-[#FFD700] text-black px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 z-10 animate-fade-in shadow-lg">
+          <div className="absolute bottom-3 right-3 bg-[#F5E6E0] text-gray-700 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 z-10 animate-fade-in shadow-lg">
             <span className="text-sm">✓</span>
             <span>Already Enrolled</span>
           </div>
         )}
       </div>
       <div className="mt-3">
-        <h3 className="font-cinema font-bold text-lg text-black group-hover:text-[#FFD700] transition-colors mb-1">
+        <h3 className="font-cinema font-bold text-lg text-gray-700 group-hover:text-gray-700 transition-colors mb-1">
           {course.title}
         </h3>
         {hasTeacher && (
-          <p className="text-xs text-black/70 flex items-center gap-1 mb-2 font-medium">
+          <p className="text-xs text-gray-700 flex items-center gap-1 mb-2 font-medium">
             <span>👩‍🏫</span>
             <span>{course.teacherName || 'Assigned Teacher'}</span>
             {course.teacherInstrument && (
               <>
-                <span className="text-black/50">•</span>
+                <span className="text-gray-500">•</span>
                 <span>{course.teacherInstrument}</span>
               </>
             )}
           </p>
         )}
-        <p className="text-black/70 text-sm line-clamp-2 leading-relaxed mb-3 font-medium">
+        <p className="text-gray-700 text-sm line-clamp-2 leading-relaxed mb-3 font-medium">
           {course.description || 'Learn this amazing instrument with our expert instructors. Perfect for beginners and intermediate players.'}
         </p>
         
-        <div className="flex items-center justify-between pt-2 border-t border-black/10">
+        <div className="flex items-center justify-between pt-2 border-t border-gray-300">
           <div className="flex items-center space-x-2">
-            <div className="flex text-[#FFD700] text-sm">
+            <div className="flex text-[#F5E6E0] text-sm">
               {'★'.repeat(Math.floor(rating))}
-              {rating % 1 >= 0.5 && <span className="text-[#FFD700]">½</span>}
+              {rating % 1 >= 0.5 && <span className="text-[#F5E6E0]">½</span>}
             </div>
-            <span className="text-xs text-black/60 font-medium">({rating.toFixed(1)})</span>
+            <span className="text-xs text-gray-600 font-medium">({rating.toFixed(1)})</span>
           </div>
-          <div className="flex items-center space-x-2 text-xs text-black/60 font-medium">
+          <div className="flex items-center space-x-2 text-xs text-gray-600 font-medium">
             <span>📚</span>
             <span>{totalLessons || 0} {totalLessons === 1 ? 'Lesson' : 'Lessons'}</span>
           </div>
         </div>
         
         <div className="flex items-center justify-between pt-3">
-          <div className="flex items-center space-x-4 text-sm text-black/70 font-medium">
+          <div className="flex items-center space-x-4 text-sm text-gray-700 font-medium">
             <span className="flex items-center gap-1">
               <span>👥</span>
               <span>{studentDisplay}</span>
@@ -114,11 +114,11 @@ function CourseCard({ course, isEnrolled = false }) {
             )}
           </div>
           {!isEnrolled ? (
-            <span className="px-4 py-1.5 rounded-full bg-black text-[#FFD700] text-sm font-bold group-hover:bg-[#FFD700] group-hover:text-black transition-all duration-300">
+            <span className="px-4 py-1.5 rounded-full bg-black text-[#F5E6E0] text-sm font-bold group-hover:bg-[#F5E6E0] group-hover:text-gray-700 transition-all duration-300">
               View Details →
             </span>
           ) : (
-            <span className="px-4 py-1.5 rounded-full bg-[#FFD700] text-black text-sm font-bold group-hover:bg-black group-hover:text-[#FFD700] transition-all duration-300 flex items-center gap-1.5">
+            <span className="px-4 py-1.5 rounded-full bg-[#F5E6E0] text-gray-700 text-sm font-bold group-hover:bg-black group-hover:text-[#F5E6E0] transition-all duration-300 flex items-center gap-1.5">
               <span>✓</span>
               <span>Continue Learning →</span>
             </span>
@@ -135,8 +135,8 @@ function FilterButton({ active, onClick, children }) {
       onClick={onClick}
       className={`px-4 py-2 rounded-full text-sm font-bold transition-all duration-300 ${
         active 
-          ? 'bg-[#FFD700] text-black shadow-md hover:shadow-lg transform hover:scale-105' 
-          : 'bg-white text-black border border-black/20 hover:border-[#FFD700] hover:text-[#FFD700]'
+          ? 'bg-[#F5E6E0] text-gray-700 shadow-md hover:shadow-lg transform hover:scale-105' 
+          : 'bg-white text-gray-700 border border-gray-300 hover:border-[#F5E6E0] hover:text-[#F5E6E0]'
       }`}
     >
       {children}
@@ -237,15 +237,24 @@ export default function CoursesPage() {
         <section className="bg-black py-16 md:py-20">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-[#FFD700]/20 text-[#FFD700] text-sm font-bold mb-6 border border-[#FFD700]/30">
+              <div className="inline-flex items-center px-4 py-2 rounded-full bg-[#F5E6E0]/20 text-[#F5E6E0] text-sm font-bold mb-6 border border-[#F5E6E0]/30"
+              style={{
+                fontFamily: "'Dancing Script', cursive"
+              }}>
                 <span className="mr-2">🎵</span>
                 {courses.length} Courses Available
               </div>
-              <h1 className="text-4xl md:text-6xl font-cinema font-bold text-white mb-4">
+              <h1 className="text-4xl md:text-6xl font-cinema font-bold text-white mb-4"
+              style={{
+                fontFamily: "'Dancing Script', cursive"
+              }}>
                 Explore Our Music Courses
               </h1>
-              <div className="w-24 h-1 bg-[#FFD700] mx-auto mb-6"></div>
-              <p className="text-xl md:text-2xl text-white/90 font-medium max-w-3xl mx-auto leading-relaxed">
+              <div className="w-24 h-1 bg-[#F5E6E0] mx-auto mb-6"></div>
+              <p className="text-xl md:text-2xl text-white/90 font-medium max-w-3xl mx-auto leading-relaxed"
+              style={{
+                fontFamily: "'Satisfy', cursive"
+              }}>
                 Discover your musical passion with our comprehensive courses designed for all skill levels. 
                 Learn from expert instructors and join our community of music lovers.
               </p>
@@ -306,11 +315,11 @@ export default function CoursesPage() {
             {filteredCourses.length === 0 && !loading && (
               <div className="text-center py-16">
                 <div className="text-6xl mb-4">🎵</div>
-                <h3 className="text-xl font-bold text-black mb-2">No courses found</h3>
-                <p className="text-black/70 mb-6 font-medium">Try adjusting your filter or check back later for new courses.</p>
+                <h3 className="text-xl font-bold text-gray-700 mb-2">No courses found</h3>
+                <p className="text-gray-700 mb-6 font-medium">Try adjusting your filter or check back later for new courses.</p>
                 <button 
                   onClick={() => handleFilter('all')}
-                  className="px-6 py-3 rounded-full bg-[#FFD700] text-black hover:bg-[#FFC700] transition-colors font-bold shadow-lg hover:shadow-xl"
+                  className="px-6 py-3 rounded-full bg-[#F5E6E0] text-gray-700 hover:bg-[#F5E6E0]/80 transition-colors font-bold shadow-lg hover:shadow-xl"
                 >
                   Show All Courses
                 </button>

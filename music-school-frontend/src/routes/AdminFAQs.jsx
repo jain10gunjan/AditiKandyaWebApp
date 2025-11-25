@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useAuth, SignedIn, SignedOut, SignInButton } from '@clerk/clerk-react'
 import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api.js'
 import toast from 'react-hot-toast'
+import Navbar from '../components/Navbar.jsx'
+import Footer from '../components/Footer.jsx'
 
 export default function AdminFAQs() {
   const { getToken } = useAuth()
@@ -89,6 +91,7 @@ export default function AdminFAQs() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-pink-50">
+      <Navbar />
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-extrabold text-slate-900">Manage FAQs</h1>
@@ -247,6 +250,7 @@ export default function AdminFAQs() {
           </div>
         </SignedIn>
       </div>
+      <Footer />
     </div>
   )
 }

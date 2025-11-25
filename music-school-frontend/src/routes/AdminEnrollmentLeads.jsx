@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useAuth, useUser, SignedIn, SignedOut, SignInButton } from '@clerk/clerk-react'
+import Navbar from '../components/Navbar.jsx'
+import Footer from '../components/Footer.jsx'
+import { apiDelete } from '../lib/api.js'
+import toast from 'react-hot-toast'
 
 export default function AdminEnrollmentLeads() {
   const { getToken } = useAuth()
@@ -24,10 +28,27 @@ export default function AdminEnrollmentLeads() {
     }
   }
 
+  const handleDelete = async (leadId, leadName) => {
+    if (!confirm(`Are you sure you want to delete the lead for "${leadName}"? This action cannot be undone.`)) {
+      return
+    }
+    
+    try {
+      const token = await getToken()
+      await apiDelete(`/leads/${leadId}`, token)
+      toast.success('Lead deleted successfully! ✅')
+      loadLeads() // Reload the leads list
+    } catch (error) {
+      console.error('Failed to delete lead:', error)
+      toast.error('Failed to delete lead. Please try again.')
+    }
+  }
+
   useEffect(() => { loadLeads() }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-pink-50">
+      <Navbar />
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-extrabold text-slate-900">New Enrollment Leads</h1>
@@ -72,6 +93,7 @@ export default function AdminEnrollmentLeads() {
                       <th className="text-left text-xs font-semibold text-slate-600 uppercase tracking-wider px-6 py-3">WhatsApp</th>
                       <th className="text-left text-xs font-semibold text-slate-600 uppercase tracking-wider px-6 py-3">Country</th>
                       <th className="text-left text-xs font-semibold text-slate-600 uppercase tracking-wider px-6 py-3">Received</th>
+                      <th className="text-left text-xs font-semibold text-slate-600 uppercase tracking-wider px-6 py-3">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
@@ -101,6 +123,15 @@ export default function AdminEnrollmentLeads() {
                         <td className="px-6 py-3">{lead.whatsapp || '-'}</td>
                         <td className="px-6 py-3">{lead.country || '-'}</td>
                         <td className="px-6 py-3 text-slate-600 text-sm">{new Date(lead.createdAt).toLocaleString()}</td>
+                        <td className="px-6 py-3">
+                          <button
+                            onClick={() => handleDelete(lead._id, lead.fullName)}
+                            className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-1"
+                          >
+                            <span>🗑️</span>
+                            <span>Delete</span>
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -110,6 +141,7 @@ export default function AdminEnrollmentLeads() {
           </div>
         </SignedIn>
       </div>
+      <Footer />
     </div>
   )
 }

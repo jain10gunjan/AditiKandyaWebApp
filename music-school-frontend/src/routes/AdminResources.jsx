@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useAuth, SignedIn, SignedOut, SignInButton } from '@clerk/clerk-react'
 import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api'
+import Navbar from '../components/Navbar.jsx'
+import Footer from '../components/Footer.jsx'
 
 export default function AdminResources() {
   const { getToken } = useAuth()
@@ -191,6 +193,7 @@ export default function AdminResources() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-pink-50">
+      <Navbar />
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-extrabold text-slate-900">Resource Management</h1>
@@ -422,6 +425,7 @@ export default function AdminResources() {
           )}
         </SignedIn>
       </div>
+      <Footer />
     </div>
   )
 }

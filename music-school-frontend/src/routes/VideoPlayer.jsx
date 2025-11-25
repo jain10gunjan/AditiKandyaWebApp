@@ -45,8 +45,18 @@ export default function VideoPlayer() {
         url.searchParams.set('userHint', userId)
       }
 
-      // Test if video is accessible
-      const testResponse = await fetch(url.toString(), { method: 'HEAD' })
+      // Get token for Authorization header (for admin access)
+      const token = await getToken().catch(() => null)
+      const headers = {}
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+
+      // Test if video is accessible with Authorization header
+      const testResponse = await fetch(url.toString(), { 
+        method: 'HEAD',
+        headers: headers
+      })
       
       if (!testResponse.ok) {
         if (testResponse.status === 401) {
@@ -56,6 +66,11 @@ export default function VideoPlayer() {
         } else {
           throw new Error(`Failed to load video (${testResponse.status})`)
         }
+      }
+
+      // If token is available, add it to the video URL for the video element
+      if (token) {
+        url.searchParams.set('token', token)
       }
 
       setVideoUrl(url.toString())

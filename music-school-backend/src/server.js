@@ -532,7 +532,7 @@ const requireAdmin = hasClerk
     }
   : (req, res) => res.status(501).json({ error: 'Auth not configured' })
 
-// Multer for local uploads with increased file size limit (50mb)
+// Multer for local uploads with increased file size limit (100mb)
 const multer = require('multer')
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -549,7 +549,7 @@ const storage = multer.diskStorage({
 const upload = multer({ 
   storage,
   limits: {
-    fileSize: 50 * 1024 * 1024 // 50MB limit
+    fileSize: 100 * 1024 * 1024 // 100MB limit
   }
 })
 
@@ -918,6 +918,40 @@ app.post('/api/courses/:id/modules/:mIdx/lessons', requireAdmin, upload.single('
   res.json(course)
 })
 
+// Delete a lesson from a module
+app.delete('/api/courses/:id/modules/:mIdx/lessons/:lIdx', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const course = await Course.findById(req.params.id)
+  if (!course) return res.status(404).json({ error: 'Course not found' })
+  const mIdx = Number(req.params.mIdx)
+  const lIdx = Number(req.params.lIdx)
+  if (!course.modules || !course.modules[mIdx]) return res.status(400).json({ error: 'Invalid module index' })
+  if (!course.modules[mIdx].lessons || !course.modules[mIdx].lessons[lIdx]) return res.status(400).json({ error: 'Invalid lesson index' })
+  
+  const lesson = course.modules[mIdx].lessons[lIdx]
+  
+  // Delete the file from filesystem if it exists
+  if (lesson.videoPath || lesson.pdfPath) {
+    try {
+      const filePath = lesson.videoPath || lesson.pdfPath
+      const fileName = filePath.replace('/uploads/', '')
+      const fullPath = path.join(uploadsDir, fileName)
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath)
+        console.log('Deleted file:', fullPath)
+      }
+    } catch (err) {
+      console.warn('Could not delete file:', err?.message)
+      // Continue even if file deletion fails
+    }
+  }
+  
+  // Remove lesson from array
+  course.modules[mIdx].lessons.splice(lIdx, 1)
+  await course.save()
+  res.json(course)
+})
+
 // Chapters -> modules -> lessons management
 app.post('/api/courses/:id/chapters', requireAdmin, async (req, res) => {
   if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
@@ -1104,37 +1138,101 @@ app.get('/api/media/video/:courseId/:mIdx/:lIdx', async (req, res) => {
       })
     }
     
-    // Access control: free preview OR free course OR enrolled user
+    // Access control: free preview OR free course OR enrolled user OR admin
     let allowed = Boolean(lesson.freePreview)
     
     // Get userId from multiple sources (for iframe support)
     let userId = null
+    let userIdFromToken = null
+    
     if (req.auth && req.auth.userId) {
       userId = req.auth.userId
     } else if (req.query.userHint) {
       userId = req.query.userHint
     } else if (req.query.token && hasClerk) {
-      // If token is provided in query (for iframe), try to verify it
+      // Extract userId from JWT token (decode without verification for now)
       try {
-        // Note: This is a simplified approach. For production, you might want to verify the token properly
-        // For now, we'll rely on userHint or auth middleware
-        console.log('Token provided in query, but using userHint is preferred')
+        const token = req.query.token
+        // JWT format: header.payload.signature
+        const parts = token.split('.')
+        if (parts.length === 3) {
+          // Decode the payload (base64url)
+          const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString())
+          // The 'sub' claim contains the userId
+          if (payload.sub) {
+            userIdFromToken = payload.sub
+            userId = userIdFromToken
+            console.log('Extracted userId from token:', userIdFromToken)
+          }
+        }
       } catch (e) {
-        console.warn('Could not verify token from query:', e)
+        console.warn('Could not extract userId from token:', e?.message)
       }
     } else if (req.headers['x-user-id']) {
       userId = req.headers['x-user-id']
     }
     
+    // Check if user is admin (for admin preview access)
+    // Check by userId OR email - try both req.auth.userId, userHint, and token
+    let isAdmin = false
+    const userIdsToCheck = []
+    
+    // Collect all possible userIds to check
+    if (req.auth && req.auth.userId) {
+      userIdsToCheck.push(req.auth.userId)
+    }
+    if (userIdFromToken) {
+      userIdsToCheck.push(userIdFromToken)
+    }
+    if (userId && !userIdsToCheck.includes(userId)) {
+      userIdsToCheck.push(userId)
+    }
+    
+    // Check admin status for each userId (by userId OR email)
+    for (const userIdToCheck of userIdsToCheck) {
+      if (hasClerk && !isAdmin) {
+        try {
+          const user = await clerkClient.users.getUser(userIdToCheck)
+          const emails = (user.emailAddresses || []).map((e) => String(e.emailAddress || '').toLowerCase())
+          isAdmin = emails.some((e) => ADMIN_EMAILS.includes(e))
+          if (isAdmin) {
+            console.log('Admin access granted via userId:', userIdToCheck, 'email:', emails)
+            break
+          }
+        } catch (err) {
+          console.warn('Could not check admin status for userId:', userIdToCheck, err?.message)
+        }
+      }
+    }
+    
+    // Also check if Authorization header is present and req.auth is set (Clerk middleware should handle this)
+    if (!isAdmin && req.auth && req.auth.userId && hasClerk) {
+      try {
+        const user = await clerkClient.users.getUser(req.auth.userId)
+        const emails = (user.emailAddresses || []).map((e) => String(e.emailAddress || '').toLowerCase())
+        isAdmin = emails.some((e) => ADMIN_EMAILS.includes(e))
+        if (isAdmin) {
+          console.log('Admin access granted via req.auth.userId, email:', emails)
+        }
+      } catch (err) {
+        console.warn('Could not check admin from req.auth:', err?.message)
+      }
+    }
+    
     console.log('Video access check:', {
       courseId: req.params.courseId,
       userId: userId || 'none',
+      isAdmin: isAdmin,
       freePreview: lesson.freePreview,
       coursePrice: course.price,
       courseIsFree: course.isFree
     })
     
-    if (!allowed) {
+    // Admin can always access videos for preview
+    if (isAdmin) {
+      allowed = true
+      console.log('Access granted: Admin user')
+    } else if (!allowed) {
       // Free course (price = 0 or isFree flag)
       if (Number(course.price || 0) === 0 || course.isFree === true) {
         allowed = true
@@ -1331,8 +1429,30 @@ app.get('/api/me/enrollments', async (req, res) => {
   
   console.log('Getting enrollments for user:', userId)
   
-  const list = await Enrollment.find({ userId, approved: true }).sort({ createdAt: -1 })
-  console.log('Found approved enrollments:', list.length)
+  // Get user email from Clerk if available
+  let userEmail = null
+  if (hasClerk && req.auth && req.auth.userId) {
+    try {
+      const user = await clerkClient.users.getUser(req.auth.userId)
+      userEmail = user.emailAddresses?.[0]?.emailAddress?.toLowerCase()
+    } catch (err) {
+      console.warn('Could not get user email from Clerk:', err?.message)
+    }
+  }
+  
+  // Find enrollments by userId OR by email (if email matches)
+  const query = { approved: true }
+  if (userEmail) {
+    query.$or = [
+      { userId },
+      { email: userEmail }
+    ]
+  } else {
+    query.userId = userId
+  }
+  
+  const list = await Enrollment.find(query).sort({ createdAt: -1 })
+  console.log('Found approved enrollments:', list.length, 'for userId:', userId, 'email:', userEmail)
   
   const courseIds = list.map((e) => e.courseId)
   const courses = await Course.find({ _id: { $in: courseIds } })
@@ -2130,6 +2250,14 @@ app.get('/api/admin/leads', requireAdmin, async (req, res) => {
   if (!dbConnected) return res.json([])
   const items = await Lead.find().sort({ createdAt: -1 })
   res.json(items)
+})
+
+// Admin: delete a lead
+app.delete('/api/leads/:id', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const doc = await Lead.findByIdAndDelete(req.params.id)
+  if (!doc) return res.status(404).json({ error: 'Lead not found' })
+  res.json({ message: 'Lead deleted successfully', id: doc._id })
 })
 
 // ==================== CONTACT ENDPOINTS ====================

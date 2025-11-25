@@ -651,6 +651,9 @@ function ModuleCard({ module, moduleIndex, courseId, onAddLesson, onDeleteModule
                   lessonIndex={lessonIndex}
                   moduleIndex={moduleIndex}
                   courseId={courseId}
+                  getToken={getToken}
+                  onDelete={() => {}}
+                  onReload={onReload}
                 />
               ))}
             </div>
@@ -800,8 +803,10 @@ function LessonForm({ lessonType, onSubmit, onCancel, loading }) {
   )
 }
 
-function LessonCard({ lesson, lessonIndex, moduleIndex, courseId }) {
+function LessonCard({ lesson, lessonIndex, moduleIndex, courseId, getToken, onDelete, onReload }) {
   const [previewOpen, setPreviewOpen] = useState(false)
+  const [videoIframeUrl, setVideoIframeUrl] = useState(null)
+  const [deleting, setDeleting] = useState(false)
   
   const getResourceUrl = () => {
     if (lesson.type === 'video' && lesson.videoPath) {
@@ -810,6 +815,58 @@ function LessonCard({ lesson, lessonIndex, moduleIndex, courseId }) {
       return `${import.meta.env.VITE_API_BASE_URL}/media/pdf/${courseId}/${moduleIndex}/${lessonIndex}`
     }
     return null
+  }
+
+  // Load video iframe URL with authentication when preview opens
+  useEffect(() => {
+    if (previewOpen && lesson.type === 'video' && getToken) {
+      const loadVideoIframeUrl = async () => {
+        try {
+          const token = await getToken()
+          const baseUrl = getResourceUrl()
+          if (baseUrl && token) {
+            // Use VideoPlayer route with token in query string
+            // The VideoPlayer component will handle the authentication
+            const iframeUrl = `/video/${courseId}/${moduleIndex}/${lessonIndex}?adminToken=${encodeURIComponent(token)}`
+            setVideoIframeUrl(iframeUrl)
+          } else if (baseUrl) {
+            // Fallback: use VideoPlayer route without token
+            const iframeUrl = `/video/${courseId}/${moduleIndex}/${lessonIndex}`
+            setVideoIframeUrl(iframeUrl)
+          }
+        } catch (error) {
+          console.error('Error setting up video iframe:', error)
+          const iframeUrl = `/video/${courseId}/${moduleIndex}/${lessonIndex}`
+          setVideoIframeUrl(iframeUrl)
+        }
+      }
+      loadVideoIframeUrl()
+    } else if (!previewOpen) {
+      setVideoIframeUrl(null)
+    }
+  }, [previewOpen, lesson.type, lessonIndex, moduleIndex, courseId, getToken])
+
+  const handleDelete = async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!confirm(`Are you sure you want to delete "${lesson.title}"? This action cannot be undone and will also delete the file from the server.`)) {
+      return
+    }
+    
+    try {
+      setDeleting(true)
+      const token = await getToken()
+      await apiDelete(`/courses/${courseId}/modules/${moduleIndex}/lessons/${lessonIndex}`, token)
+      toast.success('Lesson deleted successfully! ✅')
+      if (onReload) {
+        onReload(true) // preserveScroll = true
+      }
+    } catch (error) {
+      console.error('Failed to delete lesson:', error)
+      toast.error('Failed to delete lesson. Please try again.')
+    } finally {
+      setDeleting(false)
+    }
   }
 
   return (
@@ -836,12 +893,31 @@ function LessonCard({ lesson, lessonIndex, moduleIndex, courseId }) {
               </div>
             </div>
           </div>
-          <button
-            onClick={() => setPreviewOpen(true)}
-            className="px-3 py-1.5 bg-sky-600 text-white rounded-lg text-sm hover:bg-sky-700 transition-all shadow-sm hover:shadow-md active:scale-95"
-          >
-            Preview
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPreviewOpen(true)}
+              className="px-3 py-1.5 bg-sky-600 text-white rounded-lg text-sm hover:bg-sky-700 transition-all shadow-sm hover:shadow-md active:scale-95"
+            >
+              Preview
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-all shadow-sm hover:shadow-md active:scale-95 disabled:opacity-50 flex items-center gap-1"
+            >
+              {deleting ? (
+                <>
+                  <span className="animate-spin">⏳</span>
+                  <span>Deleting...</span>
+                </>
+              ) : (
+                <>
+                  <span>🗑️</span>
+                  <span>Delete</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -866,13 +942,25 @@ function LessonCard({ lesson, lessonIndex, moduleIndex, courseId }) {
             </div>
             <div className="p-6">
               {lesson.type === 'video' ? (
-                <video
-                  controls
-                  className="w-full rounded-lg shadow-lg"
-                  src={getResourceUrl()}
-                >
-                  Your browser does not support the video tag.
-                </video>
+                videoIframeUrl ? (
+                  <div className="w-full rounded-lg shadow-lg overflow-hidden bg-black" style={{ aspectRatio: '16/9' }}>
+                    <iframe
+                      src={videoIframeUrl}
+                      className="w-full h-full"
+                      allow="autoplay; encrypted-media; fullscreen"
+                      allowFullScreen
+                      title={lesson.title}
+                      style={{ border: 'none' }}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-64 bg-slate-100 rounded-lg">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600 mx-auto mb-4"></div>
+                      <p className="text-slate-600">Loading video player...</p>
+                    </div>
+                  </div>
+                )
               ) : (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">📄</div>
