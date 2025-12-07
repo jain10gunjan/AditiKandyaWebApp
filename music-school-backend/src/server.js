@@ -248,6 +248,22 @@ const Attendance = mongoose.model(
   )
 );
 
+// Testimonial model
+const Testimonial = mongoose.model(
+  'Testimonial',
+  new mongoose.Schema(
+    {
+      name: { type: String, required: true },
+      role: { type: String, required: true },
+      content: { type: String, required: true },
+      avatar: { type: String, default: 'https://i.pravatar.cc/150' },
+      isActive: { type: Boolean, default: true },
+      order: { type: Number, default: 0 }, // For ordering testimonials
+    },
+    { timestamps: true }
+  )
+);
+
 // Schedule/Calendar model
 const Schedule = mongoose.model(
   'Schedule',
@@ -2831,6 +2847,90 @@ app.delete('/api/admin/workshops/:id', requireAdmin, async (req, res) => {
   const workshop = await Workshop.findByIdAndDelete(req.params.id)
   if (!workshop) return res.status(404).json({ error: 'Workshop not found' })
   res.json({ message: 'Workshop deleted' })
+})
+
+// ==================== TESTIMONIAL ENDPOINTS ====================
+
+// Public: Get all active testimonials
+app.get('/api/testimonials', async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  try {
+    const testimonials = await Testimonial.find({ isActive: true })
+      .sort({ order: 1, createdAt: -1 })
+    res.json(testimonials)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// Admin: Get all testimonials (including inactive)
+app.get('/api/admin/testimonials', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  try {
+    const testimonials = await Testimonial.find().sort({ order: 1, createdAt: -1 })
+    res.json(testimonials)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// Admin: Create testimonial
+app.post('/api/admin/testimonials', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  try {
+    const { name, role, content, avatar, isActive, order } = req.body
+    if (!name || !role || !content) {
+      return res.status(400).json({ error: 'Name, role, and content are required' })
+    }
+    const testimonial = new Testimonial({
+      name,
+      role,
+      content,
+      avatar: avatar || 'https://i.pravatar.cc/150',
+      isActive: isActive !== undefined ? isActive : true,
+      order: order || 0
+    })
+    await testimonial.save()
+    res.status(201).json(testimonial)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// Admin: Update testimonial
+app.put('/api/admin/testimonials/:id', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  try {
+    const { name, role, content, avatar, isActive, order } = req.body
+    const testimonial = await Testimonial.findByIdAndUpdate(
+      req.params.id,
+      {
+        name,
+        role,
+        content,
+        avatar,
+        isActive,
+        order
+      },
+      { new: true }
+    )
+    if (!testimonial) return res.status(404).json({ error: 'Testimonial not found' })
+    res.json(testimonial)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// Admin: Delete testimonial
+app.delete('/api/admin/testimonials/:id', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  try {
+    const testimonial = await Testimonial.findByIdAndDelete(req.params.id)
+    if (!testimonial) return res.status(404).json({ error: 'Testimonial not found' })
+    res.json({ message: 'Testimonial deleted' })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
 })
 
 // ==================== WORKSHOP ENROLLMENT ENDPOINTS ====================

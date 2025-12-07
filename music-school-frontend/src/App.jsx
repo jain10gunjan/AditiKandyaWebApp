@@ -5,22 +5,51 @@ import { useEffect, useState, useRef } from 'react'
 import toast from 'react-hot-toast'
 import Navbar from './components/Navbar.jsx'
 import Footer from './components/Footer.jsx'
+import { motion } from 'framer-motion'
 
 function SectionTitle({ emoji, title, subtitle }) {
   return (
-    <div className="max-w-5xl mx-auto text-center mb-8">
-      <h2 className="text-3xl md:text-5xl font-cinema font-bold tracking-wide text-white">
-        <span className="mr-2">{emoji}</span>
+    <motion.div 
+      className="max-w-5xl mx-auto text-center mb-8"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.6 }}
+    >
+      <motion.h2 
+        className="text-3xl md:text-5xl font-cinema font-bold tracking-wide text-white"
+        initial={{ opacity: 0, scale: 0.9 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <motion.span 
+          className="mr-2"
+          initial={{ rotate: -180, scale: 0 }}
+          whileInView={{ rotate: 0, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, type: "spring" }}
+        >
+          {emoji}
+        </motion.span>
         {title}
-      </h2>
+      </motion.h2>
       {subtitle && (
-        <p className="text-white/80 mt-3 text-lg font-medium">{subtitle}</p>
+        <motion.p 
+          className="text-white/80 mt-3 text-lg font-medium"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          {subtitle}
+        </motion.p>
       )}
-    </div>
+    </motion.div>
   )
 }
 
-function CourseCard({ title, level, price, image, _id, isEnrolled = false, course }) {
+function CourseCard({ title, level, price, image, _id, isEnrolled = false, course, index }) {
   // Check if teacher is assigned - check both teacherId and teacherName
   const hasTeacher = course && (
     (course.teacherId && course.teacherId.trim() !== '') || 
@@ -49,7 +78,20 @@ function CourseCard({ title, level, price, image, _id, isEnrolled = false, cours
   }
   
   return (
-    <a href={`/courses/${_id}`} className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-4 border border-white/20 hover:border-[#F5E6E0] relative overflow-hidden">
+    <motion.a 
+      href={`/courses/${_id}`} 
+      className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-4 border border-white/20 hover:border-[#F5E6E0] relative overflow-hidden"
+      initial={{ opacity: 0, y: 50, scale: 0.9 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ 
+        duration: 0.5, 
+        delay: (index || 0) * 0.1,
+        type: "spring",
+        stiffness: 100
+      }}
+      whileHover={{ y: -8, scale: 1.02 }}
+    >
       <div className="relative overflow-hidden rounded-xl">
         <img 
           src={getImageUrl()} 
@@ -98,7 +140,7 @@ function CourseCard({ title, level, price, image, _id, isEnrolled = false, cours
           </span>
         </div>
       </div>
-    </a>
+    </motion.a>
   )
 }
 
@@ -120,31 +162,128 @@ function TeacherCard({ name, instrument, avatar }) {
   )
 }
 
-function StatCard({ number, label, icon, color }) {
+function StatCard({ number, label, icon, color, index }) {
   return (
-    <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 text-center border border-white/20 hover:border-[#F5E6E0]">
-      <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-[#F5E6E0] transition-colors">
+    <motion.div 
+      className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 text-center border border-white/20 hover:border-[#F5E6E0]"
+      initial={{ opacity: 0, y: 30, scale: 0.8 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ 
+        duration: 0.5, 
+        delay: (index || 0) * 0.1,
+        type: "spring",
+        stiffness: 100
+      }}
+      whileHover={{ scale: 1.05, y: -5 }}
+    >
+      <motion.div 
+        className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-[#F5E6E0] transition-colors"
+        whileHover={{ rotate: 360 }}
+        transition={{ duration: 0.6 }}
+      >
         <span className="text-2xl">{icon}</span>
-      </div>
-      <div className="text-4xl font-cinema font-bold text-black mb-2">{number}</div>
+      </motion.div>
+      <motion.div 
+        className="text-4xl font-cinema font-bold text-black mb-2"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ delay: (index || 0) * 0.1 + 0.2 }}
+      >
+        {number}
+      </motion.div>
       <div className="text-black/70 font-bold">{label}</div>
-    </div>
+    </motion.div>
   )
 }
 
 function TestimonialCard({ name, role, content, avatar }) {
   return (
-    <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border border-white/20 hover:border-[#F5E6E0]">
+    <motion.div 
+      className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border border-white/20 hover:border-[#F5E6E0] flex-shrink-0"
+      initial={{ opacity: 0, scale: 0.9 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.4 }}
+      whileHover={{ scale: 1.05, y: -5 }}
+    >
       <div className="flex items-center mb-4">
-        <img src={avatar} alt={name} className="h-12 w-12 rounded-full object-cover ring-2 ring-[#F5E6E0]/30" />
+        <img 
+          src={avatar} 
+          alt={name} 
+          className="h-12 w-12 rounded-full object-cover ring-2 ring-[#F5E6E0]/30"
+          onError={(e) => {
+            e.target.src = 'https://i.pravatar.cc/150'
+          }}
+        />
         <div className="ml-3">
           <div className="font-cinema font-bold text-black">{name}</div>
           <div className="text-sm text-black/70 font-medium">{role}</div>
         </div>
       </div>
       <p className="text-black italic leading-relaxed font-medium">"{content}"</p>
-      <div className="mt-3 flex text-[#F5E6E0]">
+      <motion.div 
+        className="mt-3 flex text-[#F5E6E0]"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ delay: 0.3 }}
+      >
         {'★'.repeat(5)}
+      </motion.div>
+    </motion.div>
+  )
+}
+
+function TestimonialsSlider({ testimonials }) {
+  if (testimonials.length === 0) {
+    return null
+  }
+
+  // If 3 or fewer testimonials, show in grid
+  if (testimonials.length <= 3) {
+    return (
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {testimonials.map((testimonial, index) => (
+          <TestimonialCard
+            key={testimonial._id || index}
+            name={testimonial.name}
+            role={testimonial.role}
+            content={testimonial.content}
+            avatar={testimonial.avatar}
+          />
+        ))}
+      </div>
+    )
+  }
+
+  // If more than 3, show as auto-sliding marquee
+  return (
+    <div className="marquee-wrapper">
+      <div className="flex gap-6 marquee-container">
+        {/* First set */}
+        {testimonials.map((testimonial, index) => (
+          <div key={`first-${testimonial._id || index}`} className="flex-shrink-0" style={{ width: '350px' }}>
+            <TestimonialCard
+              name={testimonial.name}
+              role={testimonial.role}
+              content={testimonial.content}
+              avatar={testimonial.avatar}
+            />
+          </div>
+        ))}
+        {/* Duplicate set for seamless loop */}
+        {testimonials.map((testimonial, index) => (
+          <div key={`second-${testimonial._id || index}`} className="flex-shrink-0" style={{ width: '350px' }}>
+            <TestimonialCard
+              name={testimonial.name}
+              role={testimonial.role}
+              content={testimonial.content}
+              avatar={testimonial.avatar}
+            />
+          </div>
+        ))}
       </div>
     </div>
   )
@@ -747,6 +886,7 @@ function HeroCarousel() {
 function App() {
   const [courses, setCourses] = useState([])
   const [teachers, setTeachers] = useState([])
+  const [testimonials, setTestimonials] = useState([])
   const [enrolledCourseIds, setEnrolledCourseIds] = useState(new Set())
   const { getToken, isSignedIn } = useAuth()
 
@@ -777,9 +917,18 @@ function App() {
   }, [])
 
   useEffect(() => {
-    // Load courses and teachers from API
+    // Load courses, teachers, and testimonials from API
     apiGet('/courses').then(setCourses).catch(() => setCourses([]))
     apiGet('/teachers').then(setTeachers).catch(() => setTeachers([]))
+    apiGet('/testimonials')
+      .then(data => {
+        console.log('Loaded testimonials from API:', data)
+        setTestimonials(Array.isArray(data) ? data : [])
+      })
+      .catch((error) => {
+        console.error('Error loading testimonials:', error)
+        setTestimonials([])
+      })
     
     // Load enrollment status if user is signed in
     if (isSignedIn) {
@@ -819,24 +968,37 @@ function App() {
         </section>
 
         {/* Stats Section - White background */}
-        <section className="bg-white py-20 w-full">
+        <motion.section 
+          className="bg-white py-20 w-full"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6 }}
+        >
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <StatCard number="500+" label="Happy Students" icon="👥" color="bg-black" />
-              <StatCard number="15+" label="Expert Teachers" icon="👩‍🏫" color="bg-black" />
-              <StatCard number="6" label="Instruments" icon="🎵" color="bg-black" />
-              <StatCard number="95%" label="Success Rate" icon="⭐" color="bg-black" />
+              <StatCard number="500+" label="Happy Students" icon="👥" color="bg-black" index={0} />
+              <StatCard number="15+" label="Expert Teachers" icon="👩‍🏫" color="bg-black" index={1} />
+              <StatCard number="6" label="Instruments" icon="🎵" color="bg-black" index={2} />
+              <StatCard number="95%" label="Success Rate" icon="⭐" color="bg-black" index={3} />
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Courses Section - Black background */}
-        <section id="courses" className="bg-black py-20 w-full">
+        <motion.section 
+          id="courses" 
+          className="bg-black py-20 w-full"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6 }}
+        >
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <SectionTitle emoji="🎵" title="Featured Courses" subtitle="Choose your instrument and start your musical journey" />
           {courses.length > 0 ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {courses.slice(0, 6).map((course) => {
+              {courses.slice(0, 6).map((course, index) => {
                 const courseId = String(course._id)
                 const isEnrolled = enrolledCourseIds.has(courseId) || enrolledCourseIds.has(course._id)
                 return (
@@ -849,6 +1011,7 @@ function App() {
                     _id={course._id}
                     isEnrolled={isEnrolled}
                     course={course}
+                    index={index}
                   />
                 )
               })}
@@ -867,10 +1030,17 @@ function App() {
             </a>
           </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Teachers Section - White background */}
-        <section id="teachers" className="bg-white py-20 w-full">
+        <motion.section 
+          id="teachers" 
+          className="bg-white py-20 w-full"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6 }}
+        >
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-5xl mx-auto text-center mb-8">
               <h2 className="text-3xl md:text-5xl font-cinema font-bold tracking-wide text-black">
@@ -898,47 +1068,50 @@ function App() {
             )}
           </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Testimonials Section - Black background */}
-        <section className="bg-black py-20 w-full">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <SectionTitle emoji="💬" title="What Our Students Say" subtitle="Real feedback from our music community" />
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <TestimonialCard 
-              name="Priya Sharma" 
-              role="Guitar Student" 
-              content="The guitar lessons here are amazing! My instructor Aarav is patient and makes learning so much fun. I've improved so much in just 3 months!"
-              avatar="https://i.pravatar.cc/150?img=1"
-            />
-            <TestimonialCard 
-              name="Arjun Patel" 
-              role="Piano Student" 
-              content="Maya's piano teaching style is incredible. She breaks down complex pieces into easy steps. Highly recommended for anyone wanting to learn piano!"
-              avatar="https://i.pravatar.cc/150?img=2"
-            />
-            <TestimonialCard 
-              name="Sneha Reddy" 
-              role="Vocal Student" 
-              content="Kabir's vocal coaching helped me discover my voice. The techniques I learned here have boosted my confidence tremendously!"
-              avatar="https://i.pravatar.cc/150?img=3"
-            />
-          </div>
-          </div>
-        </section>
+        {testimonials.length > 0 && (
+          <motion.section 
+            className="bg-black py-20 w-full"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+              <SectionTitle emoji="💬" title="What Our Students Say" subtitle="Real feedback from our music community" />
+              <TestimonialsSlider testimonials={testimonials} />
+            </div>
+          </motion.section>
+        )}
 
         {/* Enrollment Section - Black background */}
-        <section id="enroll" className="bg-black py-20 w-full">
+        <motion.section 
+          id="enroll" 
+          className="bg-black py-20 w-full"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6 }}
+        >
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <SectionTitle emoji="📝" title="Ready to Start?" subtitle="Join our music family today" />
             <div className="max-w-4xl mx-auto">
               <EnrollForm />
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Gallery Section - White background */}
-        <section id="gallery" className="bg-white py-20 w-full">
+        <motion.section 
+          id="gallery" 
+          className="bg-white py-20 w-full"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6 }}
+        >
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-5xl mx-auto text-center mb-8">
               <h2 className="text-3xl md:text-5xl font-cinema font-bold tracking-wide text-black">
@@ -959,7 +1132,7 @@ function App() {
             ))}
           </div>
           </div>
-        </section>
+        </motion.section>
       </main>
 
       <Footer />

@@ -32,6 +32,7 @@ import AdminWorkshops from './routes/AdminWorkshops.jsx'
 import AdminWorkshopEnrollments from './routes/AdminWorkshopEnrollments.jsx'
 import AdminManualEnrollments from './routes/AdminManualEnrollments.jsx'
 import AdminDynamicPricing from './routes/AdminDynamicPricing.jsx'
+import AdminTestimonials from './routes/AdminTestimonials.jsx'
 import VideoPlayer from './routes/VideoPlayer.jsx'
 import AboutPage from './routes/AboutPage.jsx'
 import WorkshopsPage from './routes/WorkshopsPage.jsx'
@@ -75,6 +76,7 @@ const router = createBrowserRouter([
   { path: '/admin/workshop-enrollments', element: <AdminWorkshopEnrollments /> },
   { path: '/admin/manual-enrollments', element: <AdminManualEnrollments /> },
   { path: '/admin/dynamic-pricing', element: <AdminDynamicPricing /> },
+  { path: '/admin/testimonials', element: <AdminTestimonials /> },
   { path: '/video/:courseId/:moduleIndex/:lessonIndex', element: <VideoPlayer /> },
   { path: '/video', element: <VideoPlayer /> },
   { path: '/dashboard', element: <StudentDashboard /> },

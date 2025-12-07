@@ -1352,7 +1352,11 @@ export default function AdminPage() {
                   <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">💰</div>
                   <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-amber-700 transition-colors">Dynamic Pricing</h3>
                   <p className="text-sm text-slate-600">Manage region-based course pricing</p>
-                  <p className="text-sm text-slate-600">Manage manual enrollments</p>
+                </a>
+                <a href="/admin/testimonials" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-pink-300 active:scale-95">
+                  <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">💬</div>
+                  <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-pink-700 transition-colors">Testimonials</h3>
+                  <p className="text-sm text-slate-600">Manage student testimonials</p>
                 </a>
                 <a href="/admin/contacts" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-green-300 active:scale-95">
                   <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">📧</div>
