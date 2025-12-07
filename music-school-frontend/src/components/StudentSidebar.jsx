@@ -1,0 +1,116 @@
+import { useAuth, UserButton } from '@clerk/clerk-react'
+import { Link, useLocation } from 'react-router-dom'
+
+export default function StudentSidebar({ activeTab, onTabChange, isOpen, onClose }) {
+  const { user } = useAuth()
+  const location = useLocation()
+  
+  const menuItems = [
+    { id: 'overview', label: 'Overview', icon: '🏠', href: '/dashboard' },
+    { id: 'courses', label: 'My Courses', icon: '📚', href: '/dashboard' },
+    { id: 'calendar', label: 'Calendar', icon: '📅', href: '/student/calendar' },
+    { id: 'attendance', label: 'Attendance', icon: '📊', href: '/student/attendance' },
+    { id: 'resources', label: 'Resources', icon: '📖', href: '/student/resources' },
+  ]
+
+  // Determine active tab based on current location
+  const getCurrentActiveTab = () => {
+    const path = location.pathname
+    if (path === '/dashboard') return activeTab || 'overview'
+    if (path.includes('/calendar')) return 'calendar'
+    if (path.includes('/attendance')) return 'attendance'
+    if (path.includes('/resources')) return 'resources'
+    return activeTab || 'overview'
+  }
+
+  const currentActive = getCurrentActiveTab()
+
+  return (
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={onClose}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <div className={`fixed inset-y-0 left-0 z-50 w-56 lg:w-60 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static ${
+        isOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <div className="h-full flex flex-col">
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto">
+            {/* Header - Extended to top, overlapping navbar */}
+            <div className="pt-2 lg:pt-0 px-4 lg:px-6 pb-4 lg:pb-6 border-b border-slate-200">
+              <div className="flex items-center justify-between lg:min-h-0 lg:items-center">
+                
+                <button
+                  onClick={onClose}
+                  className="lg:hidden p-2 rounded-lg hover:bg-slate-100"
+                >
+                  <span className="text-xl">✕</span>
+                </button>
+              </div>
+            </div>
+            {/* Navigation Menu */}
+            <nav className="p-3 lg:p-4 pb-20 lg:pb-20">
+              <ul className="space-y-1 lg:space-y-2">
+                {menuItems.map((item) => {
+                  // Only Overview and My Courses should change tabs (for dashboard page)
+                  const isDashboardTab = item.id === 'overview' || item.id === 'courses'
+                  const isActive = currentActive === item.id
+                  
+                  return (
+                    <li key={item.id}>
+                      {isDashboardTab && onTabChange && location.pathname === '/dashboard' ? (
+                        <button
+                          onClick={() => {
+                            onTabChange(item.id)
+                            if (onClose) {
+                              onClose()
+                            }
+                          }}
+                          className={`w-full flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 rounded-lg lg:rounded-xl transition-all duration-200 ${
+                            isActive
+                              ? 'bg-sky-50 text-sky-700 border border-sky-200'
+                              : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                          }`}
+                        >
+                          <span className="text-lg lg:text-xl">{item.icon}</span>
+                          <span className="font-medium text-sm lg:text-base">{item.label}</span>
+                        </button>
+                      ) : (
+                        <Link
+                          to={item.href}
+                          onClick={() => {
+                            // If it's a dashboard tab, also trigger the tab change
+                            if (isDashboardTab && onTabChange) {
+                              onTabChange(item.id)
+                            }
+                            if (onClose) {
+                              onClose()
+                            }
+                          }}
+                          className={`flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 rounded-lg lg:rounded-xl transition-all duration-200 ${
+                            isActive
+                              ? 'bg-sky-50 text-sky-700 border border-sky-200'
+                              : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                          }`}
+                        >
+                          <span className="text-lg lg:text-xl">{item.icon}</span>
+                          <span className="font-medium text-sm lg:text-base">{item.label}</span>
+                        </Link>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}

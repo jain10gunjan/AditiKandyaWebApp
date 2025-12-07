@@ -1,118 +1,17 @@
 import { useEffect, useState } from 'react'
-import { useAuth, SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
+import { useAuth, SignedIn, SignedOut, SignInButton } from '@clerk/clerk-react'
 import { apiGet } from '../lib/api'
-
-function Sidebar({ activeTab, onTabChange, isOpen, onClose }) {
-  const { user } = useAuth()
-  
-  const menuItems = [
-    { id: 'overview', label: 'Overview', icon: '🏠', href: '/dashboard' },
-    { id: 'courses', label: 'My Courses', icon: '📚', href: '/dashboard' },
-    { id: 'calendar', label: 'Calendar', icon: '📅', href: '/student/calendar' },
-    { id: 'attendance', label: 'Attendance', icon: '📊', href: '/student/attendance' },
-    { id: 'resources', label: 'Resources', icon: '📖', href: '/student/resources' },
-  ]
-
-  return (
-    <>
-      {/* Mobile Overlay */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={onClose}
-        />
-      )}
-      
-      {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-56 lg:w-60 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
-        <div className="h-screen flex flex-col">
-          {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto">
-            {/* Header */}
-            <div className="p-4 lg:p-6 border-b border-slate-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 lg:gap-3">
-                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg lg:rounded-xl flex items-center justify-center">
-                    <span className="text-white font-bold text-sm lg:text-lg">🎶</span>
-                  </div>
-                  <div>
-                    <h1 className="font-bold text-slate-900 text-sm lg:text-base">TheMusinest</h1>
-                    <p className="text-xs text-slate-600">By - Aditi Kandya</p>
-                  </div>
-                </div>
-                <button
-                  onClick={onClose}
-                  className="lg:hidden p-2 rounded-lg hover:bg-slate-100"
-                >
-                  <span className="text-xl">✕</span>
-                </button>
-              </div>
-            </div>
-
-            {/* User Profile */}
-            <div className="p-4 lg:p-6 border-b border-slate-200">
-              <div className="flex items-center gap-2 lg:gap-3">
-                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-sm lg:text-lg">
-                    {user?.firstName?.[0] || user?.emailAddresses?.[0]?.emailAddress?.[0] || 'U'}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-slate-900 truncate text-sm lg:text-base">
-                    {user?.firstName && user?.lastName 
-                      ? `${user.firstName} ${user.lastName}` 
-                      : user?.firstName || user?.fullName || 'Student'}
-                  </p>
-                  <p className="text-xs text-slate-600 truncate">
-                    {user?.emailAddresses?.[0]?.emailAddress || 'student@example.com'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Navigation Menu */}
-            <nav className="p-3 lg:p-4 pb-20 lg:pb-20">
-              <ul className="space-y-1 lg:space-y-2">
-                {menuItems.map((item) => (
-                  <li key={item.id}>
-                    <a
-                      href={item.href}
-                      onClick={() => onClose()}
-                      className={`flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 rounded-lg lg:rounded-xl transition-all duration-200 ${
-                        activeTab === item.id
-                          ? 'bg-sky-50 text-sky-700 border border-sky-200'
-                          : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
-                      }`}
-                    >
-                      <span className="text-lg lg:text-xl">{item.icon}</span>
-                      <span className="font-medium text-sm lg:text-base">{item.label}</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          </div>
-
-          {/* Footer - Fixed at bottom */}
-          <div className="flex-shrink-0 p-3 lg:p-4 border-t border-slate-200 bg-white">
-            <div className="flex items-center justify-between">
-              <a href="/" className="flex items-center gap-1 lg:gap-2 text-xs lg:text-sm text-slate-600 hover:text-slate-900">
-                <span className="text-sm lg:text-base">🏠</span>
-                <span>Back to Home</span>
-              </a>
-              <UserButton afterSignOutUrl="/" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  )
-}
+import StudentNavbar from '../components/StudentNavbar.jsx'
+import StudentFooter from '../components/StudentFooter.jsx'
+import StudentSidebar from '../components/StudentSidebar.jsx'
 
 function CalendarGrid({ schedules, selectedDate, onDateSelect, view }) {
   const [currentDate, setCurrentDate] = useState(new Date())
+  
+  // Filter to show only individual schedules
+  const individualSchedules = schedules.filter(schedule => {
+    return schedule.studentId && schedule.studentId !== null && schedule.studentId !== ''
+  })
   
   const getDaysInMonth = (date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
@@ -120,15 +19,6 @@ function CalendarGrid({ schedules, selectedDate, onDateSelect, view }) {
   
   const getFirstDayOfMonth = (date) => {
     return new Date(date.getFullYear(), date.getMonth(), 1).getDay()
-  }
-  
-  const formatDate = (date) => {
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
   }
   
   const formatTime = (date) => {
@@ -140,7 +30,7 @@ function CalendarGrid({ schedules, selectedDate, onDateSelect, view }) {
   }
   
   const getEventsForDate = (date) => {
-    return schedules.filter(schedule => {
+    return individualSchedules.filter(schedule => {
       const scheduleDate = new Date(schedule.startTime)
       return scheduleDate.toDateString() === date.toDateString()
     })
@@ -182,28 +72,30 @@ function CalendarGrid({ schedules, selectedDate, onDateSelect, view }) {
   return (
     <div className="bg-white rounded-xl lg:rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       {/* Calendar Header */}
-      <div className="p-4 lg:p-6 border-b border-slate-200">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      <div className="p-3 sm:p-4 lg:p-6 border-b border-slate-200">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => navigateMonth(-1)}
               className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+              aria-label="Previous month"
             >
               <span className="text-lg">‹</span>
             </button>
-            <h2 className="text-lg lg:text-xl font-bold text-slate-900">
+            <h2 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900">
               {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
             </h2>
             <button
               onClick={() => navigateMonth(1)}
               className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+              aria-label="Next month"
             >
               <span className="text-lg">›</span>
             </button>
           </div>
           <button
             onClick={() => setCurrentDate(new Date())}
-            className="px-4 py-2 text-sm bg-sky-100 text-sky-700 rounded-lg hover:bg-sky-200 transition-colors"
+            className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-sky-100 text-sky-700 rounded-lg hover:bg-sky-200 transition-colors whitespace-nowrap"
           >
             Today
           </button>
@@ -211,11 +103,11 @@ function CalendarGrid({ schedules, selectedDate, onDateSelect, view }) {
       </div>
       
       {/* Calendar Grid */}
-      <div className="p-4 lg:p-6">
+      <div className="p-2 sm:p-4 lg:p-6">
         {/* Week day headers */}
         <div className="grid grid-cols-7 gap-1 mb-2">
           {weekDays.map(day => (
-            <div key={day} className="text-center text-xs lg:text-sm font-medium text-slate-500 py-2">
+            <div key={day} className="text-center text-xs sm:text-sm font-medium text-slate-500 py-1 sm:py-2">
               {day}
             </div>
           ))}
@@ -225,7 +117,7 @@ function CalendarGrid({ schedules, selectedDate, onDateSelect, view }) {
         <div className="grid grid-cols-7 gap-1">
           {days.map((date, index) => {
             if (!date) {
-              return <div key={index} className="h-16 lg:h-20"></div>
+              return <div key={index} className="h-12 sm:h-16 lg:h-20"></div>
             }
             
             const events = getEventsForDate(date)
@@ -236,7 +128,7 @@ function CalendarGrid({ schedules, selectedDate, onDateSelect, view }) {
               <div
                 key={date.toISOString()}
                 onClick={() => onDateSelect(date)}
-                className={`h-16 lg:h-20 p-1 cursor-pointer rounded-lg transition-all duration-200 ${
+                className={`h-12 sm:h-16 lg:h-20 p-1 cursor-pointer rounded-lg transition-all duration-200 ${
                   isCurrentDay 
                     ? 'bg-sky-100 border-2 border-sky-500' 
                     : isSelectedDay
@@ -244,24 +136,26 @@ function CalendarGrid({ schedules, selectedDate, onDateSelect, view }) {
                     : 'hover:bg-slate-50'
                 }`}
               >
-                <div className={`text-xs lg:text-sm font-medium ${
+                <div className={`text-xs sm:text-sm font-medium mb-0.5 ${
                   isCurrentDay ? 'text-sky-700' : 'text-slate-900'
                 }`}>
                   {date.getDate()}
                 </div>
-                <div className="space-y-0.5 mt-1">
-                  {events.slice(0, 2).map(event => (
-                    <div
-                      key={event._id}
-                      className="text-xs bg-blue-500 text-white px-1 py-0.5 rounded truncate"
-                      title={event.title}
-                    >
-                      {formatTime(event.startTime)} {event.title}
-                    </div>
-                  ))}
-                  {events.length > 2 && (
-                    <div className="text-xs text-slate-500">
-                      +{events.length - 2} more
+                <div className="space-y-0.5">
+                  {events.slice(0, 1).map(event => {
+                    return (
+                      <div
+                        key={event._id}
+                        className="text-[10px] sm:text-xs px-1 py-0.5 rounded truncate bg-purple-500 text-white"
+                        title={`${event.title} (Individual)`}
+                      >
+                        {formatTime(event.startTime)}
+                      </div>
+                    )
+                  })}
+                  {events.length > 1 && (
+                    <div className="text-[10px] sm:text-xs text-slate-500">
+                      +{events.length - 1}
                     </div>
                   )}
                 </div>
@@ -274,11 +168,16 @@ function CalendarGrid({ schedules, selectedDate, onDateSelect, view }) {
   )
 }
 
-function EventDetail({ selectedDate, schedules, onClose }) {
+function EventDetail({ selectedDate, schedules, onClose, isMobile = false }) {
+  // Filter to show only individual schedules
+  const individualSchedules = schedules.filter(schedule => {
+    return schedule.studentId && schedule.studentId !== null && schedule.studentId !== ''
+  })
+  
   const getEventsForDate = (date) => {
     if (!date) return []
     const now = new Date()
-    return schedules.filter(schedule => {
+    return individualSchedules.filter(schedule => {
       const scheduleDate = new Date(schedule.startTime)
       const sameDay = scheduleDate.toDateString() === date.toDateString()
       if (!sameDay) return false
@@ -286,7 +185,6 @@ function EventDetail({ selectedDate, schedules, onClose }) {
       if (date.toDateString() === now.toDateString()) {
         return scheduleDate >= now
       }
-      // For future dates, show all events on that date; for past dates, none will match since sameDay true but < now is okay since not today
       return true
     })
   }
@@ -328,74 +226,80 @@ function EventDetail({ selectedDate, schedules, onClose }) {
   if (!selectedDate) return null
   
   return (
-    <div className="bg-white rounded-xl lg:rounded-2xl shadow-sm border border-slate-200">
-      <div className="p-4 lg:p-6 border-b border-slate-200">
+    <div className={`bg-white rounded-xl lg:rounded-2xl shadow-sm border border-slate-200 ${isMobile ? 'fixed inset-x-4 bottom-4 top-auto max-h-[70vh] overflow-y-auto z-50' : ''}`}>
+      <div className="p-3 sm:p-4 lg:p-6 border-b border-slate-200 sticky top-0 bg-white z-10">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg lg:text-xl font-bold text-slate-900">
+          <h3 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900">
             {formatDate(selectedDate)}
           </h3>
           <button
             onClick={onClose}
             className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+            aria-label="Close"
           >
             <span className="text-xl">✕</span>
           </button>
         </div>
       </div>
       
-      <div className="p-4 lg:p-6">
+      <div className="p-3 sm:p-4 lg:p-6">
         {events.length > 0 ? (
-          <div className="space-y-4">
-            {events.map(event => (
-              <div key={event._id} className="flex items-start gap-4 p-4 bg-slate-50 rounded-lg">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-blue-600 font-bold">📅</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-slate-900 mb-1">{event.title}</h4>
-                  <div className="text-sm text-slate-600 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span>🕐</span>
-                      <span>{formatTime(event.startTime)} - {formatTime(event.endTime)}</span>
+          <div className="space-y-3 sm:space-y-4">
+            {events.map(event => {
+              return (
+                <div key={event._id} className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 p-3 sm:p-4 bg-slate-50 rounded-lg">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <span className="text-blue-600 font-bold text-lg sm:text-xl">📅</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <h4 className="font-semibold text-slate-900 text-sm sm:text-base">{event.title}</h4>
+                      <span className="px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                        Individual
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}>
+                        {event.status}
+                      </span>
                     </div>
-                    {event.instructor && (
+                    <div className="text-xs sm:text-sm text-slate-600 space-y-1">
                       <div className="flex items-center gap-2">
-                        <span>👨‍🏫</span>
-                        <span>Instructor: {event.instructor}</span>
+                        <span>🕐</span>
+                        <span>{formatTime(event.startTime)} - {formatTime(event.endTime)}</span>
                       </div>
-                    )}
-                    {event.location && (
-                      <div className="flex items-center gap-2">
-                        <span>📍</span>
-                        <span>{event.location}</span>
-                      </div>
-                    )}
-                    {event.description && (
-                      <div className="mt-2 text-slate-700">{event.description}</div>
+                      {event.instructor && (
+                        <div className="flex items-center gap-2">
+                          <span>👨‍🏫</span>
+                          <span>Instructor: {event.instructor}</span>
+                        </div>
+                      )}
+                      {event.location && (
+                        <div className="flex items-center gap-2">
+                          <span>📍</span>
+                          <span>{event.location}</span>
+                        </div>
+                      )}
+                      {event.description && (
+                        <div className="mt-2 text-slate-700 text-xs sm:text-sm">{event.description}</div>
+                      )}
+                    </div>
+                    {event.meetingLink && (
+                      <button
+                        onClick={() => joinMeeting(event.meetingLink)}
+                        className="mt-3 w-full sm:w-auto px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm font-medium"
+                      >
+                        Join Class
+                      </button>
                     )}
                   </div>
                 </div>
-                <div className="flex flex-col gap-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}>
-                    {event.status}
-                  </span>
-                  {event.meetingLink && (
-                    <button
-                      onClick={() => joinMeeting(event.meetingLink)}
-                      className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm"
-                    >
-                      Join Class
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         ) : (
-          <div className="text-center py-8">
-            <div className="text-4xl mb-4">📅</div>
-            <h4 className="text-lg font-semibold text-slate-900 mb-2">No Classes Scheduled</h4>
-            <p className="text-slate-600">You don't have any classes on this date.</p>
+          <div className="text-center py-6 sm:py-8">
+            <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">📅</div>
+            <h4 className="text-base sm:text-lg font-semibold text-slate-900 mb-2">No Classes Scheduled</h4>
+            <p className="text-xs sm:text-sm text-slate-600">You don't have any classes on this date.</p>
           </div>
         )}
       </div>
@@ -405,7 +309,13 @@ function EventDetail({ selectedDate, schedules, onClose }) {
 
 function CalendarContent({ schedules, enrollments, loading, onMenuClick }) {
   const [selectedDate, setSelectedDate] = useState(new Date())
-  const [view, setView] = useState('month')
+  const [showMobileEventDetail, setShowMobileEventDetail] = useState(false)
+  
+  // Filter to show only individual schedules (where studentId exists and is not null/empty)
+  // Backend still fetches both types, but UI only displays individual schedules
+  const individualSchedules = schedules.filter(schedule => {
+    return schedule.studentId && schedule.studentId !== null && schedule.studentId !== ''
+  })
   
   const getGreeting = () => {
     const hour = new Date().getHours()
@@ -416,7 +326,7 @@ function CalendarContent({ schedules, enrollments, loading, onMenuClick }) {
   
   const getUpcomingSchedules = () => {
     const now = new Date()
-    return schedules.filter(schedule => new Date(schedule.startTime) > now).slice(0, 3)
+    return individualSchedules.filter(schedule => new Date(schedule.startTime) > now).slice(0, 3)
   }
   
   const getTodaysSchedules = () => {
@@ -425,10 +335,15 @@ function CalendarContent({ schedules, enrollments, loading, onMenuClick }) {
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
     
-    return schedules.filter(schedule => {
+    return individualSchedules.filter(schedule => {
       const scheduleDate = new Date(schedule.startTime)
       return scheduleDate >= today && scheduleDate < tomorrow
     })
+  }
+  
+  const handleDateSelect = (date) => {
+    setSelectedDate(date)
+    setShowMobileEventDetail(true)
   }
   
   if (loading) {
@@ -443,49 +358,51 @@ function CalendarContent({ schedules, enrollments, loading, onMenuClick }) {
   const todaysSchedules = getTodaysSchedules()
   
   return (
-    <div className="flex-1 p-4 lg:p-6 xl:p-8">
+    <div className="flex-1 p-3 sm:p-4 lg:p-6 xl:p-8 pb-20 sm:pb-8">
       {/* Mobile Header */}
-      <div className="lg:hidden mb-6">
+      <div className="lg:hidden mb-4 sm:mb-6">
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={onMenuClick}
-            className="p-2 rounded-lg hover:bg-slate-100"
+            className="p-2 rounded-lg hover:bg-slate-100 hidden"
+            style={{ display: 'none' }}
+            aria-label="Open menu"
           >
             <span className="text-xl">☰</span>
           </button>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <div className="w-8 h-8 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">🎶</span>
             </div>
-            <span className="font-bold text-slate-900">Calendar</span>
+            <span className="font-bold text-slate-900 text-sm sm:text-base">Calendar</span>
           </div>
           <div className="w-8"></div>
         </div>
       </div>
 
       {/* Header */}
-      <div className="mb-6 lg:mb-8">
-        <h1 className="text-2xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-2">
+      <div className="mb-4 sm:mb-6 lg:mb-8">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-2">
           {getGreeting()}, Your Calendar 📅
         </h1>
-        <p className="text-slate-600 text-sm lg:text-base">
-          Stay on top of your music classes and practice schedule.
+        <p className="text-slate-600 text-xs sm:text-sm lg:text-base">
+          View your individual class schedules and practice sessions.
         </p>
       </div>
 
       {/* Check if student has enrollments */}
       {enrollments.length === 0 && !loading && (
-        <div className="mb-8 p-6 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl">
-          <div className="flex items-start gap-4">
-            <div className="text-2xl">🎓</div>
+        <div className="mb-6 sm:mb-8 p-4 sm:p-6 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl sm:rounded-2xl">
+          <div className="flex items-start gap-3 sm:gap-4">
+            <div className="text-xl sm:text-2xl">🎓</div>
             <div className="flex-1">
-              <h3 className="font-semibold text-amber-800 mb-2">No Enrollments Found</h3>
-              <p className="text-amber-700 text-sm mb-4">
+              <h3 className="font-semibold text-amber-800 mb-2 text-sm sm:text-base">No Enrollments Found</h3>
+              <p className="text-amber-700 text-xs sm:text-sm mb-4">
                 You need to be enrolled in courses to see your class schedule.
               </p>
               <a 
                 href="/courses" 
-                className="inline-block px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium"
+                className="inline-block px-4 sm:px-6 py-2 sm:py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium text-xs sm:text-sm"
               >
                 Browse Courses
               </a>
@@ -498,109 +415,148 @@ function CalendarContent({ schedules, enrollments, loading, onMenuClick }) {
         <>
           {/* Today's Classes Quick View */}
           {todaysSchedules.length > 0 && (
-            <div className="mb-6 lg:mb-8">
-              <h2 className="text-lg lg:text-xl font-bold text-slate-900 mb-4">Today's Classes</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {todaysSchedules.map(schedule => (
-                  <div key={schedule._id} className="bg-green-50 border border-green-200 rounded-xl p-4">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                        <span className="text-green-600">📚</span>
+            <div className="mb-4 sm:mb-6 lg:mb-8">
+              <h2 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Today's Classes</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                {todaysSchedules.map(schedule => {
+                  return (
+                    <div key={schedule._id} className="bg-green-50 border border-green-200 rounded-xl p-3 sm:p-4">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <span className="text-green-600 text-sm sm:text-base">📚</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                            <h3 className="font-semibold text-slate-900 truncate text-sm sm:text-base">{schedule.title}</h3>
+                            <span className="px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-medium bg-purple-100 text-purple-800 flex-shrink-0">
+                              Individual
+                            </span>
+                          </div>
+                          <p className="text-xs sm:text-sm text-green-600 mt-0.5">
+                            {new Date(schedule.startTime).toLocaleTimeString('en-US', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true
+                            })}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-slate-900 truncate">{schedule.title}</h3>
-                        <p className="text-sm text-green-600">
-                          {new Date(schedule.startTime).toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true
-                          })}
-                        </p>
-                      </div>
+                      {schedule.meetingLink && (
+                        <button
+                          onClick={() => window.open(schedule.meetingLink, '_blank')}
+                          className="w-full px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm font-medium"
+                        >
+                          Join Class
+                        </button>
+                      )}
                     </div>
-                    {schedule.meetingLink && (
-                      <button
-                        onClick={() => window.open(schedule.meetingLink, '_blank')}
-                        className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-                      >
-                        Join Class
-                      </button>
-                    )}
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}
 
-      {/* Calendar and Events Split 70:30 */}
-      <div className="mb-6 lg:mb-8 lg:flex lg:gap-6">
-        <div className="lg:w-2/3">
-          <CalendarGrid
-            schedules={schedules}
-            selectedDate={selectedDate}
-            onDateSelect={setSelectedDate}
-            view={view}
-          />
-        </div>
-        <div className="lg:w-1/3 mt-6 lg:mt-0">
-          <EventDetail
-            selectedDate={selectedDate}
-            schedules={schedules}
-            onClose={() => setSelectedDate(new Date())}
-          />
-        </div>
-      </div>
+          {/* Calendar and Events Split - Responsive */}
+          <div className="mb-4 sm:mb-6 lg:mb-8">
+            <div className="lg:flex lg:gap-6">
+              <div className="lg:w-2/3 mb-4 lg:mb-0">
+                <CalendarGrid
+                  schedules={individualSchedules}
+                  selectedDate={selectedDate}
+                  onDateSelect={handleDateSelect}
+                  view="month"
+                />
+              </div>
+              {/* Desktop Event Detail */}
+              <div className="hidden lg:block lg:w-1/3">
+                <EventDetail
+                  selectedDate={selectedDate}
+                  schedules={individualSchedules}
+                  onClose={() => setSelectedDate(new Date())}
+                  isMobile={false}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Event Detail - Bottom Sheet */}
+          {showMobileEventDetail && (
+            <>
+              <div 
+                className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+                onClick={() => setShowMobileEventDetail(false)}
+              />
+              <div className="lg:hidden">
+                <EventDetail
+                  selectedDate={selectedDate}
+                  schedules={individualSchedules}
+                  onClose={() => {
+                    setShowMobileEventDetail(false)
+                    setSelectedDate(new Date())
+                  }}
+                  isMobile={true}
+                />
+              </div>
+            </>
+          )}
 
           {/* Upcoming Classes */}
           {upcomingSchedules.length > 0 && (
-            <div>
-              <h2 className="text-lg lg:text-xl font-bold text-slate-900 mb-4">Upcoming Classes</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {upcomingSchedules.map(schedule => (
-                  <div key={schedule._id} className="bg-white border border-slate-200 rounded-xl p-4 hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <span className="text-blue-600">📅</span>
+            <div className="mb-4 sm:mb-6">
+              <h2 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Upcoming Classes</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                {upcomingSchedules.map(schedule => {
+                  return (
+                    <div key={schedule._id} className="bg-white border border-slate-200 rounded-xl p-3 sm:p-4 hover:shadow-md transition-shadow">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <span className="text-blue-600 text-sm sm:text-base">📅</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                            <h3 className="font-semibold text-slate-900 truncate text-sm sm:text-base">{schedule.title}</h3>
+                            <span className="px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-medium bg-purple-100 text-purple-800 flex-shrink-0">
+                              Individual
+                            </span>
+                          </div>
+                          <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
+                            {new Date(schedule.startTime).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric'
+                            })} at {new Date(schedule.startTime).toLocaleTimeString('en-US', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true
+                            })}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-slate-900 truncate">{schedule.title}</h3>
-                        <p className="text-sm text-slate-600">
-                          {new Date(schedule.startTime).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric'
-                          })} at {new Date(schedule.startTime).toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true
-                          })}
-                        </p>
-                      </div>
+                      {schedule.instructor && (
+                        <p className="text-xs sm:text-sm text-slate-500 mb-2 sm:mb-3">Instructor: {schedule.instructor}</p>
+                      )}
+                      {schedule.meetingLink && (
+                        <button
+                          onClick={() => window.open(schedule.meetingLink, '_blank')}
+                          className="w-full px-3 sm:px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-xs sm:text-sm font-medium"
+                        >
+                          Join Class
+                        </button>
+                      )}
                     </div>
-                    {schedule.instructor && (
-                      <p className="text-sm text-slate-500 mb-3">Instructor: {schedule.instructor}</p>
-                    )}
-                    {schedule.meetingLink && (
-                      <button
-                        onClick={() => window.open(schedule.meetingLink, '_blank')}
-                        className="w-full px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm font-medium"
-                      >
-                        Join Class
-                      </button>
-                    )}
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}
 
           {/* No Classes Message */}
-          {schedules.length === 0 && (
-            <div className="bg-white rounded-xl lg:rounded-2xl p-8 lg:p-12 text-center border border-slate-200">
-              <div className="text-4xl lg:text-6xl mb-4">📅</div>
-              <h3 className="text-lg lg:text-xl font-semibold text-slate-900 mb-2">No Classes Scheduled</h3>
-              <p className="text-slate-600 mb-6">You don't have any classes scheduled yet.</p>
-              <p className="text-sm text-slate-500">
-                Your instructor will create schedules for your enrolled courses soon.
+          {individualSchedules.length === 0 && (
+            <div className="bg-white rounded-xl lg:rounded-2xl p-6 sm:p-8 lg:p-12 text-center border border-slate-200">
+              <div className="text-3xl sm:text-4xl lg:text-6xl mb-3 sm:mb-4">📅</div>
+              <h3 className="text-base sm:text-lg lg:text-xl font-semibold text-slate-900 mb-2">No Individual Classes Scheduled</h3>
+              <p className="text-sm sm:text-base text-slate-600 mb-4 sm:mb-6">You don't have any individual classes scheduled yet.</p>
+              <p className="text-xs sm:text-sm text-slate-500">
+                Your instructor will create individual schedules for you soon.
               </p>
             </div>
           )}
@@ -668,10 +624,12 @@ export default function StudentCalendar() {
   }
 
   return (
-    <div className="h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <StudentNavbar />
+      
       <SignedOut>
-        <div className="flex items-center justify-center h-screen">
-          <div className="text-center">
+        <div className="flex items-center justify-center min-h-screen py-20">
+          <div className="text-center px-4">
             <div className="text-6xl mb-6">🎶</div>
             <h1 className="text-2xl font-bold text-slate-900 mb-4">Welcome to Music Academy</h1>
             <p className="text-slate-600 mb-6">Please sign in to access your calendar</p>
@@ -685,14 +643,14 @@ export default function StudentCalendar() {
       </SignedOut>
       
       <SignedIn>
-        <div className="flex h-screen overflow-hidden">
-          <Sidebar 
+        <div className="flex min-h-screen">
+          <StudentSidebar 
             activeTab={activeTab} 
             onTabChange={setActiveTab} 
             isOpen={sidebarOpen}
             onClose={() => setSidebarOpen(false)}
           />
-          <div className="lg:ml-16 xl:ml-20 flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
             <CalendarContent 
               schedules={schedules}
               enrollments={enrollments}
@@ -702,6 +660,8 @@ export default function StudentCalendar() {
           </div>
         </div>
       </SignedIn>
+      
+      <StudentFooter />
     </div>
   )
 }

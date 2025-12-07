@@ -1299,8 +1299,13 @@ export default function AdminPage() {
                 </a>
                 <a href="/admin/calendar" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-sky-300 active:scale-95">
                   <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">📅</div>
-                  <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-sky-700 transition-colors">Schedule</h3>
-                  <p className="text-sm text-slate-600">Create and manage class schedules</p>
+                  <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-sky-700 transition-colors">Course Schedules</h3>
+                  <p className="text-sm text-slate-600">Create and manage course-level schedules</p>
+                </a>
+                <a href="/admin/student-schedules" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-purple-300 active:scale-95">
+                  <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">👤</div>
+                  <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-purple-700 transition-colors">Student Schedules</h3>
+                  <p className="text-sm text-slate-600">Create individual schedules for students</p>
                 </a>
                 <a href="/admin/resources" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-sky-300 active:scale-95">
                   <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">📚</div>
@@ -1342,6 +1347,11 @@ export default function AdminPage() {
                 <a href="/admin/manual-enrollments" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-emerald-300 active:scale-95">
                   <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">✏️</div>
                   <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-emerald-700 transition-colors">Manual Enrollments</h3>
+                </a>
+                <a href="/admin/dynamic-pricing" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-amber-300 active:scale-95">
+                  <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">💰</div>
+                  <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-amber-700 transition-colors">Dynamic Pricing</h3>
+                  <p className="text-sm text-slate-600">Manage region-based course pricing</p>
                   <p className="text-sm text-slate-600">Manage manual enrollments</p>
                 </a>
                 <a href="/admin/contacts" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-green-300 active:scale-95">

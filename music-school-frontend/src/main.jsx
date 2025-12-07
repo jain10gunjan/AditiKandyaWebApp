@@ -20,6 +20,7 @@ import StudentCalendar from './routes/StudentCalendar.jsx'
 import StudentResources from './routes/StudentResources.jsx'
 import AdminAttendance from './routes/AdminAttendance.jsx'
 import AdminCalendar from './routes/AdminCalendar.jsx'
+import AdminStudentSchedules from './routes/AdminStudentSchedules.jsx'
 import AdminResources from './routes/AdminResources.jsx'
 import AdminEnrollmentLeads from './routes/AdminEnrollmentLeads.jsx'
 import AdminTeachersPage from './routes/AdminTeachersPage.jsx'
@@ -30,6 +31,7 @@ import AdminConsultations from './routes/AdminConsultations.jsx'
 import AdminWorkshops from './routes/AdminWorkshops.jsx'
 import AdminWorkshopEnrollments from './routes/AdminWorkshopEnrollments.jsx'
 import AdminManualEnrollments from './routes/AdminManualEnrollments.jsx'
+import AdminDynamicPricing from './routes/AdminDynamicPricing.jsx'
 import VideoPlayer from './routes/VideoPlayer.jsx'
 import AboutPage from './routes/AboutPage.jsx'
 import WorkshopsPage from './routes/WorkshopsPage.jsx'
@@ -61,6 +63,7 @@ const router = createBrowserRouter([
   { path: '/admin/courses/new', element: <AdminCourseNew /> },
   { path: '/admin/attendance', element: <AdminAttendance /> },
   { path: '/admin/calendar', element: <AdminCalendar /> },
+  { path: '/admin/student-schedules', element: <AdminStudentSchedules /> },
   { path: '/admin/resources', element: <AdminResources /> },
   { path: '/admin/enrollment-leads', element: <AdminEnrollmentLeads /> },
   { path: '/admin/teachers', element: <AdminTeachersPage /> },
@@ -71,6 +74,7 @@ const router = createBrowserRouter([
   { path: '/admin/workshops', element: <AdminWorkshops /> },
   { path: '/admin/workshop-enrollments', element: <AdminWorkshopEnrollments /> },
   { path: '/admin/manual-enrollments', element: <AdminManualEnrollments /> },
+  { path: '/admin/dynamic-pricing', element: <AdminDynamicPricing /> },
   { path: '/video/:courseId/:moduleIndex/:lessonIndex', element: <VideoPlayer /> },
   { path: '/video', element: <VideoPlayer /> },
   { path: '/dashboard', element: <StudentDashboard /> },

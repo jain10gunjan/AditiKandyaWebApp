@@ -254,6 +254,7 @@ const Schedule = mongoose.model(
   new mongoose.Schema(
     {
       courseId: String,
+      studentId: String, // Optional: if set, this is a student-specific schedule; if null, it's a course-level schedule
       title: String,
       description: String,
       startTime: Date,
@@ -380,6 +381,23 @@ const WorkshopEnrollment = mongoose.model(
       phone: String,
       message: String,
       status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+    },
+    { timestamps: true }
+  )
+);
+
+// Dynamic Pricing Model - Region-based pricing for courses
+const DynamicPricing = mongoose.model(
+  'DynamicPricing',
+  new mongoose.Schema(
+    {
+      courseId: { type: String, required: true },
+      region: { type: String, required: true }, // 'US', 'IN', 'EU', etc.
+      timezone: String, // Optional timezone for more granular control
+      country: String, // Country code (ISO 3166-1 alpha-2)
+      currency: { type: String, default: 'USD' }, // USD, INR, EUR, etc.
+      price: { type: Number, required: true },
+      isActive: { type: Boolean, default: true },
     },
     { timestamps: true }
   )
@@ -793,7 +811,126 @@ app.delete('/api/courses/:id', requireAdmin, async (req, res) => {
   if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
   const ok = await Course.findByIdAndDelete(req.params.id)
   if (!ok) return res.status(404).json({ error: 'Not found' })
+  // Also delete associated dynamic pricing
+  await DynamicPricing.deleteMany({ courseId: req.params.id })
   res.json({ ok: true })
+})
+
+// Dynamic Pricing API Endpoints
+// Get all dynamic pricing for a course
+app.get('/api/courses/:id/pricing', async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  try {
+    const pricing = await DynamicPricing.find({ courseId: req.params.id, isActive: true })
+    res.json(pricing)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// Get pricing based on region/country
+app.get('/api/courses/:id/pricing/:region', async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  try {
+    const { region } = req.params
+    const pricing = await DynamicPricing.findOne({ 
+      courseId: req.params.id, 
+      $or: [
+        { region },
+        { country: region },
+        { timezone: { $regex: region, $options: 'i' } }
+      ],
+      isActive: true 
+    })
+    if (!pricing) {
+      // Fallback to default course price
+      const course = await Course.findById(req.params.id)
+      res.json({ 
+        price: course?.price || 0, 
+        currency: 'INR', 
+        region: 'default',
+        isDefault: true 
+      })
+    } else {
+      res.json(pricing)
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// Create or update dynamic pricing (Admin only)
+app.post('/api/courses/:id/pricing', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  try {
+    const { region, country, timezone, currency, price, isActive } = req.body
+    if (!region || price === undefined) {
+      return res.status(400).json({ error: 'Region and price are required' })
+    }
+    
+    const pricing = await DynamicPricing.findOneAndUpdate(
+      { courseId: req.params.id, region },
+      {
+        courseId: req.params.id,
+        region,
+        country: country || region,
+        timezone,
+        currency: currency || 'USD',
+        price: Number(price),
+        isActive: isActive !== undefined ? isActive : true
+      },
+      { upsert: true, new: true }
+    )
+    res.json(pricing)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// Update dynamic pricing (Admin only)
+app.put('/api/pricing/:id', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  try {
+    const { region, country, timezone, currency, price, isActive } = req.body
+    const update = {}
+    if (region) update.region = region
+    if (country) update.country = country
+    if (timezone) update.timezone = timezone
+    if (currency) update.currency = currency
+    if (price !== undefined) update.price = Number(price)
+    if (isActive !== undefined) update.isActive = isActive
+    
+    const pricing = await DynamicPricing.findByIdAndUpdate(req.params.id, update, { new: true })
+    if (!pricing) return res.status(404).json({ error: 'Pricing not found' })
+    res.json(pricing)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// Delete dynamic pricing (Admin only)
+app.delete('/api/pricing/:id', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  try {
+    const pricing = await DynamicPricing.findByIdAndDelete(req.params.id)
+    if (!pricing) return res.status(404).json({ error: 'Pricing not found' })
+    res.json({ success: true, deleted: pricing })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// Get all dynamic pricing (Admin only)
+app.get('/api/pricing', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  try {
+    const { courseId } = req.query
+    const query = courseId ? { courseId } : {}
+    const pricing = await DynamicPricing.find(query).sort({ createdAt: -1 })
+    res.json(pricing)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
 })
 
 // Upload thumbnail for a course
@@ -1755,11 +1892,16 @@ app.get('/api/me/attendance/:courseId', requireAuthGuarded, async (req, res) => 
 
 // ==================== CALENDAR/SCHEDULE ENDPOINTS ====================
 
-// Admin: Get all schedules (with optional date filter)
+// Admin: Get all schedules (with optional date filter) - only course-level schedules
 app.get('/api/admin/schedules', requireAdmin, async (req, res) => {
   if (!dbConnected) return res.json([])
   const { date, courseId } = req.query || {}
-  let query = {}
+  let query = {
+    $or: [
+      { studentId: { $exists: false } },
+      { studentId: null }
+    ]
+  }
   if (date) {
     const startOfDay = new Date(date)
     startOfDay.setHours(0, 0, 0, 0)
@@ -1777,9 +1919,12 @@ app.get('/api/admin/schedules', requireAdmin, async (req, res) => {
 // Admin: Create a schedule (supports single or multiple dates for duplication)
 app.post('/api/admin/schedules', requireAdmin, async (req, res) => {
   console.log('POST /api/admin/schedules hit')
+  console.log('Request body:', JSON.stringify(req.body, null, 2))
   try {
     if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
-    const { courseId, title, description, startTime, endTime, dateTime, date, time, meetingLink, instructor, location, isRecurring, recurringPattern, type, duplicateDates } = req.body || {}
+    const { courseId, studentId, title, description, startTime, endTime, dateTime, date, time, meetingLink, instructor, location, isRecurring, recurringPattern, type, duplicateDates } = req.body || {}
+    
+    console.log('Parsed studentId:', studentId, 'Type:', typeof studentId)
   
   // Support both dateTime format and separate date/time format
   let finalStartTime, finalEndTime
@@ -1802,19 +1947,36 @@ app.post('/api/admin/schedules', requireAdmin, async (req, res) => {
   if (duplicateDates && Array.isArray(duplicateDates) && duplicateDates.length > 0) {
     const schedules = []
     // Create event on original date first
-    const originalSchedule = await Schedule.create({
-      courseId: courseId || '',
-      title,
-      description,
-      startTime: finalStartTime,
-      endTime: finalEndTime,
-      meetingLink,
-      instructor,
-      location,
-      isRecurring: Boolean(isRecurring),
-      recurringPattern,
-      type: type || 'class'
-    })
+      const scheduleData = {
+        courseId: courseId || '',
+        title,
+        description,
+        startTime: finalStartTime,
+        endTime: finalEndTime,
+        meetingLink,
+        instructor,
+        location,
+        isRecurring: Boolean(isRecurring),
+        recurringPattern,
+        type: type || 'class',
+        status: 'scheduled'
+      }
+      
+      // Only set studentId if it's provided and not empty
+      if (studentId && String(studentId).trim() !== '') {
+        scheduleData.studentId = String(studentId).trim()
+        console.log('Setting studentId for schedule:', scheduleData.studentId)
+      } else {
+        console.log('No studentId provided, creating course-level schedule')
+      }
+      
+      const originalSchedule = await Schedule.create(scheduleData)
+      console.log('Created schedule:', {
+        id: originalSchedule._id,
+        title: originalSchedule.title,
+        studentId: originalSchedule.studentId,
+        courseId: originalSchedule.courseId
+      })
     schedules.push(originalSchedule)
     
     // Create events on duplicate dates
@@ -1828,7 +1990,7 @@ app.post('/api/admin/schedules', requireAdmin, async (req, res) => {
       dupStartTime.setHours(finalStartTime.getHours(), finalStartTime.getMinutes(), 0, 0)
       const dupEndTime = new Date(dupStartTime.getTime() + (finalEndTime.getTime() - finalStartTime.getTime()))
       
-      const schedule = await Schedule.create({
+      const dupScheduleData = {
         courseId: courseId || '',
         title,
         description,
@@ -1839,15 +2001,23 @@ app.post('/api/admin/schedules', requireAdmin, async (req, res) => {
         location,
         isRecurring: Boolean(isRecurring),
         recurringPattern,
-        type: type || 'class'
-      })
+        type: type || 'class',
+        status: 'scheduled'
+      }
+      
+      // Only set studentId if it's provided and not empty
+      if (studentId && String(studentId).trim() !== '') {
+        dupScheduleData.studentId = String(studentId).trim()
+      }
+      
+      const schedule = await Schedule.create(dupScheduleData)
       schedules.push(schedule)
     }
     return res.status(201).json(schedules)
   }
   
   // Single event creation
-  const schedule = await Schedule.create({
+  const scheduleData = {
     courseId: courseId || '',
     title,
     description,
@@ -1858,8 +2028,38 @@ app.post('/api/admin/schedules', requireAdmin, async (req, res) => {
     location,
     isRecurring: Boolean(isRecurring),
     recurringPattern,
-    type: type || 'class'
+    type: type || 'class',
+    status: 'scheduled'
+  }
+  
+  // Only set studentId if it's provided and not empty
+  if (studentId && String(studentId).trim() !== '') {
+    scheduleData.studentId = String(studentId).trim()
+    console.log('Setting studentId for single schedule:', scheduleData.studentId)
+    console.log('StudentId type:', typeof scheduleData.studentId, 'Length:', scheduleData.studentId.length)
+  } else {
+    console.log('No studentId provided, creating course-level schedule')
+  }
+  
+  const schedule = await Schedule.create(scheduleData)
+  console.log('Created schedule:', {
+    id: schedule._id,
+    title: schedule.title,
+    studentId: schedule.studentId,
+    studentIdType: typeof schedule.studentId,
+    courseId: schedule.courseId,
+    startTime: schedule.startTime,
+    status: schedule.status
   })
+  
+  // Verify the schedule was created correctly
+  const verifySchedule = await Schedule.findById(schedule._id)
+  console.log('Verified schedule from DB:', {
+    id: verifySchedule._id,
+    studentId: verifySchedule.studentId,
+    studentIdExists: verifySchedule.studentId !== undefined && verifySchedule.studentId !== null
+  })
+  
   res.status(201).json(schedule)
   } catch (error) {
     console.error('Error creating schedule:', error)
@@ -1907,33 +2107,179 @@ app.get('/api/admin/schedules/:courseId', requireAdmin, async (req, res) => {
   res.json(schedules)
 })
 
+// Admin: Get all student-specific schedules (with optional studentId filter)
+app.get('/api/admin/student-schedules', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.json([])
+  const { studentId, courseId, date } = req.query || {}
+  let query = {}
+  
+  // Only student-specific schedules (studentId exists and is not null)
+  if (studentId) {
+    query.studentId = studentId
+  } else {
+    query.studentId = { $exists: true, $ne: null }
+  }
+  
+  if (courseId) {
+    query.courseId = courseId
+  }
+  if (date) {
+    const startOfDay = new Date(date)
+    startOfDay.setHours(0, 0, 0, 0)
+    const endOfDay = new Date(date)
+    endOfDay.setHours(23, 59, 59, 999)
+    query.startTime = { $gte: startOfDay, $lte: endOfDay }
+  }
+  
+  const schedules = await Schedule.find(query).sort({ startTime: 1 })
+  res.json(schedules)
+})
+
+// Admin: Get enrollments for a course (to show students)
+app.get('/api/admin/courses/:courseId/enrollments', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.json([])
+  const enrollments = await Enrollment.find({ courseId: req.params.courseId, approved: true }).sort({ createdAt: -1 })
+  res.json(enrollments)
+})
+
 // Student: Get their upcoming schedules for enrolled courses
 app.get('/api/me/schedules', requireAuthGuarded, async (req, res) => {
   if (!dbConnected) return res.json([])
   
-  console.log('Getting schedules for user:', req.auth.userId)
+  const userId = req.auth.userId
+  console.log('Getting schedules for user:', userId)
   
-  // Get enrolled courses
-  const enrollments = await Enrollment.find({ userId: req.auth.userId, approved: true })
-  console.log('Found enrollments:', enrollments.length)
-  
-  const courseIds = enrollments.map(e => e.courseId)
-  console.log('Course IDs:', courseIds)
-  
-  if (courseIds.length === 0) {
-    console.log('No approved enrollments found')
+  if (!userId) {
+    console.log('No userId found, returning empty array')
     return res.json([])
   }
   
-  const now = new Date()
-  console.log('Current time:', now)
+  // Get enrolled courses - try both userId and email matching
+  let enrollments = await Enrollment.find({ userId: userId, approved: true })
+  console.log('Found enrollments by userId:', enrollments.length)
   
-  const schedules = await Schedule.find({ 
-    courseId: { $in: courseIds },
-    status: 'scheduled'
-  }).sort({ startTime: 1 })
+  // If no enrollments found by userId, try by email
+  if (enrollments.length === 0 && hasClerk && req.auth && req.auth.userId) {
+    try {
+      const user = await clerkClient.users.getUser(req.auth.userId)
+      const userEmail = user.emailAddresses?.[0]?.emailAddress?.toLowerCase()
+      if (userEmail) {
+        enrollments = await Enrollment.find({ email: userEmail, approved: true })
+        console.log('Found enrollments by email:', enrollments.length)
+      }
+    } catch (err) {
+      console.warn('Could not get user email from Clerk:', err?.message)
+    }
+  }
+  
+  const courseIds = enrollments.map(e => String(e.courseId)).filter(Boolean)
+  console.log('Course IDs:', courseIds)
+  
+  // Build query: Get both course-level AND student-specific schedules
+  const queryConditions = []
+  
+  // 1. Course-level schedules (studentId is null, undefined, empty string, or doesn't exist)
+  if (courseIds.length > 0) {
+    queryConditions.push({
+      courseId: { $in: courseIds },
+      $and: [
+        {
+          $or: [
+            { studentId: { $exists: false } },
+            { studentId: null },
+            { studentId: '' }
+          ]
+        },
+        {
+          $or: [
+            { status: 'scheduled' },
+            { status: { $exists: false } },
+            { status: null }
+          ]
+        }
+      ]
+    })
+  }
+  
+  // 2. Student-specific schedules (for this user)
+  // Match by userId directly, or by email if userId starts with "email:"
+  const studentIdConditions = [String(userId)]
+  
+  // Also try to match by email if we can get it from Clerk
+  if (hasClerk && req.auth && req.auth.userId) {
+    try {
+      const user = await clerkClient.users.getUser(req.auth.userId)
+      const userEmail = user.emailAddresses?.[0]?.emailAddress?.toLowerCase()
+      if (userEmail) {
+        // Check if any enrollment has userId as email:email format
+        studentIdConditions.push(`email:${userEmail}`)
+        // Also try direct email match (in case it was stored differently)
+        studentIdConditions.push(userEmail)
+      }
+    } catch (err) {
+      console.warn('Could not get user email from Clerk for schedule matching:', err?.message)
+    }
+  }
+  
+  // Also check enrollments to see what userId format they use
+  if (enrollments.length > 0) {
+    const enrollmentUserIds = enrollments.map(e => String(e.userId)).filter(Boolean)
+    enrollmentUserIds.forEach(euid => {
+      if (!studentIdConditions.includes(euid)) {
+        studentIdConditions.push(euid)
+      }
+    })
+  }
+  
+  queryConditions.push({
+    studentId: { $in: studentIdConditions },
+    $or: [
+      { status: 'scheduled' },
+      { status: { $exists: false } },
+      { status: null }
+    ]
+  })
+  
+  // Execute query
+  let schedules = []
+  if (queryConditions.length > 0) {
+    const query = { $or: queryConditions }
+    console.log('Query:', JSON.stringify(query, null, 2))
+    console.log('StudentId conditions to match:', studentIdConditions)
+    
+    schedules = await Schedule.find(query).sort({ startTime: 1 })
+  }
   
   console.log('Found schedules:', schedules.length)
+  if (schedules.length > 0) {
+    const courseLevel = schedules.filter(s => !s.studentId || s.studentId === '' || s.studentId === null).length
+    const studentSpecific = schedules.filter(s => {
+      if (!s.studentId) return false
+      return studentIdConditions.includes(String(s.studentId))
+    }).length
+    console.log('Schedule sample:', {
+      total: schedules.length,
+      courseLevel: courseLevel,
+      studentSpecific: studentSpecific,
+      studentIdConditions: studentIdConditions,
+      firstSchedule: schedules[0] ? {
+        id: schedules[0]._id,
+        title: schedules[0].title,
+        courseId: schedules[0].courseId,
+        studentId: schedules[0].studentId,
+        status: schedules[0].status
+      } : null
+    })
+  } else {
+    console.log('No schedules found. Checking all schedules in DB for debugging...')
+    const allSchedules = await Schedule.find({}).limit(10)
+    console.log('Sample schedules in DB:', allSchedules.map(s => ({
+      id: s._id,
+      title: s.title,
+      studentId: s.studentId,
+      courseId: s.courseId
+    })))
+  }
   
   res.json(schedules)
 })

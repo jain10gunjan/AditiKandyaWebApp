@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { useAuth, SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
 import { apiGet } from '../lib/api'
 import toast from 'react-hot-toast'
+import StudentSidebar from '../components/StudentSidebar.jsx'
+import StudentNavbar from '../components/StudentNavbar.jsx'
+import StudentFooter from '../components/StudentFooter.jsx'
 
 function VideoPlayer({ resource, onView, onComplete }) {
   const { getToken } = useAuth()
@@ -264,109 +267,6 @@ function AudioPlayer({ resource, onView, onComplete }) {
   )
 }
 
-function Sidebar({ activeTab, onTabChange, isOpen, onClose }) {
-  const { user } = useAuth()
-  
-  const menuItems = [
-    { id: 'overview', label: 'Overview', icon: '🏠', href: '/dashboard' },
-    { id: 'courses', label: 'My Courses', icon: '📚', href: '/dashboard' },
-    { id: 'calendar', label: 'Calendar', icon: '📅', href: '/student/calendar' },
-    { id: 'attendance', label: 'Attendance', icon: '📊', href: '/student/attendance' },
-    { id: 'resources', label: 'Free Resources', icon: '🎁', href: '/student/resources' },
-  ]
-
-  return (
-    <>
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={onClose}
-        />
-      )}
-      
-      <div className={`fixed inset-y-0 left-0 z-50 w-56 lg:w-60 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
-        <div className="h-screen flex flex-col">
-          {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-4 lg:p-6 border-b border-slate-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 lg:gap-3">
-                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg lg:rounded-xl flex items-center justify-center">
-                    <span className="text-white font-bold text-sm lg:text-lg">🎶</span>
-                  </div>
-                  <div>
-                    <h1 className="font-bold text-slate-900 text-sm lg:text-base">TheMusinest</h1>
-                    <p className="text-xs text-slate-600">By - Aditi Kandya</p>
-                  </div>
-                </div>
-                <button
-                  onClick={onClose}
-                  className="lg:hidden p-2 rounded-lg hover:bg-slate-100"
-                >
-                  <span className="text-xl">✕</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="p-4 lg:p-6 border-b border-slate-200">
-              <div className="flex items-center gap-2 lg:gap-3">
-                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-sm lg:text-lg">
-                    {user?.firstName?.[0] || user?.emailAddresses?.[0]?.emailAddress?.[0] || 'U'}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-slate-900 truncate text-sm lg:text-base">
-                    {user?.firstName && user?.lastName 
-                      ? `${user.firstName} ${user.lastName}` 
-                      : user?.firstName || user?.fullName || 'Student'}
-                  </p>
-                  <p className="text-xs text-slate-600 truncate">
-                    {user?.emailAddresses?.[0]?.emailAddress || 'student@example.com'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <nav className="p-3 lg:p-4 pb-20 lg:pb-20">
-              <ul className="space-y-1 lg:space-y-2">
-                {menuItems.map((item) => (
-                  <li key={item.id}>
-                    <a
-                      href={item.href}
-                      onClick={() => onClose()}
-                      className={`flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 rounded-lg lg:rounded-xl transition-all duration-200 ${
-                        activeTab === item.id
-                          ? 'bg-sky-50 text-sky-700 border border-sky-200'
-                          : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
-                      }`}
-                    >
-                      <span className="text-lg lg:text-xl">{item.icon}</span>
-                      <span className="font-medium text-sm lg:text-base">{item.label}</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          </div>
-
-          {/* Footer - Fixed at bottom */}
-          <div className="flex-shrink-0 p-3 lg:p-4 border-t border-slate-200 bg-white">
-            <div className="flex items-center justify-between">
-              <a href="/" className="flex items-center gap-1 lg:gap-2 text-xs lg:text-sm text-slate-600 hover:text-slate-900">
-                <span className="text-sm lg:text-base">🏠</span>
-                <span>Back to Home</span>
-              </a>
-              <UserButton afterSignOutUrl="/" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  )
-}
 
 function ResourceCard({ resource, onClick, tracking, onToggleComplete }) {
   const getResourceIcon = (type) => {
@@ -654,7 +554,8 @@ function ResourcesContent({ freeCourses, resources, loading, selectedResource, s
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={onMenuClick}
-            className="p-2 rounded-lg hover:bg-slate-100"
+            className="p-2 rounded-lg hover:bg-slate-100 hidden"
+            style={{ display: 'none' }}
           >
             <span className="text-xl">☰</span>
           </button>
@@ -1023,16 +924,18 @@ export default function StudentResources() {
   }
 
   return (
-    <div className="h-screen bg-gradient-to-b from-sky-50 via-white to-pink-50 overflow-hidden">
-      <div className="flex h-screen">
-        <Sidebar 
+    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-pink-50">
+      <StudentNavbar />
+      
+      <div className="flex min-h-screen">
+        <StudentSidebar 
           activeTab={activeTab}
           onTabChange={setActiveTab}
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
         />
         
-        <div className="flex-1 lg:ml-16 xl:ml-16 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
           <SignedOut>
             <div className="p-6 text-center">
               <SignInButton>
@@ -1060,6 +963,8 @@ export default function StudentResources() {
           </SignedIn>
         </div>
       </div>
+      
+      <StudentFooter />
     </div>
   )
 }

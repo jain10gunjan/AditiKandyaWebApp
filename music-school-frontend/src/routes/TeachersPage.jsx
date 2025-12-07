@@ -5,24 +5,6 @@ import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
 import aditiProfileImage01 from '../assets/profileImages/image1.jpg'
 
-// Static teachers data
-const staticTeachers = [
-  {
-    id: 1,
-    name: 'Aditi Kandya',
-    instrument: 'Piano & Vocals',
-    description: 'A pianist, classical vocalist, and passionate music educator. With years of training and a deep love for music, I bring expertise in both Western classical piano (ABRSM Grade 8) and Indian classical vocals.',
-    image: aditiProfileImage01
-  },
-  {
-    id: 2,
-    name: 'Expert Instructor',
-    instrument: 'Guitar & Drums',
-    description: 'An experienced musician and educator specializing in guitar and drums. Dedicated to helping students discover their musical potential through personalized instruction and innovative teaching methods.',
-    image: aditiProfileImage01 // You can replace this with another image
-  }
-]
-
 export default function TeachersPage() {
   const [showConsultationForm, setShowConsultationForm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -53,7 +35,6 @@ export default function TeachersPage() {
 
   const validatePhone = (phone) => {
     if (!phone || phone.trim().length === 0) return 'Phone number is required'
-    // Remove spaces, dashes, plus signs, and parentheses for validation
     const cleaned = phone.replace(/[\s\-+()]/g, '')
     if (!/^\d{10,15}$/.test(cleaned)) {
       return 'Please enter a valid phone number (10-15 digits)'
@@ -68,7 +49,6 @@ export default function TeachersPage() {
     const { name, value } = e.target
     let processedValue = value
     
-    // Format phone number as user types
     if (name === 'phone') {
       const digits = value.replace(/\D/g, '')
       if (digits.length > 0) {
@@ -190,280 +170,30 @@ export default function TeachersPage() {
   }
 
   useEffect(() => {
-    // Scroll to top on page load
     window.scrollTo(0, 0)
     document.documentElement.scrollTop = 0
     document.body.scrollTop = 0
   }, [])
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white">
       <Navbar />
       
-      <main className="pb-20 md:pb-16">
-        {/* Hero Section */}
-        <section className="bg-black py-16 md:py-20">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h1 className="text-4xl md:text-6xl font-cinema font-bold text-white mb-4"
-              style={{
-                fontFamily: "'Dancing Script', cursive"
-              }}>
-                Meet Your Teacher
+      <main className="pb-0">
+        {/* Hero Section with Large Portrait */}
+        <section className="relative w-full min-h-[80vh] flex items-center bg-white">
+          <div className="absolute left-0 top-0 bottom-0 w-1/2 hidden lg:block">
+            <img
+              src={aditiProfileImage01}
+              alt="Aditi Kandya"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="w-full lg:w-1/2 lg:ml-auto relative z-10">
+            <div className="p-8 md:p-12 lg:p-16">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-black mb-6 leading-tight" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                MUSIC EDUCATION FOR STUDENTS WHO WANT MORE
               </h1>
-              <div className="w-24 h-1 bg-[#F5F5DC] mx-auto"></div>
-            </div>
-          </div>
-        </section>
-
-        {/* Teachers Section - Alternating Layout */}
-        <section className="py-16 md:py-24">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="space-y-0">
-            <div
-                    
-                    className={`flex flex-col ${'md:flex-row-reverse'} min-h-[600px] md:min-h-[700px]`}
-                  >
-                    {/* Image Section - No rounded corners */}
-                    <div className="w-full md:w-1/2 flex-shrink-0 relative bg-slate-900">
-                      <img
-                        src={aditiProfileImage01}
-                        alt={`Aditi Kandya`}
-                        className="w-full h-full object-cover"
-                        style={{ 
-                          minHeight: '600px',
-                          maxHeight: '700px'
-                        }}
-                        onError={(e) => {
-                          e.target.src = aditiProfileImage01
-                        }}
-                      />
-                    </div>
-                    
-                    {/* Content Section */}
-                    <div className="w-full md:w-1/2 flex-shrink-0 bg-black flex items-center">
-                      <div className="p-8 md:p-12 lg:p-16 w-full">
-                        <h2 className="text-4xl md:text-5xl lg:text-6xl font-cinema font-bold text-white mb-6 md:mb-8"
-                        style={{
-                          fontFamily: "'Dancing Script', cursive"
-                        }}>
-                        Aditi Kandya
-                        </h2>
-                        <p className="text-xl md:text-2xl text-white/90 font-medium mb-6 md:mb-8"
-                          style={{
-                            fontFamily: "'Satisfy', cursive"
-                          }}
-                        >
-                        Pianist, Vocalist & Music Educator
-                        </p>
-                        <p className="text-base md:text-lg text-white/80 leading-relaxed mb-8 md:mb-10"
-                          style={{
-                            fontFamily: "'Bitter', serif"
-                          }}
-                        >
-                          Hi, I'm Aditi Kandya — a pianist, classical vocalist, and passionate music educator. With years of training and a deep love for music, I have completed ABRSM Grade 8 in Piano and am also a trained Indian classical vocalist. My learning journey has taken me beyond performance and teaching.
-                        </p>
-                        <button
-                          onClick={() => {
-                            setShowConsultationForm(true)
-                            setTimeout(() => {
-                              nameInputRef.current?.focus()
-                            }, 100)
-                          }}
-                          className="px-8 py-4 bg-white text-black hover:bg-white/90 font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl"
-                        >
-                          CONTACT US
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-            </div>
-          </div>
-        </section>
-
-         {/* Teachers Section - Alternating Layout */}
-         <section className="py-4 md:py-4">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="space-y-0">
-            <div
-                    
-                    className={`flex flex-col ${'md:flex-row-reverse'} min-h-[600px] md:min-h-[700px]`}
-                  >
-
-                      {/* Content Section */}
-                      <div className="w-full md:w-1/2 flex-shrink-0 bg-black flex items-center">
-                      <div className="p-8 md:p-12 lg:p-16 w-full">
-                         
-              
-                        <p className="text-base md:text-lg text-white/80 leading-relaxed mb-8 md:mb-10"
-                          style={{
-                            fontFamily: "'Bitter', serif"
-                          }}
-                        >
-                          I have attended a 21-day summer course in composition at KM Music Conservatory, Chennai, and completed a 2-week intensive course in Sound Engineering, expanding my skills in both creative and technical aspects of music. My journey has taken me from being a curious learner to becoming a mentor who helps students of all ages discover the joy of playing and understanding music.
-                        </p>
-                        <button
-                          onClick={() => {
-                            setShowConsultationForm(true)
-                            setTimeout(() => {
-                              nameInputRef.current?.focus()
-                            }, 100)
-                          }}
-                          className="px-8 py-4 bg-white text-black hover:bg-white/90 font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl"
-                        >
-                          CONTACT US
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Image Section - No rounded corners */}
-                    <div className="w-full md:w-1/2 flex-shrink-0 relative bg-slate-900">
-                      <img
-                        src={aditiProfileImage01}
-                        alt={`Aditi Kandya`}
-                        className="w-full h-full object-cover"
-                        style={{ 
-                          minHeight: '600px',
-                          maxHeight: '700px'
-                        }}
-                        onError={(e) => {
-                          e.target.src = aditiProfileImage01
-                        }}
-                      />
-                    </div>
-                    
-                  
-                  </div>
-            </div>
-          </div>
-        </section>
-
-         
-
-        {/* Teaching Philosophy */}
-        <section className="py-8 md:py-8">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl md:text-4xl font-cinema font-bold text-center mb-12"
-            style={{
-              fontFamily: "'Dancing Script', cursive"
-            }}>
-              My Teaching Philosophy
-            </h2>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-black text-white  shadow-xl p-8 border border-white/20">
-                <div className="text-4xl mb-4">❤️</div>
-                <h3 className="text-2xl font-bold mb-3"
-                style={{
-                  fontFamily: "'Satisfy', cursive"
-                }}>Passion-Driven</h3>
-                <p className="font-medium"
-                style={{
-                  fontFamily: "'Bitter', serif"
-                }}>
-                  Every lesson is infused with genuine love for music and dedication to student success.
-                </p>
-              </div>
-              <div className="bg-black text-white shadow-xl p-8 border border-white/20">
-                <div className="text-4xl mb-4">🎯</div>
-                <h3 className="text-2xl font-bold mb-3"
-                style={{
-                  fontFamily: "'Satisfy', cursive"
-                }}>Goal-Oriented</h3>
-                <p className="  font-medium"
-                style={{
-                  fontFamily: "'Bitter', serif"
-                }}>
-                  Clear, achievable milestones keep you motivated and steadily progressing.
-                </p>
-              </div>
-              <div className="bg-black text-white shadow-xl p-8 border border-white/20">
-                <div className="text-4xl mb-4">⚖️</div>
-                <h3 className="text-2xl font-bold mb-3"
-                style={{
-                  fontFamily: "'Satisfy', cursive"
-                }}>Balanced Approach</h3>
-                <p className=" font-medium"style={{
-                  fontFamily: "'Biiter', serif"
-                }}>
-                  Striking the perfect balance between structure and creativity in music learning.
-                </p>
-              </div>
-              <div className="bg-black text-white shadow-xl p-8 border border-white/20">
-                <div className="text-4xl mb-4">🌱</div>
-                <h3 className="text-2xl font-bold mb-3"
-                style={{
-                  fontFamily: "'Satisfy', cursive"
-                }}>Personal Growth</h3>
-                <p className=" font-medium"style={{
-                  fontFamily: "'Bitter', serif"
-                }}>
-                  Creating a safe space where mistakes are part of the journey, not something to fear.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
- 
-
-       
-
-        {/* Contact Section */}
-        <section className="bg-white py-16 md:py-20">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-black rounded-2xl shadow-2xl p-8 md:p-12 border border-[#FFD700]/30 text-center">
-              <h2 className="text-3xl md:text-4xl font-cinema font-bold text-white mb-6"
-              style={{
-                fontFamily: "'Dancing Script', cursive"
-              }}>
-                Let's Connect
-              </h2>
-              <p className="text-lg text-white/80 mb-8 font-medium"
-              style={{
-                fontFamily: "'Bitter', serif"
-              }}>
-                Ready to start your musical journey? Get in touch or follow my work on social media.
-              </p>
-              
-              <div className="grid md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white/10 rounded-xl p-6 border border-[#FFD700]/30">
-                  <div className="text-3xl mb-3">📍</div>
-                  <h3 className="font-bold text-white mb-2"
-                  style={{
-                    fontFamily: "'Satisfy', cursive"
-                  }}>Location</h3>
-                  <p className="text-white/80 text-sm font-medium"
-                  style={{
-                    fontFamily: "'Bitter', serif"
-                  }}>MusiNest Studio</p>
-                  <p className="text-white/80 text-sm font-medium"
-                  style={{
-                    fontFamily: "'Bitter', serif"
-                  }}>Chennai, India</p>
-                </div>
-                <div className="bg-white/10 rounded-xl p-6 border border-[#FFD700]/30">
-                  <div className="text-3xl mb-3">📞</div>
-                  <h3 className="font-bold text-white mb-2"
-                  style={{
-                    fontFamily: "'Satisfy', cursive"
-                  }}>Phone</h3>
-                  <p className="text-white/80 text-sm font-medium"
-                  style={{
-                    fontFamily: "'Bitter', serif"
-                  }}>+91 98765 43210</p>
-                </div>
-                <div className="bg-white/10 rounded-xl p-6 border border-[#FFD700]/30">
-                  <div className="text-3xl mb-3">📧</div>
-                  <h3 className="font-bold text-white mb-2"
-                  style={{
-                    fontFamily: "'Satisfy', cursive"
-                  }}>Email</h3>
-                  <p className="text-white/80 text-sm font-medium"
-                  style={{
-                    fontFamily: "'Bitter', serif"
-                  }}>aditi@musinest.com</p>
-                </div>
-              </div>
-
               <button
                 onClick={() => {
                   setShowConsultationForm(true)
@@ -471,13 +201,397 @@ export default function TeachersPage() {
                     nameInputRef.current?.focus()
                   }, 100)
                 }}
-                className="px-8 py-4 rounded-lg bg-[#F5E6E0] text-black hover:bg-[#FFC700] font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
-                style={{
-                  fontFamily: "'Dancing Script', cursive"
-                }}
+                className="px-8 py-4 bg-black text-white hover:bg-black/90 font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl mt-8"
+                style={{ fontFamily: "'Dancing Script', cursive" }}
               >
-                Book a Consultation
+                GET IN TOUCH
               </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Key Differentiators Section */}
+        <section className="bg-black py-16 md:py-20">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid md:grid-cols-3 gap-8 md:gap-12">
+              <div className="text-center">
+                <div className="w-24 h-24 rounded-full bg-[#F5E6E0] flex items-center justify-center mx-auto mb-6">
+                  <span className="text-4xl">🎓</span>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                  CERTIFIED EXPERTISE
+                </h3>
+                <p className="text-white/80 text-sm" style={{ fontFamily: "'Satisfy', cursive" }}>
+                  ABRSM Grade 8 Piano & Indian Classical Vocal training
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-24 h-24 rounded-full bg-[#F5E6E0] flex items-center justify-center mx-auto mb-6">
+                  <span className="text-4xl">👥</span>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                  PERSONALIZED COACHING
+                </h3>
+                <p className="text-white/80 text-sm" style={{ fontFamily: "'Satisfy', cursive" }}>
+                  One-on-one attention tailored to each student's unique journey
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-24 h-24 rounded-full bg-[#F5E6E0] flex items-center justify-center mx-auto mb-6">
+                  <span className="text-4xl">⭐</span>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                  REWARDING RESULTS
+                </h3>
+                <p className="text-white/80 text-sm" style={{ fontFamily: "'Satisfy', cursive" }}>
+                  50+ students transformed through dedicated music education
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Inspirational Quote & Philosophy Section */}
+        <section className="bg-white py-16 md:py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div>
+                <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-8 leading-tight" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                  You are NOT TOO MUCH YOU'RE MORE THAN ENOUGH
+                </h2>
+                <p className="text-lg text-black/80 mb-6 leading-relaxed" style={{ fontFamily: "'Bitter', serif" }}>
+                  At MusiNest, we believe every student has unique musical potential waiting to be discovered. My teaching approach combines rigorous ABRSM training with creative exploration, helping you build strong foundations while expressing your authentic voice.
+                </p>
+                <p className="text-lg text-black/80 mb-8 leading-relaxed" style={{ fontFamily: "'Bitter', serif" }}>
+                  Whether you're a curious beginner or an aspiring performer, I create a warm, encouraging space where mistakes are part of the journey, not something to fear. Together, we'll make music learning personal, joyful, and confidence-building.
+                </p>
+                <button
+                  onClick={() => {
+                    setShowConsultationForm(true)
+                    setTimeout(() => {
+                      nameInputRef.current?.focus()
+                    }, 100)
+                  }}
+                  className="px-8 py-4 bg-black text-white hover:bg-black/90 font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl"
+                  style={{ fontFamily: "'Dancing Script', cursive" }}
+                >
+                  GET IN TOUCH
+                </button>
+              </div>
+              <div>
+                <img
+                  src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&q=80"
+                  alt="Music education"
+                  className="w-full h-[500px] object-cover rounded-lg"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Services Section */}
+        <section className="bg-black py-16 md:py-20">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-4xl md:text-5xl font-bold text-white text-center mb-12" style={{ fontFamily: "'Dancing Script', cursive" }}>
+              My SERVICES
+            </h2>
+            <div className="grid md:grid-cols-3 gap-6 mb-12">
+              <div className="bg-white rounded-lg p-8 border border-[#F5E6E0]/30">
+                <div className="w-12 h-12 rounded-full bg-[#F5E6E0] flex items-center justify-center mb-4">
+                  <span className="text-2xl">✓</span>
+                </div>
+                <h3 className="text-xl font-bold text-black mb-3" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                  PIANO & KEYBOARD COACHING
+                </h3>
+                <p className="text-black/70 text-sm" style={{ fontFamily: "'Satisfy', cursive" }}>
+                  Structured ABRSM curriculum from Grades 1-8, covering Western classical, Bollywood, and contemporary styles
+                </p>
+              </div>
+              <div className="bg-white rounded-lg p-8 border border-[#F5E6E0]/30">
+                <div className="w-12 h-12 rounded-full bg-[#F5E6E0] flex items-center justify-center mb-4">
+                  <span className="text-2xl">✓</span>
+                </div>
+                <h3 className="text-xl font-bold text-black mb-3" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                  VOCAL TRAINING & DIRECTION
+                </h3>
+                <p className="text-black/70 text-sm" style={{ fontFamily: "'Satisfy', cursive" }}>
+                  Indian classical vocal training with traditional ragas, tala patterns, and classical compositions
+                </p>
+              </div>
+              <div className="bg-white rounded-lg p-8 border border-[#F5E6E0]/30">
+                <div className="w-12 h-12 rounded-full bg-[#F5E6E0] flex items-center justify-center mb-4">
+                  <span className="text-2xl">✓</span>
+                </div>
+                <h3 className="text-xl font-bold text-black mb-3" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                  MUSIC THEORY & PERFORMANCE
+                </h3>
+                <p className="text-black/70 text-sm" style={{ fontFamily: "'Satisfy', cursive" }}>
+                  Comprehensive music theory, composition skills, and stage presence development
+                </p>
+              </div>
+            </div>
+            <div className="text-center">
+              <button
+                onClick={() => {
+                  setShowConsultationForm(true)
+                  setTimeout(() => {
+                    nameInputRef.current?.focus()
+                  }, 100)
+                }}
+                className="px-8 py-4 bg-[#F5E6E0] text-black hover:bg-[#E8D5CC] font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl"
+                style={{ fontFamily: "'Dancing Script', cursive" }}
+              >
+                EXPLORE SERVICES
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* About the Teacher Section */}
+        <section className="bg-white py-16 md:py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div>
+                <img
+                  src={aditiProfileImage01}
+                  alt="Aditi Kandya"
+                  className="w-full h-[600px] object-cover rounded-lg"
+                />
+              </div>
+              <div>
+                <h2 className="text-4xl md:text-5xl font-bold text-black mb-6" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                  Hello I'M ADITI! CERTIFIED MUSIC EDUCATOR
+                </h2>
+                <p className="text-lg text-black/80 mb-8 leading-relaxed" style={{ fontFamily: "'Bitter', serif" }}>
+                  Hi, I'm Aditi Kandya — a pianist, classical vocalist, and passionate music educator. With years of training and a deep love for music, I have completed ABRSM Grade 8 in Piano and am also a trained Indian classical vocalist. My learning journey has taken me beyond performance and teaching.
+                </p>
+                <p className="text-lg text-black/80 mb-8 leading-relaxed" style={{ fontFamily: "'Bitter', serif" }}>
+                  I have attended a 21-day summer course in composition at KM Music Conservatory, Chennai, and completed a 2-week intensive course in Sound Engineering, expanding my skills in both creative and technical aspects of music.
+                </p>
+                <div className="grid grid-cols-3 gap-6 mt-12">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-black mb-2" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                      +4
+                    </div>
+                    <div className="text-sm text-black/70" style={{ fontFamily: "'Satisfy', cursive" }}>
+                      DEDICATED YEARS OF TEACHING
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-black mb-2" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                      50+
+                    </div>
+                    <div className="text-sm text-black/70" style={{ fontFamily: "'Satisfy', cursive" }}>
+                      LIVES CHANGED WITH MY PROGRAM
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-black mb-2" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                      100%
+                    </div>
+                    <div className="text-sm text-black/70" style={{ fontFamily: "'Satisfy', cursive" }}>
+                      SATISFACTION RATE OF MY STUDENTS
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* One-on-One Coaching Section */}
+        <section className="bg-black py-16 md:py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div>
+                <img
+                  src="https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&q=80"
+                  alt="Music lesson"
+                  className="w-full h-[400px] object-cover rounded-lg mb-6"
+                />
+                <h2 className="text-4xl md:text-5xl font-bold text-white mb-6" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                  ONE-ON-ONE MUSIC COACHING
+                </h2>
+                <p className="text-lg text-white/80 mb-8 leading-relaxed" style={{ fontFamily: "'Bitter', serif" }}>
+                  Experience personalized music education tailored to your unique learning style and goals. Each session is designed to help you progress at your own pace while building strong technical foundations and creative expression.
+                </p>
+                <button
+                  onClick={() => {
+                    setShowConsultationForm(true)
+                    setTimeout(() => {
+                      nameInputRef.current?.focus()
+                    }, 100)
+                  }}
+                  className="px-8 py-4 bg-[#F5E6E0] text-black hover:bg-[#E8D5CC] font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl"
+                  style={{ fontFamily: "'Dancing Script', cursive" }}
+                >
+                  BOOK NOW
+                </button>
+              </div>
+              <div>
+                <img
+                  src={aditiProfileImage01}
+                  alt="Aditi Kandya"
+                  className="w-full h-[600px] object-cover rounded-lg"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Programs Section */}
+        <section className="bg-white py-16 md:py-20">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-4xl md:text-5xl font-bold text-black text-center mb-12" style={{ fontFamily: "'Dancing Script', cursive" }}>
+              My PROGRAMS
+            </h2>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="bg-black rounded-lg overflow-hidden border border-[#F5E6E0]/30">
+                <img
+                  src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&q=80"
+                  alt="Program"
+                  className="w-full h-48 object-cover"
+                />
+                <div className="p-6">
+                  <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                    HER MUSICAL FOUNDATION
+                  </h3>
+                  <p className="text-white/80 text-sm mb-6" style={{ fontFamily: "'Satisfy', cursive" }}>
+                    Building strong technical skills and musical understanding from the ground up
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowConsultationForm(true)
+                      setTimeout(() => {
+                        nameInputRef.current?.focus()
+                      }, 100)
+                    }}
+                    className="w-full px-6 py-3 bg-[#F5E6E0] text-black hover:bg-[#E8D5CC] font-bold transition-all duration-300"
+                    style={{ fontFamily: "'Dancing Script', cursive" }}
+                  >
+                    BOOK NOW
+                  </button>
+                </div>
+              </div>
+              <div className="bg-black rounded-lg overflow-hidden border border-[#F5E6E0]/30">
+                <img
+                  src="https://images.unsplash.com/photo-1511735111819-9a3f7709049c?w=400&q=80"
+                  alt="Program"
+                  className="w-full h-48 object-cover"
+                />
+                <div className="p-6">
+                  <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                    HER CREATIVE POWER
+                  </h3>
+                  <p className="text-white/80 text-sm mb-6" style={{ fontFamily: "'Satisfy', cursive" }}>
+                    Exploring diverse musical styles and developing your unique artistic voice
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowConsultationForm(true)
+                      setTimeout(() => {
+                        nameInputRef.current?.focus()
+                      }, 100)
+                    }}
+                    className="w-full px-6 py-3 bg-[#F5E6E0] text-black hover:bg-[#E8D5CC] font-bold transition-all duration-300"
+                    style={{ fontFamily: "'Dancing Script', cursive" }}
+                  >
+                    BOOK NOW
+                  </button>
+                </div>
+              </div>
+              <div className="bg-black rounded-lg overflow-hidden border border-[#F5E6E0]/30">
+                <img
+                  src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=400&q=80"
+                  alt="Program"
+                  className="w-full h-48 object-cover"
+                />
+                <div className="p-6">
+                  <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                    HER PERFORMANCE EXCELLENCE
+                  </h3>
+                  <p className="text-white/80 text-sm mb-6" style={{ fontFamily: "'Satisfy', cursive" }}>
+                    Stage presence, confidence building, and performance skills for aspiring musicians
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowConsultationForm(true)
+                      setTimeout(() => {
+                        nameInputRef.current?.focus()
+                      }, 100)
+                    }}
+                    className="w-full px-6 py-3 bg-[#F5E6E0] text-black hover:bg-[#E8D5CC] font-bold transition-all duration-300"
+                    style={{ fontFamily: "'Dancing Script', cursive" }}
+                  >
+                    BOOK NOW
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonials Section */}
+        <section className="bg-black py-16 md:py-20">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-4xl md:text-5xl font-bold text-white text-center mb-12" style={{ fontFamily: "'Dancing Script', cursive" }}>
+              WHAT MY STUDENTS HAVE TO SAY
+            </h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="bg-white/10 rounded-lg p-6 border border-[#F5E6E0]/30">
+                <div className="flex items-center mb-4">
+                  <div className="w-16 h-16 rounded-full bg-[#F5E6E0] flex items-center justify-center text-2xl mr-4">
+                    👤
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                      Student Name
+                    </h4>
+                    <p className="text-white/70 text-sm" style={{ fontFamily: "'Satisfy', cursive" }}>
+                      Piano Student
+                    </p>
+                  </div>
+                </div>
+                <p className="text-white/90" style={{ fontFamily: "'Bitter', serif" }}>
+                  "Aditi's teaching style is patient and encouraging. I've learned so much in just a few months!"
+                </p>
+              </div>
+              <div className="bg-white/10 rounded-lg p-6 border border-[#F5E6E0]/30">
+                <div className="flex items-center mb-4">
+                  <div className="w-16 h-16 rounded-full bg-[#F5E6E0] flex items-center justify-center text-2xl mr-4">
+                    👤
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                      Student Name
+                    </h4>
+                    <p className="text-white/70 text-sm" style={{ fontFamily: "'Satisfy', cursive" }}>
+                      Vocal Student
+                    </p>
+                  </div>
+                </div>
+                <p className="text-white/90" style={{ fontFamily: "'Bitter', serif" }}>
+                  "The best music teacher I've ever had. She makes learning fun and meaningful."
+                </p>
+              </div>
+              <div className="bg-white/10 rounded-lg p-6 border border-[#F5E6E0]/30">
+                <div className="flex items-center mb-4">
+                  <div className="w-16 h-16 rounded-full bg-[#F5E6E0] flex items-center justify-center text-2xl mr-4">
+                    👤
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                      Student Name
+                    </h4>
+                    <p className="text-white/70 text-sm" style={{ fontFamily: "'Satisfy', cursive" }}>
+                      Advanced Student
+                    </p>
+                  </div>
+                </div>
+                <p className="text-white/90" style={{ fontFamily: "'Bitter', serif" }}>
+                  "MusiNest has transformed my musical journey. Highly recommend!"
+                </p>
+              </div>
             </div>
           </div>
         </section>
@@ -486,9 +600,9 @@ export default function TeachersPage() {
       {/* Consultation Form Modal */}
       {showConsultationForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-[#FFD700]/30">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-[#F5E6E0]/30">
             <div className="sticky top-0 bg-white border-b border-black/10 p-6 flex items-center justify-between">
-              <h2 className="text-2xl font-cinema font-bold text-black">Book a Consultation</h2>
+              <h2 className="text-2xl font-bold text-black" style={{ fontFamily: "'Dancing Script', cursive" }}>Book a Consultation</h2>
               <button
                 onClick={() => {
                   setShowConsultationForm(false)
@@ -511,7 +625,7 @@ export default function TeachersPage() {
             
             <form onSubmit={handleSubmit} className="p-6 space-y-4" noValidate>
               <div>
-                <label htmlFor="consult-name" className="block text-sm font-bold text-black mb-2">
+                <label htmlFor="consult-name" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Satisfy', cursive" }}>
                   Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -527,9 +641,10 @@ export default function TeachersPage() {
                     errors.name && touched.name
                       ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'
                       : formData.name && !errors.name
-                      ? 'border-[#FFD700] bg-[#FFD700]/5 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
-                      : 'border-black/20 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
+                      ? 'border-[#F5E6E0] bg-[#F5E6E0]/5 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
+                      : 'border-black/20 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
                   }`}
+                  style={{ fontFamily: "'Bitter', serif" }}
                   required
                 />
                 {errors.name && touched.name && (
@@ -540,7 +655,7 @@ export default function TeachersPage() {
               </div>
 
               <div>
-                <label htmlFor="consult-email" className="block text-sm font-bold text-black mb-2">
+                <label htmlFor="consult-email" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Satisfy', cursive" }}>
                   Email <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -555,9 +670,10 @@ export default function TeachersPage() {
                     errors.email && touched.email
                       ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'
                       : formData.email && !errors.email
-                      ? 'border-[#FFD700] bg-[#FFD700]/5 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
-                      : 'border-black/20 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
+                      ? 'border-[#F5E6E0] bg-[#F5E6E0]/5 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
+                      : 'border-black/20 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
                   }`}
+                  style={{ fontFamily: "'Bitter', serif" }}
                   required
                 />
                 {errors.email && touched.email && (
@@ -568,7 +684,7 @@ export default function TeachersPage() {
               </div>
 
               <div>
-                <label htmlFor="consult-phone" className="block text-sm font-bold text-black mb-2">
+                <label htmlFor="consult-phone" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Satisfy', cursive" }}>
                   Phone <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -584,9 +700,10 @@ export default function TeachersPage() {
                     errors.phone && touched.phone
                       ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'
                       : formData.phone && !errors.phone
-                      ? 'border-[#FFD700] bg-[#FFD700]/5 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
-                      : 'border-black/20 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
+                      ? 'border-[#F5E6E0] bg-[#F5E6E0]/5 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
+                      : 'border-black/20 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
                   }`}
+                  style={{ fontFamily: "'Bitter', serif" }}
                   required
                 />
                 {errors.phone && touched.phone && (
@@ -598,7 +715,7 @@ export default function TeachersPage() {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="consult-date" className="block text-sm font-bold text-black mb-2">
+                  <label htmlFor="consult-date" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Satisfy', cursive" }}>
                     Preferred Date <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -612,14 +729,15 @@ export default function TeachersPage() {
                       touched.preferredDate && !formData.preferredDate
                         ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'
                         : formData.preferredDate
-                        ? 'border-[#FFD700] bg-[#FFD700]/5 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
-                        : 'border-black/20 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
+                        ? 'border-[#F5E6E0] bg-[#F5E6E0]/5 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
+                        : 'border-black/20 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
                     }`}
+                    style={{ fontFamily: "'Bitter', serif" }}
                     required
                   />
                 </div>
                 <div>
-                  <label htmlFor="consult-time" className="block text-sm font-bold text-black mb-2">
+                  <label htmlFor="consult-time" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Satisfy', cursive" }}>
                     Preferred Time <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -631,9 +749,10 @@ export default function TeachersPage() {
                       touched.preferredTime && !formData.preferredTime
                         ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'
                         : formData.preferredTime
-                        ? 'border-[#FFD700] bg-[#FFD700]/5 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
-                        : 'border-black/20 focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700]'
+                        ? 'border-[#F5E6E0] bg-[#F5E6E0]/5 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
+                        : 'border-black/20 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
                     }`}
+                    style={{ fontFamily: "'Bitter', serif" }}
                     required
                   >
                     <option value="">Select time</option>
@@ -651,7 +770,7 @@ export default function TeachersPage() {
               </div>
 
               <div>
-                <label htmlFor="consult-message" className="block text-sm font-bold text-black mb-2">
+                <label htmlFor="consult-message" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Satisfy', cursive" }}>
                   Message <span className="text-black/60 text-xs font-normal">(Optional)</span>
                 </label>
                 <textarea
@@ -661,7 +780,8 @@ export default function TeachersPage() {
                   onChange={handleChange}
                   placeholder="Any additional information or questions..."
                   rows="4"
-                  className="w-full border border-black/20 rounded-lg p-3 transition-all duration-200 bg-white font-medium focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700] resize-none"
+                  className="w-full border border-black/20 rounded-lg p-3 transition-all duration-200 bg-white font-medium focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0] resize-none"
+                  style={{ fontFamily: "'Bitter', serif" }}
                 />
               </div>
 
@@ -672,8 +792,9 @@ export default function TeachersPage() {
                   className={`flex-1 px-6 py-3 rounded-lg font-bold transition-all duration-300 shadow-lg ${
                     submitting
                       ? 'bg-black text-white cursor-not-allowed'
-                      : 'bg-[#FFD700] text-black hover:bg-[#FFC700] hover:shadow-xl active:scale-95'
+                      : 'bg-[#F5E6E0] text-black hover:bg-[#E8D5CC] hover:shadow-xl active:scale-95'
                   }`}
+                  style={{ fontFamily: "'Dancing Script', cursive" }}
                 >
                   {submitting ? 'Submitting...' : 'Submit Request'}
                 </button>
@@ -693,6 +814,7 @@ export default function TeachersPage() {
                     setTouched({})
                   }}
                   className="px-6 py-3 rounded-lg font-bold bg-black/10 text-black hover:bg-black/20 transition-all duration-300"
+                  style={{ fontFamily: "'Dancing Script', cursive" }}
                 >
                   Cancel
                 </button>
