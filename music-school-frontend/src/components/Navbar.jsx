@@ -254,10 +254,16 @@ export default function Navbar({ subtitle = 'Aditi Kandya' }) {
         </a>
         
         <div className="flex items-center gap-3">
-          {/* Add your SignedOut/SignedIn components here */}
-          <button className="px-4 py-2 rounded-lg bg-[#F5E6E0] text-gray-700 text-sm font-bold hover:bg-[#E8D4C8] transition-all duration-300 shadow-md whitespace-nowrap">
-            Sign In
-          </button>
+          <SignedOut>
+            <SignInButton>
+              <button className="px-4 py-2 rounded-lg bg-[#F5E6E0] text-gray-700 text-sm font-bold hover:bg-[#E8D4C8] transition-all duration-300 shadow-md whitespace-nowrap">
+                Sign In
+              </button>
+            </SignInButton>
+          </SignedOut>
+          <SignedIn>
+            <UserButton afterSignOutUrl="/" />
+          </SignedIn>
         </div>
       </div>
         </nav>
