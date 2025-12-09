@@ -17,7 +17,7 @@ function SectionTitle({ emoji, title, subtitle }) {
       transition={{ duration: 0.6 }}
     >
       <motion.h2 
-        className="text-3xl md:text-5xl font-cinema font-bold tracking-wide text-white"
+        className="text-3xl md:text-5xl font-cinema font-bold tracking-wide"
         initial={{ opacity: 0, scale: 0.9 }}
         whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true }}
@@ -36,7 +36,7 @@ function SectionTitle({ emoji, title, subtitle }) {
       </motion.h2>
       {subtitle && (
         <motion.p 
-          className="text-white/80 mt-3 text-lg font-medium"
+          className=" mt-3 text-lg font-medium"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
@@ -967,28 +967,12 @@ function App() {
           <HeroCarousel />
         </section>
 
-        {/* Stats Section - White background */}
-        <motion.section 
-          className="bg-white py-20 w-full"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <StatCard number="500+" label="Happy Students" icon="👥" color="bg-black" index={0} />
-              <StatCard number="15+" label="Expert Teachers" icon="👩‍🏫" color="bg-black" index={1} />
-              <StatCard number="6" label="Instruments" icon="🎵" color="bg-black" index={2} />
-              <StatCard number="95%" label="Success Rate" icon="⭐" color="bg-black" index={3} />
-            </div>
-          </div>
-        </motion.section>
+     
 
         {/* Courses Section - Black background */}
         <motion.section 
           id="courses" 
-          className="bg-black py-20 w-full"
+          className="bg-white py-20 w-full"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true, margin: "-100px" }}
@@ -1042,30 +1026,43 @@ function App() {
           transition={{ duration: 0.6 }}
         >
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-5xl mx-auto text-center mb-8">
-              <h2 className="text-3xl md:text-5xl font-cinema font-bold tracking-wide text-black">
-                <span className="mr-2">👩‍🏫</span>
-                Meet Our Expert Teachers
-              </h2>
-              <p className="text-black/70 mt-3 text-lg font-medium">Learn from the best musicians and educators</p>
+             {/* Music Genres Section */}
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12" style={{ fontFamily: "'Satisfy', cursive" }}>
+              Music Genres & Styles
+            </h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="bg- rounded-2xl shadow-xl p-6 border border-white/20">
+                <div className="text-3xl mb-3">🎼</div>
+                <h3 className="text-xl font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova SC', serif" }}>Western Classical</h3>
+                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova SC', serif" }}>From Baroque to Romantic periods, structured ABRSM curriculum (Grades 1-8)</p>
+              </div>
+              <div className="bg-white rounded-2xl shadow-xl p-6 border border-white/20">
+                <div className="text-3xl mb-3">🎬</div>
+                <h3 className="text-xl font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova SC', serif" }}>Bollywood Piano</h3>
+                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova SC', serif" }}>Popular Hindi film songs, focusing on melody, harmony, and rhythm (All Levels)</p>
+              </div>
+              <div className="bg-white rounded-2xl shadow-xl p-6 border border-white/20">
+                <div className="text-3xl mb-3">🎵</div>
+                <h3 className="text-xl font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova SC', serif" }}>Indian Classical Vocal</h3>
+                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova SC', serif" }}>Traditional ragas, tala patterns, classical compositions (Beginner to Advanced)</p>
+              </div>
+              <div className="bg-white rounded-2xl shadow-xl p-6 border border-white/20">
+                <div className="text-3xl mb-3">🎸</div>
+                <h3 className="text-xl font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova SC', serif" }}>Rock & Pop</h3>
+                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova SC', serif" }}>Contemporary music styles, chord progressions, modern piano techniques (Intermediate to Advanced)</p>
+              </div>
+              <div className="bg-white rounded-2xl shadow-xl p-6 border border-white/20">
+                <div className="text-3xl mb-3">📚</div>
+                <h3 className="text-xl font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova SC', serif" }}>Music Theory</h3>
+                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova SC', serif" }}>Harmony, rhythm, notation, and musical structure integrated into learning</p>
+              </div>
+              <div className="bg-white rounded-2xl shadow-xl p-6 border border-white/20">
+                <div className="text-3xl mb-3">🎭</div>
+                <h3 className="text-xl font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova SC', serif" }}>Performance Skills</h3>
+                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova SC', serif" }}>Stage presence, confidence building, and audience engagement (Regular concerts)</p>
+              </div>
             </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {teachers.length > 0 ? (
-              teachers.map((teacher) => (
-                <TeacherCard 
-                  key={teacher._id}
-                  name={teacher.name} 
-                  instrument={teacher.instrument} 
-                  avatar={teacher.avatar} 
-                />
-              ))
-            ) : (
-              <>
-                <TeacherCard name="Aarav" instrument="Guitar" avatar="https://i.pravatar.cc/150?img=12" />
-                <TeacherCard name="Maya" instrument="Piano" avatar="https://i.pravatar.cc/150?img=32" />
-                <TeacherCard name="Kabir" instrument="Vocals" avatar="https://i.pravatar.cc/150?img=22" />
-              </>
-            )}
           </div>
           </div>
         </motion.section>
@@ -1073,14 +1070,24 @@ function App() {
         {/* Testimonials Section - Black background */}
         {testimonials.length > 0 && (
           <motion.section 
-            className="bg-black py-20 w-full"
+            className="bg-gray-200 py-20 w-full"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.6 }}
           >
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-              <SectionTitle emoji="💬" title="What Our Students Say" subtitle="Real feedback from our music community" />
+              <div className="relative mb-8">
+                {/* Glassmorphism container */}
+                <div className="relative bg-gray-400/20 backdrop-blur-lg rounded-3xl p-8 md:p-10 border border-gray-500/30 shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] overflow-hidden">
+                  {/* Inner glow effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
+                  {/* Content */}
+                  <div className="relative z-10">
+                    <SectionTitle emoji="💬" title="What Our Students Say" subtitle="Real feedback from our music community" />
+                  </div>
+                </div>
+              </div>
               <TestimonialsSlider testimonials={testimonials} />
             </div>
           </motion.section>
@@ -1089,7 +1096,7 @@ function App() {
         {/* Enrollment Section - Black background */}
         <motion.section 
           id="enroll" 
-          className="bg-black py-20 w-full"
+          className="bg-white py-20 w-full"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true, margin: "-100px" }}
