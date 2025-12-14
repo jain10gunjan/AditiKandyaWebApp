@@ -4,11 +4,13 @@ import { useAuth } from '@clerk/clerk-react'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
 import { getUserCountry, getRegionFromCountry, formatPrice } from '../lib/pricingUtils.js'
+import coursepageBannerImage from '../assets/coursepageBannerImage.jpg'
 
 function CourseCard({ course, isEnrolled = false }) {
   const [displayPrice, setDisplayPrice] = useState(null)
   const [displayCurrency, setDisplayCurrency] = useState('INR')
   
+
   useEffect(() => {
     // Fetch dynamic pricing for this course
     const fetchPricing = async () => {
@@ -137,7 +139,11 @@ function CourseCard({ course, isEnrolled = false }) {
         )}
       </div>
       <div className="mt-3">
-        <h3 className="font-cinema font-bold text-lg text-gray-700 group-hover:text-gray-700 transition-colors mb-1">
+        <h3 className="font-cinema font-bold text-lg text-gray-700 group-hover:text-gray-700 transition-colors mb-1"
+        style={{
+          fontFamily: "'Bona Nova', serif"
+        }}
+        >
           {course.title}
         </h3>
         {hasTeacher && (
@@ -152,7 +158,11 @@ function CourseCard({ course, isEnrolled = false }) {
             )}
           </p>
         )}
-        <p className="text-gray-700 text-sm line-clamp-2 leading-relaxed mb-3 font-medium">
+        <p className="text-gray-700 text-sm line-clamp-2 leading-relaxed mb-3 font-medium"
+        style={{
+          fontFamily: "'Bona Nova', serif"
+        }}
+        >
           {course.description || 'Learn this amazing instrument with our expert instructors. Perfect for beginners and intermediate players.'}
         </p>
         
@@ -221,6 +231,11 @@ export default function CoursesPage() {
   const [loading, setLoading] = useState(true)
   const [enrolledCourseIds, setEnrolledCourseIds] = useState(new Set())
   const { getToken, isSignedIn } = useAuth()
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const images = [
+    coursepageBannerImage,
+    "https://images.unsplash.com/photo-1511735111819-9a3f7709049c?w=800&q=80"
+  ]
 
   useEffect(() => {
     const loadCourses = async () => {
@@ -299,39 +314,90 @@ export default function CoursesPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen">
       <Navbar />
 
       <main className="pb-20 md:pb-16">
         {/* Hero Section */}
-        <section className="bg-black py-16 md:py-20">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-[#F5E6E0]/20 text-[#F5E6E0] text-sm font-bold mb-6 border border-[#F5E6E0]/30"
-              style={{
-                fontFamily: "'Dancing Script', cursive"
-              }}>
-                <span className="mr-2">🎵</span>
-                {courses.length} Courses Available
+
+        <section className="relative w-full h-[40vh] min-h-[500px] max-h-[700px] md:max-h-[700px] overflow-hidden mb-16">
+          {/* Desktop: 2 Image Grid */}
+          <div className="hidden md:grid absolute inset-0 grid-cols-1 gap-0">
+            {/* Left Image - Desaturated */}
+            <div className="relative overflow-hidden">
+              <img
+                src={coursepageBannerImage}
+                alt="Music"
+                className="w-full h-full object-cover grayscale"
+              />
+            </div>             
+            {/* Dark overlay for better text readability on desktop */}
+            <div className="absolute inset-0 bg-black/40"></div>
+          </div>
+
+          {/* Mobile: Single Image Slider */}
+          <div className="md:hidden absolute inset-0">
+            {images.map((image, index) => (
+              <div
+                key={index}
+                className={`absolute inset-0 transition-opacity duration-1000 ${
+                  index === currentImageIndex ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                <img
+                  src={image}
+                  alt={`Music ${index + 1}`}
+                  className="w-full h-full object-cover grayscale"
+                />
               </div>
-              <h1 className="text-4xl md:text-6xl font-cinema font-bold text-white mb-4"
-              style={{
-                fontFamily: "'Dancing Script', cursive"
-              }}>
-                Explore Our Music Courses
-              </h1>
-              <div className="w-24 h-1 bg-[#F5E6E0] mx-auto mb-6"></div>
-              <p className="text-xl md:text-2xl text-white/90 font-medium max-w-3xl mx-auto leading-relaxed"
-              style={{
-                fontFamily: "'Satisfy', cursive"
-              }}>
-                Discover your musical passion with our comprehensive courses designed for all skill levels. 
-                Learn from expert instructors and join our community of music lovers.
-              </p>
+            ))}
+            {/* Dark overlay for better text readability on mobile */}
+            <div className="absolute inset-0 bg-black/40"></div>
+            {/* Image indicators */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-20">
+              {images.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentImageIndex(index)}
+                  className={`h-2 rounded-full transition-all ${
+                    index === currentImageIndex ? 'bg-white w-8' : 'bg-white/50 w-2'
+                  }`}
+                  aria-label={`Go to image ${index + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+          
+          {/* Text Content - Overlapping on Both Desktop and Mobile */}
+          <div className="absolute inset-0 flex items-center justify-center z-10">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+              <h1 className="text-6xl sm:text-4xl md:text-5xl lg:text-7xl text-white leading-relaxed drop-shadow-lg" 
+                style={{ fontFamily: "'Dancing Script', cursive" }}>Our Music Courses
+</h1>
+              <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-white/80 leading-relaxed drop-shadow-lg mt-2" 
+                style={{ fontFamily: "'Dancing Script', cursive" }}>
+Thoughtfully designed courses for beginners to advanced learners
+</p>
+              
+              {/* Button aligned below text */}
+              <div className="mt-8 flex justify-center">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    const element = document.getElementById('contact-form')
+                    if (element) {
+                      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }
+                  }}
+                  className="px-8 py-4 bg-white rounded-none text-black hover:bg-black hover:text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 whitespace-nowrap cursor-pointer"
+                  style={{ fontFamily: "'Bona Nova SC', serif" }}
+                >
+                  Send Us A Message
+                </button>
+              </div>
             </div>
           </div>
         </section>
-
         {/* Filter Section */}
         <section className="bg-white py-8">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -206,6 +206,24 @@ function EventDetail({ selectedDate, schedules, onClose, isMobile = false }) {
     })
   }
   
+  // Check if join button should be enabled (15 minutes before start time)
+  const canJoinClass = (startTime, endTime) => {
+    if (!startTime) return false
+    const now = new Date()
+    const start = new Date(startTime)
+    const end = endTime ? new Date(endTime) : null
+    
+    // Calculate 15 minutes before start time
+    const fifteenMinutesBefore = new Date(start.getTime() - 15 * 60 * 1000)
+    
+    // Enable if current time is 15 minutes before start or later
+    // And if current time is before or within the class duration (allow 30 minutes after end for late joiners)
+    const isAfterFifteenMinBefore = now >= fifteenMinutesBefore
+    const isBeforeOrDuringClass = !end || now <= new Date(end.getTime() + 30 * 60 * 1000)
+    
+    return isAfterFifteenMinBefore && isBeforeOrDuringClass
+  }
+  
   const joinMeeting = (meetingLink) => {
     if (meetingLink) {
       window.open(meetingLink, '_blank')
@@ -283,12 +301,24 @@ function EventDetail({ selectedDate, schedules, onClose, isMobile = false }) {
                       )}
                     </div>
                     {event.meetingLink && (
-                      <button
-                        onClick={() => joinMeeting(event.meetingLink)}
-                        className="mt-3 w-full sm:w-auto px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm font-medium"
-                      >
-                        Join Class
-                      </button>
+                      <div className="mt-3">
+                        {canJoinClass(event.startTime, event.endTime) ? (
+                          <button
+                            onClick={() => joinMeeting(event.meetingLink)}
+                            className="w-full sm:w-auto px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm font-medium"
+                          >
+                            Join Class
+                          </button>
+                        ) : (
+                          <button
+                            disabled
+                            className="w-full sm:w-auto px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed text-sm font-medium"
+                            title="Join button will be available 15 minutes before class starts"
+                          >
+                            Join Class (Available 15 min before)
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -322,6 +352,24 @@ function CalendarContent({ schedules, enrollments, loading, onMenuClick }) {
     if (hour < 12) return 'Good Morning'
     if (hour < 17) return 'Good Afternoon'
     return 'Good Evening'
+  }
+  
+  // Check if join button should be enabled (15 minutes before start time)
+  const canJoinClass = (startTime, endTime) => {
+    if (!startTime) return false
+    const now = new Date()
+    const start = new Date(startTime)
+    const end = endTime ? new Date(endTime) : null
+    
+    // Calculate 15 minutes before start time
+    const fifteenMinutesBefore = new Date(start.getTime() - 15 * 60 * 1000)
+    
+    // Enable if current time is 15 minutes before start or later
+    // And if current time is before or within the class duration (allow 30 minutes after end for late joiners)
+    const isAfterFifteenMinBefore = now >= fifteenMinutesBefore
+    const isBeforeOrDuringClass = !end || now <= new Date(end.getTime() + 30 * 60 * 1000)
+    
+    return isAfterFifteenMinBefore && isBeforeOrDuringClass
   }
   
   const getUpcomingSchedules = () => {
@@ -442,12 +490,22 @@ function CalendarContent({ schedules, enrollments, loading, onMenuClick }) {
                         </div>
                       </div>
                       {schedule.meetingLink && (
-                        <button
-                          onClick={() => window.open(schedule.meetingLink, '_blank')}
-                          className="w-full px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm font-medium"
-                        >
-                          Join Class
-                        </button>
+                        canJoinClass(schedule.startTime, schedule.endTime) ? (
+                          <button
+                            onClick={() => window.open(schedule.meetingLink, '_blank')}
+                            className="w-full px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm font-medium"
+                          >
+                            Join Class
+                          </button>
+                        ) : (
+                          <button
+                            disabled
+                            className="w-full px-3 sm:px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed text-xs sm:text-sm font-medium"
+                            title="Join button will be available 15 minutes before class starts"
+                          >
+                            Join Class (Available 15 min before)
+                          </button>
+                        )
                       )}
                     </div>
                   )
@@ -535,12 +593,22 @@ function CalendarContent({ schedules, enrollments, loading, onMenuClick }) {
                         <p className="text-xs sm:text-sm text-slate-500 mb-2 sm:mb-3">Instructor: {schedule.instructor}</p>
                       )}
                       {schedule.meetingLink && (
-                        <button
-                          onClick={() => window.open(schedule.meetingLink, '_blank')}
-                          className="w-full px-3 sm:px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-xs sm:text-sm font-medium"
-                        >
-                          Join Class
-                        </button>
+                        canJoinClass(schedule.startTime, schedule.endTime) ? (
+                          <button
+                            onClick={() => window.open(schedule.meetingLink, '_blank')}
+                            className="w-full px-3 sm:px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-xs sm:text-sm font-medium"
+                          >
+                            Join Class
+                          </button>
+                        ) : (
+                          <button
+                            disabled
+                            className="w-full px-3 sm:px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed text-xs sm:text-sm font-medium"
+                            title="Join button will be available 15 minutes before class starts"
+                          >
+                            Join Class (Available 15 min before)
+                          </button>
+                        )
                       )}
                     </div>
                   )
@@ -643,14 +711,14 @@ export default function StudentCalendar() {
       </SignedOut>
       
       <SignedIn>
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen pt-20">
           <StudentSidebar 
             activeTab={activeTab} 
             onTabChange={setActiveTab} 
             isOpen={sidebarOpen}
             onClose={() => setSidebarOpen(false)}
           />
-          <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
+          <div className="flex-1 overflow-y-auto pb-16 md:pb-0 md:ml-64">
             <CalendarContent 
               schedules={schedules}
               enrollments={enrollments}

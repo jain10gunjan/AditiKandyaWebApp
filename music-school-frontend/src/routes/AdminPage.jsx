@@ -4,6 +4,7 @@ import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api'
 import toast from 'react-hot-toast'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
+import StudentNavbar from '../components/StudentNavbar.jsx'
 
 function AdminGuard({ children }) {
   const { user, isLoaded } = useUser()
@@ -1208,10 +1209,11 @@ export default function AdminPage() {
 
   return (
     <AdminGuard>
-      <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-pink-50">
-        <Navbar subtitle="Admin Panel" />
+      <div className="min-h-screen">
+        {/* <Navbar subtitle="Admin Panel" /> */}
+        <StudentNavbar/>
 
-        <main className="pb-16">
+        <main className="pb-16 pt-20">
           <div className="max-w-6xl mx-auto px-4 pt-8">
             {/* Welcome Section */}
             <div className="mb-8 flex items-center justify-between">
@@ -1297,11 +1299,11 @@ export default function AdminPage() {
                   <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-sky-700 transition-colors">Attendance</h3>
                   <p className="text-sm text-slate-600">Mark and manage student attendance</p>
                 </a>
-                <a href="/admin/calendar" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-sky-300 active:scale-95">
+                {/* <a href="/admin/calendar" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-sky-300 active:scale-95">
                   <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">📅</div>
                   <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-sky-700 transition-colors">Course Schedules</h3>
                   <p className="text-sm text-slate-600">Create and manage course-level schedules</p>
-                </a>
+                </a> */}
                 <a href="/admin/student-schedules" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-purple-300 active:scale-95">
                   <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">👤</div>
                   <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-purple-700 transition-colors">Student Schedules</h3>

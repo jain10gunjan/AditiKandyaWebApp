@@ -1,9 +1,17 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
 import aditiProfileImage01 from '../assets/profileImages/image1.jpg'
 
 export default function AboutPage() {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  
+  const images = [
+    "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&q=80",
+    aditiProfileImage01,
+    "https://images.unsplash.com/photo-1511735111819-9a3f7709049c?w=800&q=80"
+  ]
+
   useEffect(() => {
     // Scroll to top on page load
     window.scrollTo(0, 0)
@@ -11,15 +19,26 @@ export default function AboutPage() {
     document.body.scrollTop = 0
   }, [])
 
+  // Auto-slide images on mobile
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % images.length)
+    }, 4000) // Change image every 4 seconds
+
+    return () => clearInterval(interval)
+  }, [images.length])
+
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
       
       <main className="pb-0">
        
-        {/* Large ABOUT Title with Image Collage */}
-        <section className="relative w-full h-[60vh] min-h-[500px] max-h-[700px] overflow-hidden mb-16">
-          <div className="absolute inset-0 grid grid-cols-3 gap-0">
+        {/* Desktop: Large Image Collage with Overlapping Text */}
+        {/* Mobile: Single Image Slider with Overlapping Text */}
+        <section className="relative w-full h-[60vh] min-h-[500px] max-h-[700px] md:max-h-[700px] overflow-hidden mb-16">
+          {/* Desktop: 3 Image Grid */}
+          <div className="hidden md:grid absolute inset-0 grid-cols-3 gap-0">
             {/* Left Image - Desaturated */}
             <div className="relative overflow-hidden">
               <img
@@ -33,7 +52,7 @@ export default function AboutPage() {
               <img
                 src={aditiProfileImage01}
                 alt="Aditi Kandya"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover grayscale"
               />
             </div>
             {/* Right Image - Desaturated */}
@@ -44,91 +63,161 @@ export default function AboutPage() {
                 className="w-full h-full object-cover grayscale"
               />
             </div>
+            {/* Dark overlay for better text readability on desktop */}
+            <div className="absolute inset-0 bg-black/40"></div>
+          </div>
+
+          {/* Mobile: Single Image Slider */}
+          <div className="md:hidden absolute inset-0">
+            {images.map((image, index) => (
+              <div
+                key={index}
+                className={`absolute inset-0 transition-opacity duration-1000 ${
+                  index === currentImageIndex ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                <img
+                  src={image}
+                  alt={`Music ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+            {/* Dark overlay for better text readability on mobile */}
+            <div className="absolute inset-0 bg-black/40"></div>
+            {/* Image indicators */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-20">
+              {images.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentImageIndex(index)}
+                  className={`h-2 rounded-full transition-all ${
+                    index === currentImageIndex ? 'bg-white w-8' : 'bg-white/50 w-2'
+                  }`}
+                  aria-label={`Go to image ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
           
-          {/* Overlay with ABOUT Title */}
-           
+          {/* Text Content - Overlapping on Both Desktop and Mobile */}
+          <div className="absolute inset-0 flex items-center justify-center z-10">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+              <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-white leading-relaxed drop-shadow-lg" 
+                style={{ fontFamily: "'Satisfy', cursive" }}>
+                Bridging the gap between Western classical music and Indian classical and music. Musinest creates a unique musical journey for every student.
+              </p>
+            </div>
+          </div>
         </section>
 
-        {/* Introduction Section */}
-        <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-20 text-center">
-           
-          <p className="text-2xl md:text-3xl text-black leading-relaxed max-w-3xl mx-auto" 
-          style=
-          {{ fontFamily: "'Satisfy', cursive" }}>
-            Bridging the gap between Western classical piano and Indian classical vocal traditions. Musinest creates a unique musical journey for every student.
-          </p>
-        </section>
+     
 
-        {/* Two Column Layout Section */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
-          <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-start">
-            {/* Left Column - Text Content */}
-            <div className="space-y-8">
-              {/* The Beginning */}
-              <div>
-                <h3 className="text-3xl md:text-4xl font-bold text-black mb-4" style={{ fontFamily: "'Dancing Script', cursive" }}>
-                  The Beginning
-                </h3>
-                <p className="text-lg text-black/80 font-medium leading-relaxed" style={{ fontFamily: "'Bitter', serif" }}>
-                  My musical journey began with a deep fascination for the piano and its beautiful sounds. What started as curiosity for Western classical music evolved into a lifelong passion — until a turning point came with Indian classical vocal music. The realization that music transcends boundaries inspired the birth of Musinest by Aditi.
-                </p>
-              </div>
-
-              {/* My Vision for Musinest */}
-              <div>
-                <h3 className="text-3xl md:text-4xl font-bold text-black mb-4" style={{ fontFamily: "'Dancing Script', cursive" }}>
-                  My Vision for Musinest
-                </h3>
-                <p className="text-lg text-black/80 font-medium leading-relaxed mb-4" style={{ fontFamily: "'Bitter', serif" }}>
-                  At Musinest, my vision is for every lesson to be warm and encouraging. Right now, Musinest is a "one-girl gig": every class, lesson plan, and note of encouragement comes directly from me. This personal connection allows me to understand each student's strengths and guide them at their own pace, striking the perfect balance between structure and creativity.
-                </p>
-                <p className="text-lg text-black/80 font-medium leading-relaxed" style={{ fontFamily: "'Bitter', serif" }}>
-                  I want Musinest to be a space where students feel free to experiment, explore, and make music on their own terms, building strong technical foundations and expressing themselves.
-                </p>
-              </div>
-
-              {/* My Mission */}
-              <div>
-                <h3 className="text-3xl md:text-4xl font-bold text-black mb-4" style={{ fontFamily: "'Dancing Script', cursive" }}>
-                  My Mission
-                </h3>
-                <p className="text-lg text-black/80 font-medium leading-relaxed" style={{ fontFamily: "'Bitter', serif" }}>
-                  My mission with Musinest is to make music learning personal, enjoyable, and deeply rewarding. I strive for every student—curious beginner or aspiring performer—to feel empowered, inspired, and confident.
-                </p>
-                <p className="text-lg text-black/80 font-medium leading-relaxed mt-4" style={{ fontFamily: "'Bitter', serif" }}>
-                  Through patient guidance, interactive lessons, and a balance of discipline and creativity, I help build strong technical skills, encourage self-expression, and foster a safe space where mistakes are part of the journey, not something to fear.
-                </p>
-              </div>
- 
-
-              {/* Teaching Philosophy */}
-              <div>
-                <h3 className="text-3xl md:text-4xl font-bold text-black mb-6" style={{ fontFamily: "'Dancing Script', cursive" }}>
-                  Teaching Philosophy
-                </h3>
-                <div className="space-y-4">
-                  <p className="text-lg text-black/80 font-medium leading-relaxed" style={{ fontFamily: "'Bitter', serif" }}>
-                    "Music is not just about technical proficiency—it's about emotional expression, cultural connection, and personal growth. My teaching approach combines rigorous ABRSM training with creative exploration of diverse musical styles."
-                  </p>
-                  <p className="text-lg text-black/80 font-medium leading-relaxed" style={{ fontFamily: "'Bitter', serif" }}>
-                    "Every student brings a unique perspective and set of experiences. My role is to help them discover their authentic voice while building strong foundations in both Western classical and Indian classical traditions."
-                  </p>
-                  <p className="text-lg text-black/80 font-medium leading-relaxed" style={{ fontFamily: "'Bitter', serif" }}>
-                    "At Musinest, we believe in creating a warm, encouraging space where mistakes are part of the journey. My mission is to make music learning personal, joyful, and confidence-building for every student."
-                  </p>
-                </div>
-              </div>
+        {/* Timeline Section */}
+        <section className="py-16 md:py-20">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Timeline Title */}
+            <div className="text-center mb-12 md:mb-16">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-black mb-4" style={{ fontFamily: "'Bona Nova SC', serif" }}>
+                The Beginning
+              </h2>
+              <p className="text-lg text-black/70 max-w-2xl mx-auto" style={{ fontFamily: "'Bona Nova', serif" }}>
+              The Musinest was created with a simple intention — to make learning music calm, enjoyable, and genuinely meaningful. Founded by pianist and vocalist Aditi Kandya, the studio brings together learners from different countries, age groups, and skill levels. What started as a small space for online learning has now grown into a supportive, structured environment where students feel understood, guided, and inspired.
+              </p>
             </div>
 
-            {/* Right Column - Image and Inspiration */}
-            <div className="sticky top-8">
-              <div className="mb-8">
-                <img
-                  src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&q=80"
-                  alt="Music inspiration"
-                  className="w-full h-[500px] object-cover rounded-lg"
-                />
+            {/* Timeline */}
+            <div className="relative">
+              {/* Vertical Timeline Line */}
+              <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 w-0.5 h-full bg-[#8B7355]"></div>
+
+              {/* Timeline Items */}
+              <div className="space-y-16 md:space-y-24">
+                {/* Timeline Item 1 */}
+                <div className="relative flex flex-col md:flex-row items-center gap-8 md:gap-12">
+                  {/* Image - Left on Desktop */}
+                  <div className="w-full md:w-1/2 md:pr-8 order-2 md:order-1">
+                    <img
+                      src="https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&q=80"
+                      alt="Timeline event"
+                      className="w-full aspect-square object-cover"
+                    />
+                  </div>
+
+                  {/* Timeline Node - Center */}
+                  <div className="hidden md:flex absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-[#8B7355] rounded-full z-10 border-4 border-[#F5F5F0]"></div>
+
+                  {/* Content - Right on Desktop */}
+                  <div className="w-full md:w-1/2 md:pl-8 order-1 md:order-2">
+                    <div className="text-left">
+                      <h3 className="text-2xl md:text-3xl font-bold text-black mb-3" style={{ fontFamily: "'Bona Nova SC', serif" }}>
+                      My Vision for Musinest
+
+                      </h3>
+                      <p className="text-base md:text-lg text-black/70 leading-relaxed" style={{ fontFamily: "'Bona Nova', serif" }}>
+                      We envision a learning space where music education feels accessible, stress-free, and aligned with each student’s personal goals. Whether a student is preparing for graded exams, learning their favourite pieces, or exploring music for the first time, The Musinest aims to create a nurturing environment where growth feels natural, learning feels joyful, and every student feels motivated to keep going.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Timeline Item 2 */}
+                <div className="relative flex flex-col md:flex-row items-center gap-8 md:gap-12">
+                  {/* Content - Left on Desktop */}
+                  <div className="w-full md:w-1/2 md:pr-8 order-1">
+                    <div className="text-left">
+                      <h3 className="text-2xl md:text-3xl font-bold text-black mb-3" style={{ fontFamily: "'Bona Nova SC', serif" }}>
+                      My Mission
+
+                      </h3>
+                      <p className="text-base md:text-lg text-black/70 leading-relaxed" style={{ fontFamily: "'Bona Nova', serif" }}>
+                      Our mission is to offer clear, personalised, one-on-one online music training that helps every student build strong fundamentals, good technique, musical expression, and confidence. At The Musinest, lessons are carefully designed to feel engaging, balanced, and enjoyable, blending traditional teaching methods with modern learning tools to support steady and meaningful progress.
+
+Through patient guidance, interactive lessons, and a balance of discipline and creativity, I help build strong technical skills, encourage self-expression, and foster a safe space where mistakes are part of the journey, not something to fear.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Timeline Node - Center */}
+                  <div className="hidden md:flex absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-[#8B7355] rounded-full z-10 border-4 border-[#F5F5F0]"></div>
+
+                  {/* Image - Right on Desktop */}
+                  <div className="w-full md:w-1/2 md:pl-8 order-2">
+                    <img
+                      src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&q=80"
+                      alt="Timeline event"
+                      className="w-full aspect-square object-cover"
+                    />
+                  </div>
+                </div>
+
+                {/* Timeline Item 3 - Add more as needed */}
+                <div className="relative flex flex-col md:flex-row items-center gap-8 md:gap-12">
+                  {/* Image - Left on Desktop */}
+                  <div className="w-full md:w-1/2 md:pr-8 order-2 md:order-1">
+                    <img
+                      src="https://images.unsplash.com/photo-1511735111819-9a3f7709049c?w=600&q=80"
+                      alt="Timeline event"
+                      className="w-full aspect-square object-cover"
+                    />
+                  </div>
+
+                  {/* Timeline Node - Center */}
+                  <div className="hidden md:flex absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-[#8B7355] rounded-full z-10 border-4 border-[#F5F5F0]"></div>
+
+                  {/* Content - Right on Desktop */}
+                  <div className="w-full md:w-1/2 md:pl-8 order-1 md:order-2">
+                    <div className="text-left">
+                      <h3 className="text-2xl md:text-3xl font-bold text-black mb-3" style={{ fontFamily: "'Bona Nova SC', serif" }}>
+                      Teaching Philosophy
+
+                      </h3>
+                      <p className="text-base md:text-lg text-black/70 leading-relaxed" style={{ fontFamily: "'Bona Nova', serif" }}>
+                      We envision a learning space where music education feels accessible, stress-free, and aligned with each student’s personal goals. Whether a student is preparing for graded exams, learning their favourite pieces, or exploring music for the first time, The Musinest aims to create a nurturing environment where growth feels natural, learning feels joyful, and every student feels motivated to keep going.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

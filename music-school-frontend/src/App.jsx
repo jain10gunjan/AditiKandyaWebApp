@@ -2,15 +2,16 @@ import './App.css'
 import { apiGet, apiPost } from './lib/api.js'
 import { useAuth } from '@clerk/clerk-react'
 import { useEffect, useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import Navbar from './components/Navbar.jsx'
 import Footer from './components/Footer.jsx'
 import { motion } from 'framer-motion'
 
-function SectionTitle({ emoji, title, subtitle }) {
+function SectionTitle({ emoji, title, subtitle, spaceNumber }) {
   return (
     <motion.div 
-      className="max-w-5xl mx-auto text-center mb-8"
+      className={`max-w-5xl mx-auto text-center mb-${spaceNumber}`}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
@@ -22,6 +23,7 @@ function SectionTitle({ emoji, title, subtitle }) {
         whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5, delay: 0.2 }}
+      style={{ fontFamily: "'Bona Nova SC', serif" }}
       >
         <motion.span 
           className="mr-2"
@@ -41,6 +43,8 @@ function SectionTitle({ emoji, title, subtitle }) {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.4 }}
+      style={{ fontFamily: "'Bona Nova', serif" }}
+
         >
           {subtitle}
         </motion.p>
@@ -144,6 +148,119 @@ function CourseCard({ title, level, price, image, _id, isEnrolled = false, cours
   )
 }
 
+function HomepageCourseCard({ title, level, price, image, _id, isEnrolled = false, course, index }) {
+  // Build image URL - handle both full URLs and relative paths
+  const getImageUrl = () => {
+    if (!image && !course?.thumbnailPath) {
+      return 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=600&auto=format&fit=crop'
+    }
+    if (image && (image.startsWith('http://') || image.startsWith('https://'))) {
+      return image
+    }
+    if (course?.thumbnailPath) {
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+      return `${baseUrl}${course.thumbnailPath}`
+    }
+    if (image) {
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+      return image.startsWith('/') ? `${baseUrl}${image}` : `${baseUrl}/${image}`
+    }
+    return 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=600&auto=format&fit=crop'
+  }
+
+  // Get course description or create a default one
+  const description = course?.description || course?.shortDescription || `Learn ${title} with expert guidance and structured lessons.`
+
+  return (
+    <motion.a 
+      href={`/courses/${_id}`} 
+      className="group relative h-96 md:h-[420px] w-full overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300"
+      initial={{ opacity: 0, y: 50, scale: 0.9 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ 
+        duration: 0.5, 
+        delay: (index || 0) * 0.1,
+        type: "spring",
+        stiffness: 100
+      }}
+      whileHover={{ y: -8, scale: 1.02 }}
+    >
+      {/* Background Image */}
+      <div className="absolute inset-0">
+        <img 
+          src={getImageUrl()} 
+          alt={title} 
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+          onError={(e) => {
+            e.target.src = 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=600&auto=format&fit=crop'
+          }}
+        />
+      </div>
+
+      {/* Dark Overlay - appears on hover */}
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/70 transition-all duration-500"></div>
+
+      {/* Level Badge - always visible */}
+      <div className="absolute top-4 right-4 bg-black/80 text-white px-3 py-1 rounded-full text-xs font-bold z-20 backdrop-blur-sm"
+      style={{ fontFamily: "'Bona Nova SC', serif" }}
+      >
+        {level}
+      </div>
+
+      {/* Enrolled Badge */}
+      {isEnrolled && (
+        <div className="absolute top-4 left-4 bg-[#F5E6E0]/90 text-black px-3 py-1 rounded-full text-xs font-bold z-20 backdrop-blur-sm flex items-center gap-1.5 shadow-lg">
+          <span className="text-sm">✓</span>
+          <span>Enrolled</span>
+        </div>
+      )}
+
+      {/* Content Overlay - appears on hover */}
+      <div className="absolute inset-0 flex flex-col justify-between p-5 md:p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10">
+        {/* Title and Description */}
+        <div className="flex-1 flex flex-col justify-center">
+          <h3 className="text-white text-xl md:text-2xl font-bold mb-2 md:mb-3 uppercase tracking-wide"
+          style={{ fontFamily: "'Bona Nova SC', serif" }}
+          >
+            {title}
+          </h3>
+          <div className="w-12 md:w-16 h-0.5 bg-white mb-3 md:mb-4"></div>
+          <p className="text-white/90 text-xs md:text-sm leading-relaxed line-clamp-3"
+          style={{ fontFamily: "'Bona Nova', serif" }}
+          >
+            {description}
+          </p>
+        </div>
+
+        {/* Bottom Section - Price and Button */}
+        <div className="flex items-center justify-between pt-3 md:pt-4 border-t border-white/20">
+          {!isEnrolled && (
+            <span className="text-white font-bold text-lg md:text-xl">₹{price}</span>
+          )}
+          {isEnrolled && (
+            <span className="text-white/80 font-medium text-xs md:text-sm flex items-center gap-1">
+              <span>✓</span>
+              <span>Enrolled</span>
+            </span>
+          )}
+          <button className="px-4 md:px-6 py-1.5 md:py-2 bg-white text-black font-bold text-xs md:text-sm uppercase tracking-wide hover:bg-white/90 transition-all duration-300 border border-white">
+            Know More
+          </button>
+        </div>
+      </div>
+
+      {/* Default visible content - hidden on hover */}
+      <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6 bg-gradient-to-t from-black/60 to-transparent group-hover:opacity-0 transition-opacity duration-500">
+        <h3 className="text-white text-lg md:text-xl font-bold mb-2">{title}</h3>
+        {!isEnrolled && (
+          <span className="text-white font-semibold text-base md:text-lg">₹{price}</span>
+        )}
+      </div>
+    </motion.a>
+  )
+}
+
 function TeacherCard({ name, instrument, avatar }) {
   return (
     <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border border-white/20 text-center group hover:border-[#F5E6E0]">
@@ -198,40 +315,53 @@ function StatCard({ number, label, icon, color, index }) {
   )
 }
 
-function TestimonialCard({ name, role, content, avatar }) {
+function TestimonialCard({ name, role, content, avatar, index }) {
   return (
     <motion.div 
-      className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border border-white/20 hover:border-[#F5E6E0] flex-shrink-0"
-      initial={{ opacity: 0, scale: 0.9 }}
-      whileInView={{ opacity: 1, scale: 1 }}
+      className="bg-white shadow-lg hover:shadow-2xl transition-all duration-300 p-6 md:p-8 border-l-4 border-black flex-shrink-0 h-full flex flex-col"
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.4 }}
-      whileHover={{ scale: 1.05, y: -5 }}
+      transition={{ duration: 0.5, delay: (index || 0) * 0.1 }}
+      whileHover={{ y: -5 }}
     >
-      <div className="flex items-center mb-4">
-        <img 
-          src={avatar} 
-          alt={name} 
-          className="h-12 w-12 rounded-full object-cover ring-2 ring-[#F5E6E0]/30"
-          onError={(e) => {
-            e.target.src = 'https://i.pravatar.cc/150'
-          }}
-        />
-        <div className="ml-3">
-          <div className="font-cinema font-bold text-black">{name}</div>
-          <div className="text-sm text-black/70 font-medium">{role}</div>
+      {/* Quote Icon */}
+      <div className="mb-4">
+        <svg className="w-8 h-8 text-black/20" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.996 2.151c-2.432.967-4.996 2.848-4.996 7.153 0 3.68 1.681 4.806 4.996 4.806v7h-9.979zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.967-5 2.848-5 7.153 0 3.68 1.76 4.806 5 4.806v7h-10z"/>
+        </svg>
+      </div>
+
+      {/* Content */}
+      <p className="text-black text-base md:text-lg leading-relaxed mb-6 flex-grow" style={{ fontFamily: "'Bona Nova', serif" }}>
+        "{content}"
+      </p>
+
+      {/* Author Info */}
+      <div className="flex items-center justify-between pt-4 border-t border-black/10">
+        <div className="flex items-center gap-3">
+          <img 
+            src={avatar} 
+            alt={name} 
+            className="h-12 w-12 object-cover"
+            onError={(e) => {
+              e.target.src = 'https://i.pravatar.cc/150'
+            }}
+          />
+          <div>
+            <div className="font-bold text-black text-sm md:text-base" style={{ fontFamily: "'Bona Nova SC', serif" }}>
+              {name}
+            </div>
+            <div className="text-xs md:text-sm text-black/60" style={{ fontFamily: "'Bona Nova', serif" }}>
+              {role}
+            </div>
+          </div>
+        </div>
+        {/* Stars */}
+        <div className="flex text-yellow-500 text-lg">
+          {'★'.repeat(5)}
         </div>
       </div>
-      <p className="text-black italic leading-relaxed font-medium">"{content}"</p>
-      <motion.div 
-        className="mt-3 flex text-[#F5E6E0]"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.3 }}
-      >
-        {'★'.repeat(5)}
-      </motion.div>
     </motion.div>
   )
 }
@@ -244,7 +374,7 @@ function TestimonialsSlider({ testimonials }) {
   // If 3 or fewer testimonials, show in grid
   if (testimonials.length <= 3) {
     return (
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
         {testimonials.map((testimonial, index) => (
           <TestimonialCard
             key={testimonial._id || index}
@@ -252,6 +382,7 @@ function TestimonialsSlider({ testimonials }) {
             role={testimonial.role}
             content={testimonial.content}
             avatar={testimonial.avatar}
+            index={index}
           />
         ))}
       </div>
@@ -261,26 +392,28 @@ function TestimonialsSlider({ testimonials }) {
   // If more than 3, show as auto-sliding marquee
   return (
     <div className="marquee-wrapper">
-      <div className="flex gap-6 marquee-container">
+      <div className="flex gap-6 md:gap-8 marquee-container">
         {/* First set */}
         {testimonials.map((testimonial, index) => (
-          <div key={`first-${testimonial._id || index}`} className="flex-shrink-0" style={{ width: '350px' }}>
+          <div key={`first-${testimonial._id || index}`} className="flex-shrink-0" style={{ width: '380px' }}>
             <TestimonialCard
               name={testimonial.name}
               role={testimonial.role}
               content={testimonial.content}
               avatar={testimonial.avatar}
+              index={index}
             />
           </div>
         ))}
         {/* Duplicate set for seamless loop */}
         {testimonials.map((testimonial, index) => (
-          <div key={`second-${testimonial._id || index}`} className="flex-shrink-0" style={{ width: '350px' }}>
+          <div key={`second-${testimonial._id || index}`} className="flex-shrink-0" style={{ width: '380px' }}>
             <TestimonialCard
               name={testimonial.name}
               role={testimonial.role}
               content={testimonial.content}
               avatar={testimonial.avatar}
+              index={index}
             />
           </div>
         ))}
@@ -300,6 +433,12 @@ function EnrollForm() {
 		country: ''
 	})
 	const nameInputRef = useRef(null)
+	
+	// Ensure errors are cleared on mount
+	useEffect(() => {
+		setErrors({})
+		setTouched({})
+	}, [])
 
 	// Validation functions
 	const validateFullName = (name) => {
@@ -501,15 +640,26 @@ function EnrollForm() {
 	}
 
 	return (
-		<form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-6 lg:p-8 grid md:grid-cols-2 gap-6 border border-white/20" noValidate>
-			<div className="md:col-span-2 text-center mb-2">
-				<h3 className="text-xl lg:text-3xl font-cinema font-bold text-black mb-2">Start Your Musical Journey 🎵</h3>
-				<p className="text-black/70 font-medium">Join hundreds of students learning music with us</p>
+		<form 
+			onSubmit={handleSubmit} 
+			className="bg-white shadow-xl p-6 lg:p-8 grid md:grid-cols-2 gap-6 md:gap-8 border border-black/10" 
+			noValidate
+			onInvalid={(e) => {
+				e.preventDefault()
+			}}
+		>
+			<div className="md:col-span-2 text-center mb-4 md:mb-6">
+				<h3 className="text-2xl lg:text-3xl font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova SC', serif" }}>
+					Start Your Musical Journey 🎵
+				</h3>
+				<p className="text-black/70 text-base md:text-lg" style={{ fontFamily: "'Bona Nova', serif" }}>
+					Join hundreds of students learning music with us
+				</p>
 			</div>
 			
 			{/* Full Name */}
-			<div>
-				<label htmlFor="enroll-fullName" className="block text-sm font-bold text-black mb-2">
+			<div className="md:col-span-2">
+				<label htmlFor="enroll-fullName" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova SC', serif" }}>
 					Full Name <span className="text-red-500">*</span>
 				</label>
 				<input
@@ -522,36 +672,38 @@ function EnrollForm() {
 					onBlur={handleBlur}
 					placeholder="Enter your full name"
 					maxLength={100}
-					className={`w-full border rounded-lg p-3 transition-all duration-200 bg-white font-medium ${
-						errors.fullName && touched.fullName
+					className={`w-full border-2 p-3 md:p-4 transition-all duration-200 bg-white ${
+						touched.fullName && errors.fullName
 							? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'
-							: formData.fullName && !errors.fullName
-							? 'border-[#F5E6E0] bg-[#F5E6E0]/5 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
-							: 'border-black/20 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
+							: touched.fullName && formData.fullName && !errors.fullName
+							? 'border-black/30 bg-white focus:ring-2 focus:ring-black/20 focus:border-black'
+							: 'border-black/20 focus:ring-2 focus:ring-black/20 focus:border-black'
 					}`}
-					required
+					style={{ fontFamily: "'Bona Nova', serif" }}
 					aria-invalid={errors.fullName && touched.fullName ? 'true' : 'false'}
 					aria-describedby={errors.fullName && touched.fullName ? 'enroll-fullName-error' : undefined}
 				/>
-				<div className="flex items-center justify-between mt-1">
-					{errors.fullName && touched.fullName ? (
-						<p id="enroll-fullName-error" className="text-sm text-red-600 flex items-center gap-1 animate-fade-in">
+				<div className="flex items-center justify-between mt-2 min-h-[20px]">
+					{touched.fullName && errors.fullName ? (
+						<p id="enroll-fullName-error" className="text-sm text-red-600 flex items-center gap-1">
 							<span>⚠️</span> {errors.fullName}
 						</p>
-					) : formData.fullName && !errors.fullName ? (
+					) : touched.fullName && formData.fullName && !errors.fullName ? (
 						<p className="text-xs text-green-600 flex items-center gap-1">
 							<span>✓</span> Looks good!
 						</p>
-					) : null}
+					) : (
+						<span></span>
+					)}
 					{formData.fullName.length > 0 && (
-						<span className="text-xs text-slate-400">{formData.fullName.length}/100</span>
+						<span className="text-xs text-black/40">{formData.fullName.length}/100</span>
 					)}
 				</div>
 			</div>
 
 			{/* Email */}
 			<div>
-				<label htmlFor="enroll-email" className="block text-sm font-bold text-black mb-2">
+				<label htmlFor="enroll-email" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova SC', serif" }}>
 					Email Address <span className="text-red-500">*</span>
 				</label>
 				<input
@@ -562,31 +714,33 @@ function EnrollForm() {
 					onChange={handleChange}
 					onBlur={handleBlur}
 					placeholder="your.email@example.com"
-					className={`w-full border rounded-lg p-3 transition-all duration-200 bg-white font-medium ${
+					className={`w-full border-2 p-3 md:p-4 transition-all duration-200 bg-white ${
 						errors.email && touched.email
 							? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'
 							: formData.email && !errors.email
-							? 'border-[#F5E6E0] bg-[#F5E6E0]/5 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
-							: 'border-black/20 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
+							? 'border-black/30 bg-white focus:ring-2 focus:ring-black/20 focus:border-black'
+							: 'border-black/20 focus:ring-2 focus:ring-black/20 focus:border-black'
 					}`}
-					required
+					style={{ fontFamily: "'Bona Nova', serif" }}
 					aria-invalid={errors.email && touched.email ? 'true' : 'false'}
 					aria-describedby={errors.email && touched.email ? 'enroll-email-error' : undefined}
 				/>
-				{errors.email && touched.email ? (
-					<p id="enroll-email-error" className="mt-1 text-sm text-red-600 flex items-center gap-1 animate-fade-in">
-						<span>⚠️</span> {errors.email}
-					</p>
-				) : formData.email && !errors.email ? (
-					<p className="mt-1 text-xs text-green-600 flex items-center gap-1">
-						<span>✓</span> Valid email address
-					</p>
-				) : null}
+				<div className="mt-2 min-h-[20px]">
+					{errors.email && touched.email ? (
+						<p id="enroll-email-error" className="text-sm text-red-600 flex items-center gap-1">
+							<span>⚠️</span> {errors.email}
+						</p>
+					) : formData.email && !errors.email ? (
+						<p className="text-xs text-green-600 flex items-center gap-1">
+							<span>✓</span> Valid email address
+						</p>
+					) : null}
+				</div>
 			</div>
 
 			{/* WhatsApp */}
 			<div>
-				<label htmlFor="enroll-whatsapp" className="block text-sm font-bold text-black mb-2">
+				<label htmlFor="enroll-whatsapp" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova SC', serif" }}>
 					WhatsApp Number <span className="text-black/60 text-xs font-normal">(Optional)</span>
 				</label>
 				<input
@@ -598,32 +752,35 @@ function EnrollForm() {
 					onBlur={handleBlur}
 					placeholder="+91 98765 43210"
 					maxLength={17}
-					className={`w-full border rounded-lg p-3 transition-all duration-200 bg-white font-medium ${
+					className={`w-full border-2 p-3 md:p-4 transition-all duration-200 bg-white ${
 						errors.whatsapp && touched.whatsapp
 							? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'
 							: formData.whatsapp && !errors.whatsapp
-							? 'border-[#F5E6E0] bg-[#F5E6E0]/5 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
-							: 'border-black/20 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
+							? 'border-black/30 bg-white focus:ring-2 focus:ring-black/20 focus:border-black'
+							: 'border-black/20 focus:ring-2 focus:ring-black/20 focus:border-black'
 					}`}
+					style={{ fontFamily: "'Bona Nova', serif" }}
 					aria-invalid={errors.whatsapp && touched.whatsapp ? 'true' : 'false'}
 					aria-describedby={errors.whatsapp && touched.whatsapp ? 'enroll-whatsapp-error' : undefined}
 				/>
-				{errors.whatsapp && touched.whatsapp ? (
-					<p id="enroll-whatsapp-error" className="mt-1 text-sm text-red-600 flex items-center gap-1 animate-fade-in">
-						<span>⚠️</span> {errors.whatsapp}
-					</p>
-				) : formData.whatsapp && !errors.whatsapp ? (
-					<p className="mt-1 text-xs text-green-600 flex items-center gap-1">
-						<span>✓</span> Valid phone number
-					</p>
+				<div className="mt-2 min-h-[20px]">
+					{errors.whatsapp && touched.whatsapp ? (
+						<p id="enroll-whatsapp-error" className="text-sm text-red-600 flex items-center gap-1">
+							<span>⚠️</span> {errors.whatsapp}
+						</p>
+					) : formData.whatsapp && !errors.whatsapp ? (
+						<p className="text-xs text-green-600 flex items-center gap-1">
+							<span>✓</span> Valid phone number
+						</p>
 					) : (
-						<p className="mt-1 text-xs text-[#2c2c2c]">We'll use this to contact you quickly</p>
+						<p className="text-xs text-black/50">We'll use this to contact you quickly</p>
 					)}
+				</div>
 			</div>
 
 			{/* Country */}
-			<div>
-				<label htmlFor="enroll-country" className="block text-sm font-bold text-black mb-2">
+			<div className="md:col-span-2">
+				<label htmlFor="enroll-country" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova SC', serif" }}>
 					Country <span className="text-black/60 text-xs font-normal">(Optional)</span>
 				</label>
 				<input
@@ -634,32 +791,36 @@ function EnrollForm() {
 					onChange={handleChange}
 					onBlur={handleBlur}
 					placeholder="e.g., India, USA, UK"
-					className={`w-full border rounded-lg p-3 transition-all duration-200 bg-white font-medium ${
+					className={`w-full border-2 p-3 md:p-4 transition-all duration-200 bg-white ${
 						errors.country && touched.country
 							? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-red-500'
 							: formData.country && !errors.country
-							? 'border-[#F5E6E0] bg-[#F5E6E0]/5 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
-							: 'border-black/20 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
+							? 'border-black/30 bg-white focus:ring-2 focus:ring-black/20 focus:border-black'
+							: 'border-black/20 focus:ring-2 focus:ring-black/20 focus:border-black'
 					}`}
+					style={{ fontFamily: "'Bona Nova', serif" }}
 					aria-invalid={errors.country && touched.country ? 'true' : 'false'}
 					aria-describedby={errors.country && touched.country ? 'enroll-country-error' : undefined}
 				/>
-				{errors.country && touched.country ? (
-					<p id="enroll-country-error" className="mt-1 text-sm text-red-600 flex items-center gap-1 animate-fade-in">
-						<span>⚠️</span> {errors.country}
-					</p>
-				) : null}
+				<div className="mt-2 min-h-[20px]">
+					{errors.country && touched.country ? (
+						<p id="enroll-country-error" className="text-sm text-red-600 flex items-center gap-1">
+							<span>⚠️</span> {errors.country}
+						</p>
+					) : null}
+				</div>
 			</div>
 
 			{/* Submit Button */}
 			<button
 				type="submit"
 				disabled={submitting}
-				className={`md:col-span-2 px-6 py-3 rounded-lg font-bold transition-all duration-300 shadow-lg relative overflow-hidden ${
+				className={`md:col-span-2 px-8 py-4 font-bold transition-all duration-300 shadow-lg relative overflow-hidden border-2 border-black ${
 					submitting
 						? 'bg-black text-white cursor-not-allowed'
-						: 'bg-[#F5E6E0] text-black hover:bg-[#E8D5CC] hover:shadow-xl active:scale-95'
+						: 'bg-white text-black hover:bg-black hover:text-white hover:shadow-xl active:scale-95'
 				}`}
+				style={{ fontFamily: "'Bona Nova SC', serif" }}
 			>
 				{submitting ? (
 					<span className="flex items-center justify-center gap-2">
@@ -689,30 +850,56 @@ function EnrollForm() {
 // Hero Carousel Component
 function HeroCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0)
+  const navigate = useNavigate()
   const carouselSlides = [
     {
       image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1920&q=80',
       title: 'The Musinest',
       subtitle: 'Structured piano lessons designed for growth, skill-building, and musical confidence',
-      badge: 'Trusted by 500+ Students'
+      badge: 'Trusted by 500+ Students',
+      buttonText1: 'Start Learning Today',
+      href1: '#enroll',
+      buttonText2: 'Browse Courses',
+      href2: '#courses',
     },
     {
       image: 'https://images.unsplash.com/photo-1511735111819-9a3f7709049c?w=1920&q=80',
       title: 'Meet Your Teacher',
-      subtitle: 'Aditi — dedicated to providing patient, professional, and personalised music training by Aditi',
-      badge: '15+ Professional Instructors'
+      subtitle: 'Meet Aditi — offering patient, professional, and personalised music training for learners of all levels.',
+      badge: '15+ Professional Instructors',
+    buttonText1: 'About Aditi',
+    href1: '/teachers',
+      buttonText2: 'About Musinest',
+      href2: '/about',
     },
     {
       image: 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=1920&q=80',
       title: 'Music Arrangements & Notations',
-      subtitle: 'Clean, accurate, and crafted for musicians',
-      badge: '95% Success Rate'
+      subtitle: 'Clear, accurate music arrangements and notations for easy learning.',
+      badge: '95% Success Rate',
+      buttonText1: 'Start Learning Today',
+      href1: '#enroll',
+      buttonText2: 'Browse Courses',
+      href2: '#courses',
+    },
+    {
+      image: 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=1920&q=80',
+      title: 'One-on-One Lessons',
+      subtitle: 'Structured teaching with complete attention on you and your progress.',
+      buttonText1: 'Start Learning Today',
+      href1: '#enroll',
+      buttonText2: 'Browse Courses',
+      href2: '#courses',
     },
     {
       image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=1920&q=80',
       title: 'Start Your Journey',
-      subtitle: 'Contact me for piano lessons, event performances, and collaboration opportunities by Aditi',
-      badge: '6 Instruments Available'
+      subtitle: 'Get in touch to begin your musical journey.',
+      badge: '6 Instruments Available',
+      buttonText1: 'Contact Us',
+      href1: '/contact',
+      buttonText2: 'Browse Courses',
+      href2: '#courses',
     }
   ]
 
@@ -785,32 +972,52 @@ function HeroCarousel() {
                 </p>
                 <div className="flex flex-col items-center gap-4">
                   <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                    <a 
-                      href="#enroll" 
+                    <button
                       onClick={(e) => {
                         e.preventDefault()
-                        const element = document.getElementById('enroll')
-                        if (element) {
-                          element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                        const href = slide.href1
+                        if (href.startsWith('#')) {
+                          // Hash link - scroll to element
+                          const elementId = href.substring(1)
+                          const element = document.getElementById(elementId)
+                          if (element) {
+                            element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                          }
+                        } else if (href.startsWith('/')) {
+                          // Route link - navigate using React Router
+                          navigate(href)
+                        } else if (href.startsWith('http://') || href.startsWith('https://')) {
+                          // External link - open in new tab
+                          window.open(href, '_blank', 'noopener,noreferrer')
                         }
                       }}
-                      className="px-8 py-4 rounded-lg bg-[#F5E6E0] text-black hover:bg-[#E8D5CC] font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 text-center whitespace-nowrap"
+                      className="px-8 py-4 rounded-lg bg-[#F5E6E0] text-black hover:bg-[#E8D5CC] font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 text-center whitespace-nowrap cursor-pointer"
                     >
-                      Start Learning Today
-                    </a>
-                    <a 
-                      href="#courses" 
+                      {slide.buttonText1}
+                    </button>
+                    <button
                       onClick={(e) => {
                         e.preventDefault()
-                        const element = document.getElementById('courses')
-                        if (element) {
-                          element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                        const href = slide.href2
+                        if (href.startsWith('#')) {
+                          // Hash link - scroll to element
+                          const elementId = href.substring(1)
+                          const element = document.getElementById(elementId)
+                          if (element) {
+                            element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                          }
+                        } else if (href.startsWith('/')) {
+                          // Route link - navigate using React Router
+                          navigate(href)
+                        } else if (href.startsWith('http://') || href.startsWith('https://')) {
+                          // External link - open in new tab
+                          window.open(href, '_blank', 'noopener,noreferrer')
                         }
                       }}
-                      className="px-8 py-4 rounded-lg bg-transparent border-2 border-[#F5E6E0] hover:bg-[#F5E6E0]/10 font-bold text-[#F5E6E0] text-lg transition-all duration-300 text-center whitespace-nowrap"
+                      className="px-8 py-4 rounded-lg bg-transparent border-2 border-[#F5E6E0] hover:bg-[#F5E6E0]/10 font-bold text-[#F5E6E0] text-lg transition-all duration-300 text-center whitespace-nowrap cursor-pointer"
                     >
-                      Browse Courses
-                    </a>
+                      {slide.buttonText2}
+                    </button>
                   </div>
                   {/* Social Media Icons */}
                   <div className="flex gap-4 items-center mt-2">
@@ -826,7 +1033,7 @@ function HeroCarousel() {
                       </svg>
                     </a>
                     <a 
-                      href="https://www.youtube.com/@themusinest" 
+                      href="https://www.youtube.com/@the_musinest" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="w-12 h-12 bg-[#F5E6E0]/20 backdrop-blur-sm rounded-full flex items-center justify-center cursor-pointer hover:bg-[#F5E6E0]/30 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-110 border border-[#F5E6E0]/30"
@@ -958,7 +1165,7 @@ function App() {
   }, [isSignedIn, getToken])
 
   return (
-    <div className="min-h-screen bg-black overflow-x-hidden">
+    <div className="min-h-screen overflow-x-hidden">
       <Navbar />
 
       <main className="pb-20 md:pb-16">
@@ -979,14 +1186,14 @@ function App() {
           transition={{ duration: 0.6 }}
         >
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <SectionTitle emoji="🎵" title="Featured Courses" subtitle="Choose your instrument and start your musical journey" />
+            <SectionTitle emoji="🎵" title="Featured Courses" subtitle="Choose your instrument and start your musical journey" spaceNumber={16}/>
           {courses.length > 0 ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {courses.slice(0, 6).map((course, index) => {
                 const courseId = String(course._id)
                 const isEnrolled = enrolledCourseIds.has(courseId) || enrolledCourseIds.has(course._id)
                 return (
-                  <CourseCard 
+                  <HomepageCourseCard 
                     key={course._id}
                     title={course.title} 
                     level={course.level} 
@@ -1008,7 +1215,9 @@ function App() {
             </div>
           )}
           <div className="text-center mt-8">
-            <a href="/courses" className="inline-flex items-center px-6 py-3 rounded-lg bg-[#F5E6E0] text-black font-bold hover:bg-[#E8D5CC] transition-all duration-300 shadow-lg hover:shadow-xl">
+            <a href="/courses" className="inline-flex items-center px-6 py-3 text-black font-bold hover:bg-black hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl border-2 border-black"
+            style={{ fontFamily: "'Bona Nova SC', serif" }}
+            >
               View All Courses
               <span className="ml-2">→</span>
             </a>
@@ -1028,66 +1237,56 @@ function App() {
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
              {/* Music Genres Section */}
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12" style={{ fontFamily: "'Satisfy', cursive" }}>
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12" style={{ fontFamily: "'Bona Nova SC', serif" }}>
               Music Genres & Styles
             </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="bg- rounded-2xl shadow-xl p-6 border border-white/20">
                 <div className="text-3xl mb-3">🎼</div>
                 <h3 className="text-xl font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova SC', serif" }}>Western Classical</h3>
-                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova SC', serif" }}>From Baroque to Romantic periods, structured ABRSM curriculum (Grades 1-8)</p>
+                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova', serif" }}>From Baroque to Modern music, structured ABRSM curriculum (Grades 1-8)</p>
               </div>
               <div className="bg-white rounded-2xl shadow-xl p-6 border border-white/20">
                 <div className="text-3xl mb-3">🎬</div>
                 <h3 className="text-xl font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova SC', serif" }}>Bollywood Piano</h3>
-                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova SC', serif" }}>Popular Hindi film songs, focusing on melody, harmony, and rhythm (All Levels)</p>
+                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova', serif" }}>Popular Hindi film songs, focusing on melody, harmony, and rhythm (All Levels)</p>
               </div>
               <div className="bg-white rounded-2xl shadow-xl p-6 border border-white/20">
                 <div className="text-3xl mb-3">🎵</div>
                 <h3 className="text-xl font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova SC', serif" }}>Indian Classical Vocal</h3>
-                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova SC', serif" }}>Traditional ragas, tala patterns, classical compositions (Beginner to Advanced)</p>
+                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova', serif" }}>Traditional ragas, tala patterns, classical compositions (Beginner to Intermediate)</p>
               </div>
               <div className="bg-white rounded-2xl shadow-xl p-6 border border-white/20">
                 <div className="text-3xl mb-3">🎸</div>
                 <h3 className="text-xl font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova SC', serif" }}>Rock & Pop</h3>
-                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova SC', serif" }}>Contemporary music styles, chord progressions, modern piano techniques (Intermediate to Advanced)</p>
+                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova', serif" }}>Contemporary music styles, chord progressions, modern piano techniques (Beginners to Advanced)</p>
               </div>
               <div className="bg-white rounded-2xl shadow-xl p-6 border border-white/20">
                 <div className="text-3xl mb-3">📚</div>
                 <h3 className="text-xl font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova SC', serif" }}>Music Theory</h3>
-                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova SC', serif" }}>Harmony, rhythm, notation, and musical structure integrated into learning</p>
+                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova', serif" }}>Harmony, rhythm, notation, and musical structure integrated into learning</p>
               </div>
               <div className="bg-white rounded-2xl shadow-xl p-6 border border-white/20">
                 <div className="text-3xl mb-3">🎭</div>
                 <h3 className="text-xl font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova SC', serif" }}>Performance Skills</h3>
-                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova SC', serif" }}>Stage presence, confidence building, and audience engagement (Regular concerts)</p>
+                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova', serif" }}>Stage presence, confidence building, and audience engagement.</p>
               </div>
             </div>
           </div>
           </div>
         </motion.section>
 
-        {/* Testimonials Section - Black background */}
+        {/* Testimonials Section - White background */}
         {testimonials.length > 0 && (
           <motion.section 
-            className="bg-gray-200 py-20 w-full"
+            className="bg-white py-20 w-full"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.6 }}
           >
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="relative mb-8">
-                {/* Glassmorphism container */}
-                <div className="relative bg-gray-400/20 backdrop-blur-lg rounded-3xl p-8 md:p-10 border border-gray-500/30 shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] overflow-hidden">
-                  {/* Inner glow effect */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
-                  {/* Content */}
-                  <div className="relative z-10">
-                    <SectionTitle emoji="💬" title="What Our Students Say" subtitle="Real feedback from our music community" />
-                  </div>
-                </div>
-              </div>
+              <SectionTitle emoji="💬" title="Reviews from our music family" subtitle="" spaceNumber="16" />
               <TestimonialsSlider testimonials={testimonials} />
             </div>
           </motion.section>
@@ -1103,7 +1302,7 @@ function App() {
           transition={{ duration: 0.6 }}
         >
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <SectionTitle emoji="📝" title="Ready to Start?" subtitle="Join our music family today" />
+            <SectionTitle emoji="" title="" subtitle="" />
             <div className="max-w-4xl mx-auto">
               <EnrollForm />
             </div>
@@ -1122,10 +1321,12 @@ function App() {
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-5xl mx-auto text-center mb-8">
               <h2 className="text-3xl md:text-5xl font-cinema font-bold tracking-wide text-black">
-                <span className="mr-2">📸</span>
-                Gallery
+                <span className="mr-2"
+                style={{ fontFamily: "'Bona Nova SC', serif" }}
+                >📸
+                Gallery</span>
               </h2>
-              <p className="text-black/70 mt-3 text-lg font-medium">Moments from our classes and performances</p>
+              <p className="text-black/70 mt-3 text-lg font-medium" style={{ fontFamily: "'Bona Nova', serif" }}>Moments from our classes and performances</p>
             </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => (

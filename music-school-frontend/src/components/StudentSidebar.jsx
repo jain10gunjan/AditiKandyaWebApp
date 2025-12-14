@@ -36,26 +36,16 @@ export default function StudentSidebar({ activeTab, onTabChange, isOpen, onClose
       )}
       
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-56 lg:w-60 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static ${
+      <div className={`fixed top-0 bottom-0 left-0 z-40 w-56 lg:w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:top-20 lg:h-[calc(100vh-5rem)] ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="h-full flex flex-col">
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto">
-            {/* Header - Extended to top, overlapping navbar */}
-            <div className="pt-2 lg:pt-0 px-4 lg:px-6 pb-4 lg:pb-6 border-b border-slate-200">
-              <div className="flex items-center justify-between lg:min-h-0 lg:items-center">
-                
-                <button
-                  onClick={onClose}
-                  className="lg:hidden p-2 rounded-lg hover:bg-slate-100"
-                >
-                  <span className="text-xl">✕</span>
-                </button>
-              </div>
-            </div>
+            {/* Header */}
+             
             {/* Navigation Menu */}
-            <nav className="p-3 lg:p-4 pb-20 lg:pb-20">
+            <nav className="p-3 mt-8 lg:p-2">
               <ul className="space-y-1 lg:space-y-2">
                 {menuItems.map((item) => {
                   // Only Overview and My Courses should change tabs (for dashboard page)

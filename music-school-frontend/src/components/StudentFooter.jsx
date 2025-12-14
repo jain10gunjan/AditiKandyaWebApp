@@ -4,7 +4,7 @@ export default function StudentFooter() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
-    <footer className="border-t border-slate-200 mt-20 bg-white">
+    <footer className="border-t border-slate-200 mt-20 bg-white md:ml-64">
       <div className="max-w-6xl mx-auto p-8">
         {/* Desktop Footer */}
         <div className="hidden md:grid md:grid-cols-4 gap-8">

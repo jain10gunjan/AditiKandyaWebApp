@@ -116,7 +116,7 @@ export default function Navbar({ subtitle = 'Aditi Kandya' }) {
                   onClick={() => setDropdownOpen(dropdownOpen === 'programs' ? null : 'programs')}
                   className="text-white/90 hover:text-[#F5E6E0] transition-colors text-sm uppercase tracking-wide whitespace-nowrap flex items-center gap-1"
                   style={{
-                    fontFamily: "'Cinzel', serif"
+                    fontFamily: "'Bona Nova', serif"
                   }}
                 >
                   Programs
@@ -133,7 +133,7 @@ export default function Navbar({ subtitle = 'Aditi Kandya' }) {
                         className="block px-4 py-2 text-white/90 hover:text-[#F5E6E0] hover:bg-white/10 transition-colors text-sm font-medium"
                         onClick={() => setDropdownOpen(null)}
                         style={{
-                          fontFamily: "'Dancing Script', cursive"
+                          fontFamily: "'Bona Nova', serif"
                         }}
                       >
                         {link.label}
@@ -149,7 +149,7 @@ export default function Navbar({ subtitle = 'Aditi Kandya' }) {
                   onClick={() => setDropdownOpen(dropdownOpen === 'about' ? null : 'about')}
                   className="text-white/90 hover:text-[#F5E6E0] font-bold transition-colors text-sm uppercase tracking-wide whitespace-nowrap flex items-center gap-1"
                   style={{
-                    fontFamily: "'Cinzel', serif",
+                    fontFamily: "'Bona Nova', serif",
                   }}
                 >
                   About
@@ -165,6 +165,9 @@ export default function Navbar({ subtitle = 'Aditi Kandya' }) {
                         href={link.href}
                         className="block px-4 py-2 text-white/90 hover:text-[#F5E6E0] hover:bg-white/10 transition-colors text-sm font-medium"
                         onClick={() => setDropdownOpen(null)}
+                        style={{
+                          fontFamily: "'Bona Nova', serif"
+                        }}
                       >
                         {link.label}
                       </a>

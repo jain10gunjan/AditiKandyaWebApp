@@ -434,14 +434,14 @@ export default function StudentAttendance() {
       </SignedOut>
       
       <SignedIn>
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen pt-20">
           <StudentSidebar 
             activeTab={activeTab} 
             onTabChange={() => {}} 
             isOpen={sidebarOpen}
             onClose={() => setSidebarOpen(false)}
           />
-          <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
+          <div className="flex-1 overflow-y-auto pb-16 md:pb-0 md:ml-64">
             <div className="flex-1 p-4 lg:p-6 xl:p-8">
               {/* Mobile Header */}
               <div className="lg:hidden mb-6">

@@ -172,6 +172,49 @@ export default function AdminCalendar() {
     }
   }
 
+  const deleteAllSchedules = async () => {
+    const confirmMessage = '⚠️ WARNING: This will delete ALL schedules from the database!\n\nThis action cannot be undone.\n\nAre you absolutely sure you want to proceed?'
+    if (!window.confirm(confirmMessage)) {
+      return
+    }
+
+    // Double confirmation
+    const doubleConfirm = window.prompt('Type "DELETE ALL" to confirm deletion of all schedules:')
+    if (doubleConfirm !== 'DELETE ALL') {
+      toast.error('Deletion cancelled. Confirmation text did not match.')
+      return
+    }
+
+    try {
+      setSubmitting(true)
+      const token = await getToken()
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+      const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
+      
+      const response = await fetch(`${baseUrl}/admin/schedules`, {
+        method: 'DELETE',
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to delete schedules' }))
+        throw new Error(errorData.error || 'Failed to delete schedules')
+      }
+
+      const result = await response.json()
+      toast.success(`Successfully deleted ${result.deletedCount || 0} schedule(s)!`)
+      loadEvents()
+    } catch (error) {
+      console.error('Error deleting all schedules:', error)
+      toast.error(error.message || 'Failed to delete all schedules. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   const getEventTypeColor = (type) => {
     switch (type) {
       case 'class': return 'bg-blue-100 text-blue-800 border-blue-200'
@@ -268,6 +311,35 @@ export default function AdminCalendar() {
                   <div className="text-sm text-slate-600 bg-slate-50 px-4 py-2 rounded-lg">
                     <span className="font-semibold text-slate-900">{events.length}</span> event{events.length !== 1 ? 's' : ''} on {new Date(selectedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                   </div>
+                </div>
+              </div>
+
+              {/* Danger Zone - Delete All Schedules */}
+              <div className="mt-6 bg-red-50 border-2 border-red-200 rounded-2xl shadow-lg p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="font-bold text-lg text-red-900 mb-1">⚠️ Danger Zone</h3>
+                    <p className="text-sm text-red-700">
+                      Delete all schedules from the database. This action cannot be undone.
+                    </p>
+                  </div>
+                  <button
+                    onClick={deleteAllSchedules}
+                    disabled={submitting}
+                    className="px-5 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
+                  >
+                    {submitting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>Deleting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>🗑️</span>
+                        <span>Delete All Schedules</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
 

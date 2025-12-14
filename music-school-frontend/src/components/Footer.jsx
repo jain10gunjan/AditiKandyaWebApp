@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import logo from '../assets/logo.png'
+import { ImYoutube2 } from "react-icons/im";
+import { FiInstagram } from "react-icons/fi";
 
 export default function Footer({ showAdminTools = false }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -12,25 +14,10 @@ export default function Footer({ showAdminTools = false }) {
           <div>
           <a href="/" className="flex items-center gap-2">
           <div className="relative bg-black px-4 py-1.5 flex flex-col items-center justify-center">
-            {/* Top full border */}
-            <div className="absolute top-0 left-0 right-0 h-0 border-t-2 border-white"></div>
-            
-            {/* Left side border */}
-            <div className="absolute top-0 left-0 bottom-0 w-0 border-l-2 border-white"></div>
-            
-            {/* Right side border */}
-            <div className="absolute top-0 right-0 bottom-0 w-0 border-r-2 border-white"></div>
-            
-            {/* Bottom left corner */}
-            <div className="absolute bottom-0 left-0 w-12 h-0 border-b-2 border-white"></div>
-            
-            {/* Bottom right corner */}
-            <div className="absolute bottom-0 right-0 w-12 h-0 border-b-2 border-white"></div>
-            
             <span 
               className="text-white text-lg leading-none"
               style={{
-                fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive",
+                fontFamily: "'Satisfy', cursive",
                 fontWeight: 400,
                 fontStyle: 'italic'
               }}
@@ -41,7 +28,7 @@ export default function Footer({ showAdminTools = false }) {
               <span 
                 className="text-white text-xs leading-none"
                 style={{
-                  fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive",
+                  fontFamily: "'Dancing Script', cursive",
                   fontWeight: 300,
                   fontStyle: 'italic'
                 }}
@@ -53,55 +40,55 @@ export default function Footer({ showAdminTools = false }) {
         </a>
             <p className="text-white/70 text-sm font-medium pt-4"
             style={{
-              fontFamily: "'Satisfy', cursive"
+              fontFamily: "'Bona Nova', serif"
             }}>Bringing Music Lessons to Your Screen.</p>
           </div>
           <div>
             <h3 className="font-bold text-white mb-4"
             style={{
-              fontFamily: "'Dancing Script', cursive"
+              fontFamily: "'Bona Nova SC', serif"
             }}>Quick Links</h3>
             <ul className="space-y-2 text-sm text-white/70">
               <li><a href="/" className="hover:text-[#F5E6E0] transition-colors font-medium"
               style={{
-                fontFamily: "'Cinzel', serif"
+                fontFamily: "'Bona Nova', serif"
               }}              >Home</a></li>
               <li><a href="/workshops" className="hover:text-[#F5E6E0] transition-colors font-medium"
               style={{
-                fontFamily: "'Cinzel', serif"
+                fontFamily: "'Bona Nova', serif"
               }}       >Workshops</a></li>
               <li><a href="/courses" className="hover:text-[#F5E6E0] transition-colors font-medium"style={{
-                fontFamily: "'Cinzel', serif"
+                fontFamily: "'Bona Nova', serif"
               }}       >Courses</a></li>
               <li><a href="/teachers" className="hover:text-[#F5E6E0] transition-colors font-medium"style={{
-                fontFamily: "'Cinzel', serif"
+                fontFamily: "'Bona Nova', serif"
               }}       >Meet the Teacher</a></li>
               <li><a href="/about" className="hover:text-[#F5E6E0] transition-colors font-medium"style={{
-                fontFamily: "'Cinzel', serif"
+                fontFamily: "'Bona Nova', serif"
               }}       >About</a></li>
               <li><a href="/contact" className="hover:text-[#F5E6E0] transition-colors font-medium"style={{
-                fontFamily: "'Cinzel', serif"
+                fontFamily: "'Bona Nova', serif"
               }}       >Contact Us</a></li>
             </ul>
           </div>
           <div>
             <h3 className="font-bold text-white mb-4"
             style={{
-              fontFamily: "'Dancing Script', cursive"
+              fontFamily: "'Bona Nova SC', serif"
             }}       >Contact</h3>
             <ul className="space-y-2 text-sm text-white/70 font-medium"
             style={{
-              fontFamily: "'Satisfy', cursive"
+              fontFamily: "'Bona Nova', serif"
             }}       >
               <li>📧 themusinest@gmail.com</li>
               <li>📞 +91 7024403520</li>
-              <li>📍 Virtual Studio, Based in MP India</li>
+              <li>📍 Virtual Studio, Based in MP, India</li>
             </ul>
           </div>
           <div>
             <h3 className="font-bold text-white mb-4"
             style={{
-              fontFamily: "'Dancing Script', cursive"
+              fontFamily: "'Bona Nova SC', serif"
             }}       >Follow Us</h3>
             <div className="flex gap-3 mb-4">
               <a 
@@ -111,16 +98,16 @@ export default function Footer({ showAdminTools = false }) {
                 className="w-10 h-10 bg-[#F5E6E0] rounded-lg flex items-center justify-center cursor-pointer hover:bg-[#E8D5CC] transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-110"
                 title="Follow us on Instagram"
               >
-                <span className="text-black text-lg">📷</span>
+                <span className="text-black text-lg"><FiInstagram />                </span>
               </a>
               <a 
-                href="https://www.youtube.com/@themusinest" 
+                href="https://www.youtube.com/@the_musinest" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-10 h-10 bg-[#F5E6E0] rounded-lg flex items-center justify-center cursor-pointer hover:bg-[#E8D5CC] transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-110"
                 title="Subscribe to our YouTube channel"
               >
-                <span className="text-black text-lg">📺</span>
+                <span className="text-black text-lg"><ImYoutube2 /></span>
               </a>
             </div>
             {showAdminTools && (
@@ -165,7 +152,7 @@ export default function Footer({ showAdminTools = false }) {
             <span 
               className="text-white text-lg leading-none"
               style={{
-                fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive",
+                fontFamily: "'Satisfy', cursive",
                 fontWeight: 400,
                 fontStyle: 'italic'
               }}
@@ -176,7 +163,7 @@ export default function Footer({ showAdminTools = false }) {
               <span 
                 className="text-white text-xs leading-none"
                 style={{
-                  fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive",
+                  fontFamily: "'Dancing Script', cursive",
                   fontWeight: 300,
                   fontStyle: 'italic'
                 }}
@@ -234,32 +221,32 @@ export default function Footer({ showAdminTools = false }) {
                 <ul className="space-y-1 text-sm text-white/70">
                   <li><a href="/" className="hover:text-[#F5E6E0] transition-colors font-medium"
                   style={{
-                    fontFamily: "'Cinzel', serif"
+                    fontFamily: "'Bona Nova', serif"
                   }}
                   >Home</a></li>
                   <li><a href="/workshops" className="hover:text-[#F5E6E0] transition-colors font-medium"
                   style={{
-                    fontFamily: "'Cinzel', serif"
+                    fontFamily: "'Bona Nova', serif"
                   }}
                   >Workshops</a></li>
                   <li><a href="/courses" className="hover:text-[#F5E6E0] transition-colors font-medium"
                   style={{
-                    fontFamily: "'Cinzel', serif"
+                    fontFamily: "'Bona Nova', serif"
                   }}
                   >Courses</a></li>
                   <li><a href="/teachers" className="hover:text-[#F5E6E0] transition-colors font-medium"
                   style={{
-                    fontFamily: "'Cinzel', serif"
+                    fontFamily: "'Bona Nova', serif"
                   }}
                   >Meet the Teacher</a></li>
                   <li><a href="/about" className="hover:text-[#F5E6E0] transition-colors font-medium"
                   style={{
-                    fontFamily: "'Cinzel', serif"
+                    fontFamily: "'Bona Nova', serif"
                   }}
                   >About</a></li>
                   <li><a href="/contact" className="hover:text-[#F5E6E0] transition-colors font-medium"
                   style={{
-                    fontFamily: "'Cinzel', serif"
+                    fontFamily: "'Bona Nova', serif"
                   }}
                   >Contact Us</a></li>
                 </ul>
@@ -275,7 +262,7 @@ export default function Footer({ showAdminTools = false }) {
                     href="https://www.instagram.com/the_musinest?igsh=MWp1b3BpazQ2NHFtZA==" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="w-10 h-10 bg-[#F5E6E0] rounded-lg flex items-center justify-center cursor-pointer hover:bg-[#E8D5CC] transition-all duration-300"
+                    className="w-10 h-10   rounded-lg flex items-center justify-center cursor-pointer   transition-all duration-300"
                     title="Follow us on Instagram"
                   >
                     <span className="text-black text-lg">📷</span>
@@ -284,7 +271,7 @@ export default function Footer({ showAdminTools = false }) {
                     href="https://www.youtube.com/@themusinest" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="w-10 h-10 bg-[#F5E6E0] rounded-lg flex items-center justify-center cursor-pointer hover:bg-[#E8D5CC] transition-all duration-300"
+                    className="w-10 h-10   rounded-lg flex items-center justify-center cursor-pointer hover:  transition-all duration-300"
                     title="Subscribe to our YouTube channel"
                   >
                     <span className="text-black text-lg">📺</span>
@@ -297,10 +284,10 @@ export default function Footer({ showAdminTools = false }) {
 
         <div className="border-t border-[#F5E6E0]/30 mt-8 pt-6 text-center text-white/70 text-sm font-medium"
         style={{
-          fontFamily: "'Satisfy', cursive"
+          fontFamily: "'Bona Nova SC', serif"
         }}
         >
-          © {new Date().getFullYear()} Themusinest.com • Made with 🎶 and ❤️
+          © {new Date().getFullYear()} themusinest.com • made with 🎶 and ❤️
         </div>
       </div>
     </footer>

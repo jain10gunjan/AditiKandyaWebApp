@@ -147,7 +147,7 @@ export default function TeachersPage() {
         apiPost('/consultations', payload),
         {
           loading: 'Submitting your consultation request...',
-          success: 'Consultation request submitted! We\'ll contact you soon. 🎉',
+          success: 'c request submitted! We\'ll contact you soon. 🎉',
           error: 'Failed to submit request. Please try again.',
         }
       )
@@ -183,50 +183,90 @@ export default function TeachersPage() {
       
       <main className="pb-0">
         {/* Hero Section with Large Portrait */}
+        <section className="relative w-full min-h-[70vh] sm:min-h-[80vh] lg:min-h-[90vh] flex flex-row items-stretch bg-white overflow-hidden">
+          {/* Left Section - Image */}
+          <div className="w-1/2 h-[70vh] sm:h-[80vh] lg:h-[90vh] relative">
+            <img
+              src={aditiProfileImage02}
+              alt="Aditi Kandya"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          
+          {/* Right Section - Text Box with Overlap */}
+          <div className="w-1/2 flex items-center justify-start lg:justify-center bg-[#F5F5F0] relative py-4 sm:py-8 lg:py-0 px-1 sm:px-2 lg:px-6">
+            <div className="bg-white border border-gray-300 p-5 sm:p-6 md:p-8 lg:p-16 w-[95%] sm:w-[90%] md:w-[85%] lg:max-w-2xl lg:w-auto -ml-2 sm:-ml-4 md:-ml-8 lg:-ml-32 shadow-lg z-10">
+              <h1 className="mb-3 sm:mb-4 lg:mb-6 leading-tight">
+                <span className="block text-2xl sm:text-3xl md:text-4xl lg:text-5xl mb-1 sm:mb-2" style={{ fontFamily: "'Satisfy', cursive" }}>
+                Hello! I’m 
+                </span>
+                <span className="block text-xl sm:text-2xl md:text-3xl lg:text-5xl font-bold tracking-wider font-bold text-black" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                Aditi Kandya 
+                </span>
+              </h1>
+              <p className="text-xs sm:text-sm md:text-base lg:text-lg text-black/70 mb-4 sm:mb-6 lg:mb-8 leading-relaxed" style={{ fontFamily: "'Bona Nova', serif" }}>
+              My musical journey began as a young child who loved melodies, rhythms, and the feeling of expressing emotions through music. What started as curiosity gradually grew into dedicated training, performances, and eventually, a deep love for teaching.
+              </p>
+              <button
+                onClick={() => {
+                  setShowConsultationForm(true)
+                  setTimeout(() => {
+                    nameInputRef.current?.focus()
+                  }, 100)
+                }}
+                className="px-8 py-4 bg-white text-black hover:bg-black hover:text-white font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl border-2 border-black text-xs sm:text-sm uppercase tracking-wider transition-all duration-300"
+                
+                style={{ fontFamily: "'Cinzel', serif" }}
+              >
+                GET IN TOUCH
+              </button>
+            </div>
+          </div>
+        </section>
 
-  {/* About the Teacher Section */}
+        {/* About the Teacher Section */}
   <section className="bg-white py-16 md:py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid md:grid-cols-1 gap-12 items-center">
+              
               <div>
-                <img
-                  src={aditiProfileImage01}
-                  alt="Aditi Kandya"
-                  className="w-full h-[600px] object-cover rounded-lg"
-                />
-              </div>
-              <div>
-                <h2 className="text-4xl md:text-5xl font-bold text-black mb-6" style={{ fontFamily: "'Dancing Script', cursive" }}>
-                  Hello I'M <br/> ADITI KANDYA
-                </h2>
-                <p className="text-lg text-black/80 mb-8 leading-relaxed" style={{ fontFamily: "'Bitter', serif" }}>
-                  Hi, I'm Aditi Kandya — a pianist, classical vocalist, and passionate music educator. With years of training and a deep love for music, I have completed ABRSM Grade 8 in Piano and am also a trained Indian classical vocalist. My learning journey has taken me beyond performance and teaching.
+                 
+                <p className="text-lg text-black/80 mb-8 leading-relaxed" style={{ fontFamily: "'Bona Nova', serif" }}>
+                I am a trained hindustani classical vocalist and a western classical pianist, having completed ABRSM Grade 8 in Piano. I also hold a Senior Diploma in Hindustani Classical Vocals, and I continue to learn and refine my skills as a lifelong student of music. Over the past 4+ years, I’ve taught students across different levels, age groups, and countries — exclusively through online lessons, making structured and high-quality music learning accessible from anywhere.
                 </p>
-                <p className="text-lg text-black/80 mb-8 leading-relaxed" style={{ fontFamily: "'Bitter', serif" }}>
-                  I have attended a 21-day summer course in composition at KM Music Conservatory, Chennai, and completed a 2-week intensive course in Sound Engineering, expanding my skills in both creative and technical aspects of music.
+                <p className="text-lg text-black/80 mb-8 leading-relaxed" style={{ fontFamily: "'Bona Nova', serif" }}>
+                To broaden my musical understanding, I completed a 21-day composition program at KMMC, Chennai, and a 4-week intensive sound engineering course at Ishwani Kendra, Pune, along with several short courses that enrich my approach to teaching.
+                </p>
+                <p className="text-lg text-black/80 mb-8 leading-relaxed" style={{ fontFamily: "'Bona Nova', serif" }}>
+                My teaching style blends solid technique with creativity, discipline with curiosity, and structure with joy, allowing students to grow at a pace that feels both comfortable and motivating. My teaching philosophy is rooted in patience, encouragement, and a belief that anyone can learn music with the right guidance.
+                </p>
+                <p className="text-lg text-black/80 mb-8 leading-relaxed" style={{ fontFamily: "'Bona Nova', serif" }}
+                >
+                  Outside of music, I enjoy travelling and exploring new places, which continuously inspires my creativity and perspective. Music has shaped my life, and through my lessons, I hope to help every student discover joy, confidence, and expression in their own musical journey.
+
                 </p>
                 <div className="grid grid-cols-3 gap-6 mt-12">
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-black mb-2" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                    <div className="text-3xl font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova SC', serif"  }}>
                       +4
                     </div>
-                    <div className="text-sm text-black/70" style={{ fontFamily: "'Satisfy', cursive" }}>
+                    <div className="text-lg font-semibold text-black/70 " style={{ fontFamily: "'Bona Nova SC', serif" }}>
                       DEDICATED YEARS OF TEACHING
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-black mb-2" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                    <div className="text-3xl font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova SC', serif" }}>
                       50+
                     </div>
-                    <div className="text-sm text-black/70" style={{ fontFamily: "'Satisfy', cursive" }}>
+                    <div className="text-lg font-semibold text-black/70" style={{ fontFamily: "'Bona Nova SC', serif" }}>
                       LIVES CHANGED WITH MY PROGRAM
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-black mb-2" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                    <div className="text-3xl font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova SC', serif" }}>
                       100%
                     </div>
-                    <div className="text-sm text-black/70" style={{ fontFamily: "'Satisfy', cursive" }}>
+                    <div className="text-lg font-semibold text-black/70" style={{ fontFamily: "'Bona Nova SC', serif" }}>
                       SATISFACTION RATE OF MY STUDENTS
                     </div>
                   </div>
@@ -239,61 +279,61 @@ export default function TeachersPage() {
  {/* Services Section */}
  <section className=" py-16 md:py-20">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-4xl md:text-5xl font-bold text-center mb-12" style={{ fontFamily: "'Cinzel', serif" }}>
+            <h2 className="text-4xl md:text-5xl font-bold text-center mb-12" style={{ fontFamily: "'Bona Nova SC', serif" }}>
               MY SERVICES
             </h2>
             <div className="grid md:grid-cols-3 gap-6 mb-12">
               <div className="bg-gray-100 rounded-lg p-8 border border-[#F5E6E0]/30">
                 
-                <h3 className="text-xl font-bold text-black mb-3" style={{ fontFamily: "'Dancing Script', cursive" }}>
-                  PIANO & KEYBOARD COACHING
+              <h3 className="text-xl font-bold text-black mb-3" style={{ fontFamily: "'Bona Nova SC', serif" }}>
+                  Piano and keyboard coaching
                 </h3>
-                <p className="text-black/70 text-sm" style={{ fontFamily: "'Satisfy', cursive" }}>
+                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova', serif" }}>
                   Structured ABRSM curriculum from Grades 1-8, covering Western classical, Bollywood, and contemporary styles
                 </p>
               </div>
-              <div className="bg-white rounded-lg p-8 border border-[#F5E6E0]/30">
+              <div className="bg-gray-100 rounded-lg p-8 border border-[#F5E6E0]/30">
                 
-                <h3 className="text-xl font-bold text-black mb-3" style={{ fontFamily: "'Dancing Script', cursive" }}>
-                  VOCAL TRAINING & DIRECTION
+              <h3 className="text-xl font-bold text-black mb-3" style={{ fontFamily: "'Bona Nova SC', serif" }}>
+                  Vocal training & direction
                 </h3>
-                <p className="text-black/70 text-sm" style={{ fontFamily: "'Satisfy', cursive" }}>
+                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova', serif" }}>
                   Indian classical vocal training with traditional ragas, tala patterns, and classical compositions
                 </p>
               </div>
-              <div className="bg-white rounded-lg p-8 border border-[#F5E6E0]/30">
+              <div className="bg-gray-100 rounded-lg p-8 border border-[#F5E6E0]/30">
                 
-                <h3 className="text-xl font-bold text-black mb-3" style={{ fontFamily: "'Dancing Script', cursive" }}>
-                  MUSIC THEORY & PERFORMANCE
+              <h3 className="text-xl font-bold text-black mb-3" style={{ fontFamily: "'Bona Nova SC', serif" }}>
+                  Music Theory & Performance
                 </h3>
-                <p className="text-black/70 text-sm" style={{ fontFamily: "'Satisfy', cursive" }}>
+                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova', serif" }}>
                   Comprehensive music theory, composition skills, and stage presence development
                 </p>
               </div>
-              <div className="bg-white rounded-lg p-8 border border-[#F5E6E0]/30">
+              <div className="bg-gray-100 rounded-lg p-8 border border-[#F5E6E0]/30">
                 
-                <h3 className="text-xl font-bold text-black mb-3" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                <h3 className="text-xl font-bold text-black mb-3" style={{ fontFamily: "'Bona Nova SC', serif" }}>
                   One on One Coaching
                 </h3>
-                <p className="text-black/70 text-sm" style={{ fontFamily: "'Satisfy', cursive" }}>
+                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova', serif" }}>
                 Experience personalized music education tailored to your unique learning style and goals.
                  </p>
               </div>
-              <div className="bg-white rounded-lg p-8 border border-[#F5E6E0]/30">
+              <div className="bg-gray-100 rounded-lg p-8 border border-[#F5E6E0]/30">
                 
-                <h3 className="text-xl font-bold text-black mb-3" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                <h3 className="text-xl font-bold text-black mb-3" style={{ fontFamily: "'Bona Nova SC', serif" }}>
                   Exam Preparation & Guidance.
                 </h3>
-                <p className="text-black/70 text-sm" style={{ fontFamily: "'Satisfy', cursive" }}>
+                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova', serif" }}>
                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Tempore laudantium accusamus voluptas, molestias qui officiis voluptate cumque asperiores dignissimos animi.
                  </p>
               </div>
-              <div className="bg-white rounded-lg p-8 border border-[#F5E6E0]/30">
+              <div className="bg-gray-100 rounded-lg p-8 border border-[#F5E6E0]/30">
                 
-                <h3 className="text-xl font-bold text-black mb-3" style={{ fontFamily: "'Dancing Script', cursive" }}>
+                <h3 className="text-xl font-bold text-black mb-3" style={{ fontFamily: "'Bona Nova SC', serif" }}>
                   Live Recital & Workshops.
                 </h3>
-                <p className="text-black/70 text-sm" style={{ fontFamily: "'Satisfy', cursive" }}>
+                <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova', serif" }}>
                 Lorem, ipsum dolor sit amet consectetur adipisicing elit. Aperiam, commodi! Possimus officia beatae ipsam, voluptas obcaecati totam incidunt.
                  </p>
               </div>
@@ -307,7 +347,7 @@ export default function TeachersPage() {
                     nameInputRef.current?.focus()
                   }, 100)
                 }}
-                className="px-8 py-4 bg-white text-black hover:bg-black hover:text-white font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl border-2 border-black"
+                className="px-8 py-4 bg-white text-black hover:bg-black hover:text-white font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl border-2 border-black uppercase"
                 style={{ fontFamily: "'Cinzel', serif" }}
               >
                 Get In Touch
@@ -315,49 +355,6 @@ export default function TeachersPage() {
             </div>
           </div>
         </section>
-
-
-        {/* Inspirational Quote & Philosophy Section */}
-        <section className="bg-white py-16 md:py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div>
-                <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-8 leading-tight" style={{ fontFamily: "'Dancing Script', cursive" }}>
-                  You are NOT TOO MUCH YOU'RE MORE THAN ENOUGH
-                </h2>
-                <p className="text-lg text-black/80 mb-6 leading-relaxed" style={{ fontFamily: "'Bitter', serif" }}>
-                  At MusiNest, we believe every student has unique musical potential waiting to be discovered. My teaching approach combines rigorous ABRSM training with creative exploration, helping you build strong foundations while expressing your authentic voice.
-                </p>
-                <p className="text-lg text-black/80 mb-8 leading-relaxed" style={{ fontFamily: "'Bitter', serif" }}>
-                  Whether you're a curious beginner or an aspiring performer, I create a warm, encouraging space where mistakes are part of the journey, not something to fear. Together, we'll make music learning personal, joyful, and confidence-building.
-                </p>
-                <button
-                  onClick={() => {
-                    setShowConsultationForm(true)
-                    setTimeout(() => {
-                      nameInputRef.current?.focus()
-                    }, 100)
-                  }}
-                  className="px-8 py-4 bg-black text-white hover:bg-black/90 font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl"
-                  style={{ fontFamily: "'Dancing Script', cursive" }}
-                >
-                  GET IN TOUCH
-                </button>
-              </div>
-              <div>
-                <img
-                  src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&q=80"
-                  alt="Music education"
-                  className="w-full h-[500px] object-cover rounded-lg"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-
-       
-
-      
 
         {/* One-on-One Coaching Section
         <section className="bg-black py-16 md:py-20">
@@ -410,7 +407,7 @@ export default function TeachersPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-[#F5E6E0]/30">
             <div className="sticky top-0 bg-white border-b border-black/10 p-6 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-black" style={{ fontFamily: "'Dancing Script', cursive" }}>Book a Consultation</h2>
+              <h2 className="text-2xl font-bold text-black" style={{ fontFamily: "'Bona Nova SC', serif" }}>Book a Consultation</h2>
               <button
                 onClick={() => {
                   setShowConsultationForm(false)
@@ -433,7 +430,7 @@ export default function TeachersPage() {
             
             <form onSubmit={handleSubmit} className="p-6 space-y-4" noValidate>
               <div>
-                <label htmlFor="consult-name" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Satisfy', cursive" }}>
+                <label htmlFor="consult-name" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova', serif" }}>
                   Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -452,7 +449,7 @@ export default function TeachersPage() {
                       ? 'border-[#F5E6E0] bg-[#F5E6E0]/5 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
                       : 'border-black/20 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
                   }`}
-                  style={{ fontFamily: "'Bitter', serif" }}
+                  style={{ fontFamily: "'Bona Nova', serif" }}
                   required
                 />
                 {errors.name && touched.name && (
@@ -463,7 +460,7 @@ export default function TeachersPage() {
               </div>
 
               <div>
-                <label htmlFor="consult-email" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Satisfy', cursive" }}>
+                <label htmlFor="consult-email" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova', serif" }}>
                   Email <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -481,7 +478,7 @@ export default function TeachersPage() {
                       ? 'border-[#F5E6E0] bg-[#F5E6E0]/5 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
                       : 'border-black/20 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
                   }`}
-                  style={{ fontFamily: "'Bitter', serif" }}
+                  style={{ fontFamily: "'Bona Nova', serif" }}
                   required
                 />
                 {errors.email && touched.email && (
@@ -492,7 +489,7 @@ export default function TeachersPage() {
               </div>
 
               <div>
-                <label htmlFor="consult-phone" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Satisfy', cursive" }}>
+                <label htmlFor="consult-phone" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova', serif" }}>
                   Phone <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -511,7 +508,7 @@ export default function TeachersPage() {
                       ? 'border-[#F5E6E0] bg-[#F5E6E0]/5 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
                       : 'border-black/20 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
                   }`}
-                  style={{ fontFamily: "'Bitter', serif" }}
+                  style={{ fontFamily: "'Bona Nova', serif" }}
                   required
                 />
                 {errors.phone && touched.phone && (
@@ -523,7 +520,7 @@ export default function TeachersPage() {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="consult-date" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Satisfy', cursive" }}>
+                  <label htmlFor="consult-date" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova', serif" }}>
                     Preferred Date <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -540,12 +537,12 @@ export default function TeachersPage() {
                         ? 'border-[#F5E6E0] bg-[#F5E6E0]/5 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
                         : 'border-black/20 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
                     }`}
-                    style={{ fontFamily: "'Bitter', serif" }}
+                    style={{ fontFamily: "'Bona Nova', serif" }}
                     required
                   />
                 </div>
                 <div>
-                  <label htmlFor="consult-time" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Satisfy', cursive" }}>
+                  <label htmlFor="consult-time" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova', serif" }}>
                     Preferred Time <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -560,7 +557,7 @@ export default function TeachersPage() {
                         ? 'border-[#F5E6E0] bg-[#F5E6E0]/5 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
                         : 'border-black/20 focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0]'
                     }`}
-                    style={{ fontFamily: "'Bitter', serif" }}
+                    style={{ fontFamily: "'Bona Nova', serif" }}
                     required
                   >
                     <option value="">Select time</option>
@@ -578,7 +575,7 @@ export default function TeachersPage() {
               </div>
 
               <div>
-                <label htmlFor="consult-message" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Satisfy', cursive" }}>
+                <label htmlFor="consult-message" className="block text-sm font-bold text-black mb-2" style={{ fontFamily: "'Bona Nova', serif" }}>
                   Message <span className="text-black/60 text-xs font-normal">(Optional)</span>
                 </label>
                 <textarea
@@ -589,7 +586,7 @@ export default function TeachersPage() {
                   placeholder="Any additional information or questions..."
                   rows="4"
                   className="w-full border border-black/20 rounded-lg p-3 transition-all duration-200 bg-white font-medium focus:ring-2 focus:ring-[#F5E6E0] focus:border-[#F5E6E0] resize-none"
-                  style={{ fontFamily: "'Bitter', serif" }}
+                  style={{ fontFamily: "'Bona Nova', serif" }}
                 />
               </div>
 
@@ -602,7 +599,7 @@ export default function TeachersPage() {
                       ? 'bg-black text-white cursor-not-allowed'
                       : 'bg-[#F5E6E0] text-black hover:bg-[#E8D5CC] hover:shadow-xl active:scale-95'
                   }`}
-                  style={{ fontFamily: "'Dancing Script', cursive" }}
+                  style={{ fontFamily: "'Bona Nova', serif" }}
                 >
                   {submitting ? 'Submitting...' : 'Submit Request'}
                 </button>
@@ -622,7 +619,7 @@ export default function TeachersPage() {
                     setTouched({})
                   }}
                   className="px-6 py-3 rounded-lg font-bold bg-black/10 text-black hover:bg-black/20 transition-all duration-300"
-                  style={{ fontFamily: "'Dancing Script', cursive" }}
+                  style={{ fontFamily: "'Bona Nova', serif" }}
                 >
                   Cancel
                 </button>

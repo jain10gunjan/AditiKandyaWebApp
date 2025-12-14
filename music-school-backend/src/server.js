@@ -2116,6 +2116,22 @@ app.delete('/api/admin/schedules/:id', requireAdmin, async (req, res) => {
   res.json({ ok: true })
 })
 
+// Admin: Delete ALL schedules (use with caution!)
+app.delete('/api/admin/schedules', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  try {
+    const result = await Schedule.deleteMany({})
+    res.json({ 
+      ok: true, 
+      deletedCount: result.deletedCount,
+      message: `Successfully deleted ${result.deletedCount} schedule(s) from the database`
+    })
+  } catch (error) {
+    console.error('Error deleting all schedules:', error)
+    res.status(500).json({ error: error.message || 'Failed to delete schedules' })
+  }
+})
+
 // Admin: Get all schedules for a course
 app.get('/api/admin/schedules/:courseId', requireAdmin, async (req, res) => {
   if (!dbConnected) return res.json([])

@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import StudentSidebar from '../components/StudentSidebar.jsx'
 import StudentNavbar from '../components/StudentNavbar.jsx'
 import StudentFooter from '../components/StudentFooter.jsx'
+import Navbar from '../components/Navbar.jsx'
 
 function DashboardContent({ activeTab, items, pending, loading, onMenuClick, schedules, attendanceSummary, courseProgress }) {
   const getGreeting = () => {
@@ -1012,7 +1013,7 @@ export default function StudentDashboard() {
   // If courseId is present, show course learning view
   if (courseId) {
     return (
-      <div className="h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-hidden">
+      <div className="h-screen overflow-hidden">
         <SignedIn>
           <div className="flex h-screen">
             <StudentSidebar 
@@ -1171,7 +1172,7 @@ export default function StudentDashboard() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen">
       <StudentNavbar />
       
       <SignedOut>
@@ -1190,14 +1191,14 @@ export default function StudentDashboard() {
       </SignedOut>
       
       <SignedIn>
-        <div className="flex min-h-screen">
+        <div className="relative flex min-h-screen pt-20">
           <StudentSidebar 
             activeTab={activeTab} 
             onTabChange={setActiveTab} 
             isOpen={sidebarOpen}
             onClose={() => setSidebarOpen(false)}
           />
-          <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
+          <main className="flex-1 overflow-y-auto pb-16 md:pb-0 md:ml-64">
             <DashboardContent 
               activeTab={activeTab} 
               items={items} 
@@ -1208,7 +1209,7 @@ export default function StudentDashboard() {
               courseProgress={courseProgress}
               onMenuClick={() => setSidebarOpen(true)}
             />
-          </div>
+          </main>
         </div>
       </SignedIn>
       

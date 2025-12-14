@@ -18,6 +18,11 @@ export default function AdminStudentSchedules() {
   const [showEventForm, setShowEventForm] = useState(false)
   const [showDuplicateDates, setShowDuplicateDates] = useState(false)
   const [selectedDuplicateDates, setSelectedDuplicateDates] = useState([])
+  const [duplicateMode, setDuplicateMode] = useState('dateRange') // 'dateRange' or 'daysOfWeek'
+  const [selectedDaysOfWeek, setSelectedDaysOfWeek] = useState([])
+  const [duplicateStartDate, setDuplicateStartDate] = useState('')
+  const [duplicateEndDate, setDuplicateEndDate] = useState('')
+  const [duplicateWeeks, setDuplicateWeeks] = useState(4) // Number of weeks to generate
   const [newEvent, setNewEvent] = useState({
     title: '',
     description: '',
@@ -118,6 +123,44 @@ export default function AdminStudentSchedules() {
     return dates
   }
 
+  const generateDatesFromDaysOfWeek = (startDate, daysOfWeek, weeks) => {
+    if (!startDate || daysOfWeek.length === 0) return []
+    
+    const dates = []
+    const start = new Date(startDate)
+    const end = new Date(start)
+    end.setDate(end.getDate() + (weeks * 7))
+    
+    // Day of week mapping: 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const dayMapping = {
+      'sunday': 0,
+      'monday': 1,
+      'tuesday': 2,
+      'wednesday': 3,
+      'thursday': 4,
+      'friday': 5,
+      'saturday': 6
+    }
+    
+    const targetDays = daysOfWeek.map(day => dayMapping[day.toLowerCase()])
+    
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      if (targetDays.includes(d.getDay())) {
+        dates.push(new Date(d).toISOString().split('T')[0])
+      }
+    }
+    
+    return dates
+  }
+
+  const handleDayOfWeekToggle = (day) => {
+    if (selectedDaysOfWeek.includes(day)) {
+      setSelectedDaysOfWeek(selectedDaysOfWeek.filter(d => d !== day))
+    } else {
+      setSelectedDaysOfWeek([...selectedDaysOfWeek, day])
+    }
+  }
+
   const validateMeetingLink = (link, type) => {
     if (!link) return true
     if (type === 'meet') {
@@ -156,6 +199,16 @@ export default function AdminStudentSchedules() {
       setSubmitting(true)
       const token = await getToken()
       
+      // Generate duplicate dates based on mode
+      let duplicateDatesToUse = []
+      if (showDuplicateDates) {
+        if (duplicateMode === 'dateRange' && selectedDuplicateDates.length > 0) {
+          duplicateDatesToUse = selectedDuplicateDates
+        } else if (duplicateMode === 'daysOfWeek' && selectedDaysOfWeek.length > 0 && duplicateStartDate) {
+          duplicateDatesToUse = generateDatesFromDaysOfWeek(duplicateStartDate, selectedDaysOfWeek, duplicateWeeks)
+        }
+      }
+
       const payload = {
         title: newEvent.title,
         description: newEvent.description || '',
@@ -165,9 +218,7 @@ export default function AdminStudentSchedules() {
         studentId: selectedStudent,
         type: newEvent.type,
         meetingLink: newEvent.meetingLink || '',
-        duplicateDates: showDuplicateDates && selectedDuplicateDates.length > 0 
-          ? selectedDuplicateDates 
-          : undefined
+        duplicateDates: duplicateDatesToUse.length > 0 ? duplicateDatesToUse : undefined
       }
 
       const result = await apiPost('/admin/schedules', payload, token)
@@ -178,6 +229,11 @@ export default function AdminStudentSchedules() {
       setShowEventForm(false)
       setShowDuplicateDates(false)
       setSelectedDuplicateDates([])
+      setSelectedDaysOfWeek([])
+      setDuplicateMode('dateRange')
+      setDuplicateStartDate('')
+      setDuplicateEndDate('')
+      setDuplicateWeeks(4)
       setNewEvent({
         title: '',
         description: '',
@@ -384,6 +440,11 @@ export default function AdminStudentSchedules() {
                     setShowEventForm(false)
                     setShowDuplicateDates(false)
                     setSelectedDuplicateDates([])
+                    setSelectedDaysOfWeek([])
+                    setDuplicateMode('dateRange')
+                    setDuplicateStartDate('')
+                    setDuplicateEndDate('')
+                    setDuplicateWeeks(4)
                   }}
                   className="text-slate-400 hover:text-slate-600 transition-colors"
                   title="Close"
@@ -503,7 +564,7 @@ export default function AdminStudentSchedules() {
                         Duplicate Event to Multiple Days
                       </label>
                       <p className="text-xs text-slate-500">
-                        Create the same event on multiple selected dates
+                        Create the same event on multiple selected dates or days of the week
                       </p>
                     </div>
                     <button
@@ -512,6 +573,9 @@ export default function AdminStudentSchedules() {
                         setShowDuplicateDates(!showDuplicateDates)
                         if (!showDuplicateDates) {
                           setSelectedDuplicateDates([])
+                          setSelectedDaysOfWeek([])
+                          setDuplicateStartDate(newEvent.date)
+                          setDuplicateEndDate('')
                         }
                       }}
                       className={`px-4 py-2 rounded-lg font-medium transition-all ${
@@ -526,56 +590,166 @@ export default function AdminStudentSchedules() {
 
                   {showDuplicateDates && (
                     <div className="bg-slate-50 rounded-lg p-4 space-y-4 animate-fade-in">
-                      <div className="flex items-center gap-4">
-                        <div className="flex-1">
-                          <label className="block text-xs font-medium text-slate-700 mb-2">Start Date</label>
-                          <input
-                            type="date"
-                            value={selectedDuplicateDates[0] || newEvent.date}
-                            onChange={(e) => {
-                              const startDate = e.target.value
-                              const endDate = selectedDuplicateDates[selectedDuplicateDates.length - 1] || startDate
-                              if (startDate <= endDate) {
-                                setSelectedDuplicateDates(generateDateRange(startDate, endDate))
+                      {/* Mode Selection */}
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-2">Duplicate Mode</label>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDuplicateMode('dateRange')
+                              setSelectedDaysOfWeek([])
+                            }}
+                            className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                              duplicateMode === 'dateRange'
+                                ? 'bg-sky-600 text-white'
+                                : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
+                            }`}
+                          >
+                            Date Range
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDuplicateMode('daysOfWeek')
+                              setSelectedDuplicateDates([])
+                              if (!duplicateStartDate) {
+                                setDuplicateStartDate(newEvent.date)
                               }
                             }}
-                            min={newEvent.date}
-                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm"
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <label className="block text-xs font-medium text-slate-700 mb-2">End Date</label>
-                          <input
-                            type="date"
-                            value={selectedDuplicateDates[selectedDuplicateDates.length - 1] || newEvent.date}
-                            onChange={(e) => {
-                              const endDate = e.target.value
-                              const startDate = selectedDuplicateDates[0] || newEvent.date
-                              if (startDate <= endDate) {
-                                setSelectedDuplicateDates(generateDateRange(startDate, endDate))
-                              }
-                            }}
-                            min={selectedDuplicateDates[0] || newEvent.date}
-                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm"
-                          />
+                            className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                              duplicateMode === 'daysOfWeek'
+                                ? 'bg-sky-600 text-white'
+                                : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
+                            }`}
+                          >
+                            Days of Week
+                          </button>
                         </div>
                       </div>
-                      
-                      {selectedDuplicateDates.length > 0 && (
-                        <div className="bg-white rounded-lg p-3 border border-slate-200">
-                          <p className="text-xs font-medium text-slate-700 mb-2">
-                            Selected Dates ({selectedDuplicateDates.length}):
-                          </p>
-                          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                            {selectedDuplicateDates.map((date) => (
-                              <span
-                                key={date}
-                                className="px-2 py-1 bg-sky-100 text-sky-700 rounded text-xs font-medium"
-                              >
-                                {formatDate(date)}
-                              </span>
-                            ))}
+
+                      {/* Date Range Mode */}
+                      {duplicateMode === 'dateRange' && (
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-4">
+                            <div className="flex-1">
+                              <label className="block text-xs font-medium text-slate-700 mb-2">Start Date</label>
+                              <input
+                                type="date"
+                                value={selectedDuplicateDates[0] || newEvent.date}
+                                onChange={(e) => {
+                                  const startDate = e.target.value
+                                  const endDate = selectedDuplicateDates[selectedDuplicateDates.length - 1] || startDate
+                                  if (startDate <= endDate) {
+                                    setSelectedDuplicateDates(generateDateRange(startDate, endDate))
+                                  }
+                                }}
+                                min={newEvent.date}
+                                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <label className="block text-xs font-medium text-slate-700 mb-2">End Date</label>
+                              <input
+                                type="date"
+                                value={selectedDuplicateDates[selectedDuplicateDates.length - 1] || newEvent.date}
+                                onChange={(e) => {
+                                  const endDate = e.target.value
+                                  const startDate = selectedDuplicateDates[0] || newEvent.date
+                                  if (startDate <= endDate) {
+                                    setSelectedDuplicateDates(generateDateRange(startDate, endDate))
+                                  }
+                                }}
+                                min={selectedDuplicateDates[0] || newEvent.date}
+                                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm"
+                              />
+                            </div>
                           </div>
+                          
+                          {selectedDuplicateDates.length > 0 && (
+                            <div className="bg-white rounded-lg p-3 border border-slate-200">
+                              <p className="text-xs font-medium text-slate-700 mb-2">
+                                Selected Dates ({selectedDuplicateDates.length}):
+                              </p>
+                              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                                {selectedDuplicateDates.map((date) => (
+                                  <span
+                                    key={date}
+                                    className="px-2 py-1 bg-sky-100 text-sky-700 rounded text-xs font-medium"
+                                  >
+                                    {formatDate(date)}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Days of Week Mode */}
+                      {duplicateMode === 'daysOfWeek' && (
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-xs font-medium text-slate-700 mb-2">Start Date</label>
+                              <input
+                                type="date"
+                                value={duplicateStartDate || newEvent.date}
+                                onChange={(e) => setDuplicateStartDate(e.target.value)}
+                                min={newEvent.date}
+                                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-slate-700 mb-2">Number of Weeks</label>
+                              <input
+                                type="number"
+                                value={duplicateWeeks}
+                                onChange={(e) => setDuplicateWeeks(Math.max(1, parseInt(e.target.value) || 1))}
+                                min="1"
+                                max="52"
+                                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-slate-700 mb-2">Select Days of Week</label>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                              {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+                                <button
+                                  key={day}
+                                  type="button"
+                                  onClick={() => handleDayOfWeekToggle(day)}
+                                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                    selectedDaysOfWeek.includes(day)
+                                      ? 'bg-sky-600 text-white'
+                                      : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
+                                  }`}
+                                >
+                                  {day.slice(0, 3)}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {selectedDaysOfWeek.length > 0 && duplicateStartDate && (
+                            <div className="bg-white rounded-lg p-3 border border-slate-200">
+                              <p className="text-xs font-medium text-slate-700 mb-2">
+                                Generated Dates ({generateDatesFromDaysOfWeek(duplicateStartDate, selectedDaysOfWeek, duplicateWeeks).length}):
+                              </p>
+                              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                                {generateDatesFromDaysOfWeek(duplicateStartDate, selectedDaysOfWeek, duplicateWeeks).map((date) => (
+                                  <span
+                                    key={date}
+                                    className="px-2 py-1 bg-sky-100 text-sky-700 rounded text-xs font-medium"
+                                  >
+                                    {formatDate(date)}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -596,7 +770,15 @@ export default function AdminStudentSchedules() {
                     ) : (
                       <>
                         <span>✓</span>
-                        <span>Create Schedule{showDuplicateDates && selectedDuplicateDates.length > 0 ? `s (${selectedDuplicateDates.length + 1})` : ''}</span>
+                        <span>Create Schedule{
+                          showDuplicateDates ? (
+                            duplicateMode === 'dateRange' && selectedDuplicateDates.length > 0 
+                              ? `s (${selectedDuplicateDates.length + 1})`
+                              : duplicateMode === 'daysOfWeek' && selectedDaysOfWeek.length > 0 && duplicateStartDate
+                                ? `s (${generateDatesFromDaysOfWeek(duplicateStartDate, selectedDaysOfWeek, duplicateWeeks).length + 1})`
+                                : ''
+                          ) : ''
+                        }</span>
                       </>
                     )}
                   </button>
@@ -606,6 +788,11 @@ export default function AdminStudentSchedules() {
                       setShowEventForm(false)
                       setShowDuplicateDates(false)
                       setSelectedDuplicateDates([])
+                      setSelectedDaysOfWeek([])
+                      setDuplicateMode('dateRange')
+                      setDuplicateStartDate('')
+                      setDuplicateEndDate('')
+                      setDuplicateWeeks(4)
                     }}
                     className="px-5 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium transition-colors"
                   >

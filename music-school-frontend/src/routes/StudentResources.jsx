@@ -927,7 +927,7 @@ export default function StudentResources() {
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-pink-50">
       <StudentNavbar />
       
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen pt-20">
         <StudentSidebar 
           activeTab={activeTab}
           onTabChange={setActiveTab}
@@ -935,7 +935,7 @@ export default function StudentResources() {
           onClose={() => setSidebarOpen(false)}
         />
         
-        <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
+        <div className="flex-1 overflow-y-auto pb-16 md:pb-0 md:ml-64">
           <SignedOut>
             <div className="p-6 text-center">
               <SignInButton>
