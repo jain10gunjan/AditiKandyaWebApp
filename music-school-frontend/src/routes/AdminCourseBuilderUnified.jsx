@@ -62,7 +62,22 @@ function CourseBasicInfoForm({ course, teachers, onSave, loading }) {
     teacherInstrument: course?.teacherInstrument || '',
     scales: course?.scales || '',
     arpeggios: course?.arpeggios || '',
-    performanceTips: course?.performanceTips || ''
+    performanceTips: course?.performanceTips || '',
+    badgeText: course?.badgeText || 'Best Seller',
+    badgeColor: course?.badgeColor || 'green',
+    pricingFeatures: course?.pricingFeatures || [
+      'Lifetime access',
+      'Mobile & desktop',
+      'Certificate of completion',
+      '30-day money-back guarantee'
+    ],
+    videoPlayerText: course?.videoPlayerText || 'Ready to Learn?',
+    videoPlayerSubtext: course?.videoPlayerSubtext || 'Click on any lesson below to start watching videos',
+    videoPlayerFeatures: course?.videoPlayerFeatures || [
+      'HD Quality Videos',
+      'Mobile & Desktop',
+      'Progress Tracking'
+    ]
   })
 
   useEffect(() => {
@@ -82,7 +97,22 @@ function CourseBasicInfoForm({ course, teachers, onSave, loading }) {
         teacherInstrument: course.teacherInstrument || '',
         scales: course.scales || '',
         arpeggios: course.arpeggios || '',
-        performanceTips: course.performanceTips || ''
+        performanceTips: course.performanceTips || '',
+        badgeText: course.badgeText || 'Best Seller',
+        badgeColor: course.badgeColor || 'green',
+        pricingFeatures: course.pricingFeatures || [
+          'Lifetime access',
+          'Mobile & desktop',
+          'Certificate of completion',
+          '30-day money-back guarantee'
+        ],
+        videoPlayerText: course.videoPlayerText || 'Ready to Learn?',
+        videoPlayerSubtext: course.videoPlayerSubtext || 'Click on any lesson below to start watching videos',
+        videoPlayerFeatures: course.videoPlayerFeatures || [
+          'HD Quality Videos',
+          'Mobile & Desktop',
+          'Progress Tracking'
+        ]
       })
     }
   }, [course])
@@ -352,6 +382,175 @@ function CourseBasicInfoForm({ course, teachers, onSave, loading }) {
                 placeholder="Share performance tips and techniques..."
                 className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
               />
+            </div>
+          </div>
+        </div>
+
+        {/* Display Settings */}
+        <div>
+          <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            <span>🎨</span>
+            <span>Display Settings</span>
+          </h3>
+          <div className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Badge Text
+                </label>
+                <input
+                  name="badgeText"
+                  value={formData.badgeText}
+                  onChange={handleChange}
+                  placeholder="Best Seller"
+                  className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
+                />
+                <p className="text-xs text-slate-500 mt-1">Badge shown on course detail page (e.g., "Best Seller", "New", "Popular")</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Badge Color
+                </label>
+                <select
+                  name="badgeColor"
+                  value={formData.badgeColor}
+                  onChange={handleChange}
+                  className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
+                >
+                  <option value="green">Green</option>
+                  <option value="blue">Blue</option>
+                  <option value="purple">Purple</option>
+                  <option value="orange">Orange</option>
+                  <option value="red">Red</option>
+                  <option value="pink">Pink</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Pricing Features */}
+        <div>
+          <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            <span>💰</span>
+            <span>Pricing Card Features</span>
+          </h3>
+          <div className="space-y-2">
+            <p className="text-sm text-slate-600 mb-3">Features shown in the pricing card on the course detail page</p>
+            {formData.pricingFeatures.map((feature, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={feature}
+                  onChange={(e) => {
+                    const newFeatures = [...formData.pricingFeatures]
+                    newFeatures[index] = e.target.value
+                    setFormData(prev => ({ ...prev, pricingFeatures: newFeatures }))
+                  }}
+                  placeholder="Feature text"
+                  className="flex-1 border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newFeatures = formData.pricingFeatures.filter((_, i) => i !== index)
+                    setFormData(prev => ({ ...prev, pricingFeatures: newFeatures }))
+                  }}
+                  className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => {
+                setFormData(prev => ({
+                  ...prev,
+                  pricingFeatures: [...prev.pricingFeatures, '']
+                }))
+              }}
+              className="px-4 py-2 bg-sky-100 text-sky-700 rounded-lg hover:bg-sky-200 transition-colors font-medium"
+            >
+              + Add Feature
+            </button>
+          </div>
+        </div>
+
+        {/* Video Player Settings */}
+        <div>
+          <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            <span>🎥</span>
+            <span>Video Player Placeholder</span>
+          </h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Main Text
+              </label>
+              <input
+                name="videoPlayerText"
+                value={formData.videoPlayerText}
+                onChange={handleChange}
+                placeholder="Ready to Learn?"
+                className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Subtext
+              </label>
+              <input
+                name="videoPlayerSubtext"
+                value={formData.videoPlayerSubtext}
+                onChange={handleChange}
+                placeholder="Click on any lesson below to start watching videos"
+                className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Features List
+              </label>
+              <div className="space-y-2">
+                {formData.videoPlayerFeatures.map((feature, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={feature}
+                      onChange={(e) => {
+                        const newFeatures = [...formData.videoPlayerFeatures]
+                        newFeatures[index] = e.target.value
+                        setFormData(prev => ({ ...prev, videoPlayerFeatures: newFeatures }))
+                      }}
+                      placeholder="Feature text"
+                      className="flex-1 border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newFeatures = formData.videoPlayerFeatures.filter((_, i) => i !== index)
+                        setFormData(prev => ({ ...prev, videoPlayerFeatures: newFeatures }))
+                      }}
+                      className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      videoPlayerFeatures: [...prev.videoPlayerFeatures, '']
+                    }))
+                  }}
+                  className="px-4 py-2 bg-sky-100 text-sky-700 rounded-lg hover:bg-sky-200 transition-colors font-medium"
+                >
+                  + Add Feature
+                </button>
+              </div>
             </div>
           </div>
         </div>

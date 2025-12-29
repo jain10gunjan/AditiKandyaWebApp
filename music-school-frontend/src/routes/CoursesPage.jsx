@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { apiGet, API_BASE_URL } from '../lib/api.js'
 import { useAuth } from '@clerk/clerk-react'
 import Navbar from '../components/Navbar.jsx'
@@ -225,6 +226,7 @@ function FilterButton({ active, onClick, children }) {
 }
 
 export default function CoursesPage() {
+  const navigate = useNavigate()
   const [courses, setCourses] = useState([])
   const [filteredCourses, setFilteredCourses] = useState([])
   const [activeFilter, setActiveFilter] = useState('all')
@@ -303,7 +305,6 @@ export default function CoursesPage() {
     { key: 'beginner', label: 'Beginner' },
     { key: 'intermediate', label: 'Intermediate' },
     { key: 'advanced', label: 'Advanced' },
-    { key: 'all levels', label: 'All Levels' }
   ]
 
   useEffect(() => {
@@ -384,10 +385,7 @@ Thoughtfully designed courses for beginners to advanced learners
                 <button
                   onClick={(e) => {
                     e.preventDefault()
-                    const element = document.getElementById('contact-form')
-                    if (element) {
-                      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
+                    navigate('/contact')
                   }}
                   className="px-8 py-4 bg-white rounded-none text-black hover:bg-black hover:text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 whitespace-nowrap cursor-pointer"
                   style={{ fontFamily: "'Bona Nova SC', serif" }}

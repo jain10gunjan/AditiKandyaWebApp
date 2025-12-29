@@ -774,7 +774,8 @@ app.put('/api/courses/:id', requireAdmin, async (req, res) => {
     title, description, price, image, level, 
     studentCount, rating, isFree,
     teacherId, teacherName, teacherDescription, teacherAvatar, teacherInstrument,
-    scales, arpeggios, performanceTips
+    scales, arpeggios, performanceTips,
+    badgeText, badgeColor, pricingFeatures, videoPlayerText, videoPlayerSubtext, videoPlayerFeatures
   } = req.body || {}
   const updateData = {}
   if (title !== undefined) updateData.title = title
@@ -813,6 +814,14 @@ app.put('/api/courses/:id', requireAdmin, async (req, res) => {
   if (scales !== undefined) updateData.scales = scales
   if (arpeggios !== undefined) updateData.arpeggios = arpeggios
   if (performanceTips !== undefined) updateData.performanceTips = performanceTips
+  
+  // Display settings
+  if (badgeText !== undefined) updateData.badgeText = badgeText
+  if (badgeColor !== undefined) updateData.badgeColor = badgeColor
+  if (pricingFeatures !== undefined) updateData.pricingFeatures = pricingFeatures
+  if (videoPlayerText !== undefined) updateData.videoPlayerText = videoPlayerText
+  if (videoPlayerSubtext !== undefined) updateData.videoPlayerSubtext = videoPlayerSubtext
+  if (videoPlayerFeatures !== undefined) updateData.videoPlayerFeatures = videoPlayerFeatures
   
   const doc = await Course.findByIdAndUpdate(
     req.params.id,
@@ -1944,23 +1953,164 @@ app.post('/api/admin/schedules', requireAdmin, async (req, res) => {
   
   // Support both dateTime format and separate date/time format
   let finalStartTime, finalEndTime
-  if (dateTime) {
+  if (startTime && endTime) {
+    // If startTime and endTime are provided, use them directly
+    finalStartTime = new Date(startTime)
+    finalEndTime = new Date(endTime)
+    // Validate dates
+    if (isNaN(finalStartTime.getTime()) || isNaN(finalEndTime.getTime())) {
+      return res.status(400).json({ error: 'Invalid startTime or endTime format' })
+    }
+    if (finalEndTime <= finalStartTime) {
+      return res.status(400).json({ error: 'endTime must be after startTime' })
+    }
+  } else if (dateTime) {
     finalStartTime = new Date(dateTime)
     finalEndTime = new Date(finalStartTime.getTime() + 60 * 60 * 1000) // Default 1 hour duration
   } else if (date && time) {
-    finalStartTime = new Date(`${date}T${time}`)
-    finalEndTime = new Date(finalStartTime.getTime() + 60 * 60 * 1000) // Default 1 hour duration
-  } else if (startTime && endTime) {
-    finalStartTime = new Date(startTime)
-    finalEndTime = new Date(endTime)
+    // Construct date with proper timezone handling
+    const dateTimeString = `${date}T${time}:00`
+    finalStartTime = new Date(dateTimeString)
+    // If no endTime provided, default to 1 hour
+    finalEndTime = new Date(finalStartTime.getTime() + 60 * 60 * 1000)
   } else {
-    return res.status(400).json({ error: 'Missing required fields: need dateTime or (date and time) or (startTime and endTime)' })
+    return res.status(400).json({ error: 'Missing required fields: need (startTime and endTime) or dateTime or (date and time)' })
   }
   
   if (!title) return res.status(400).json({ error: 'Title is required' })
   
-  // If duplicateDates is provided, create multiple events
+  // Check for time slot conflicts with existing schedules
+  // Since it's a single teacher, check all scheduled events regardless of student/course
+  const checkConflict = async (startTime, endTime, excludeScheduleId = null) => {
+    // Find all scheduled events that overlap with the given time slot
+    // Two intervals overlap if: start1 < end2 AND start2 < end1
+    const conflictingSchedules = await Schedule.find({
+      status: 'scheduled',
+      startTime: { $lt: endTime },
+      endTime: { $gt: startTime }
+    }).lean()
+    
+    // Filter out the schedule being edited (if any)
+    const conflicts = excludeScheduleId 
+      ? conflictingSchedules.filter(s => String(s._id) !== String(excludeScheduleId))
+      : conflictingSchedules
+    
+    if (conflicts.length > 0) {
+      // Get student information for conflicts
+      const conflictDetails = await Promise.all(conflicts.map(async (conflict) => {
+        let studentInfo = 'Unknown Student'
+        let courseInfo = 'Unknown Course'
+        
+        if (conflict.studentId) {
+          // Try to get student info from enrollments
+          const enrollment = await Enrollment.findOne({ userId: conflict.studentId }).lean()
+          if (enrollment) {
+            studentInfo = enrollment.name || enrollment.email || 'Unknown Student'
+          }
+        }
+        
+        if (conflict.courseId) {
+          const course = await Course.findById(conflict.courseId).lean()
+          if (course) {
+            courseInfo = course.title
+          } else if (typeof conflict.courseId === 'object' && conflict.courseId.title) {
+            courseInfo = conflict.courseId.title
+          }
+        }
+        
+        return {
+          title: conflict.title,
+          student: studentInfo,
+          course: courseInfo,
+          startTime: conflict.startTime,
+          endTime: conflict.endTime,
+          studentId: conflict.studentId
+        }
+      }))
+      
+      return conflictDetails
+    }
+    
+    return null
+  }
+  
+  // If duplicateDates is provided, check all conflicts first before creating any schedules
   if (duplicateDates && Array.isArray(duplicateDates) && duplicateDates.length > 0) {
+    // Check conflict for the main schedule
+    const mainConflicts = await checkConflict(finalStartTime, finalEndTime)
+    if (mainConflicts && mainConflicts.length > 0) {
+      const conflictMessages = mainConflicts.map(c => {
+        const startStr = new Date(c.startTime).toLocaleString('en-US', { 
+          month: 'short', 
+          day: 'numeric', 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        })
+        const endStr = new Date(c.endTime).toLocaleString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        })
+        return `"${c.title}" for ${c.student} (${c.course}) from ${startStr} to ${endStr}`
+      }).join(', ')
+      
+      return res.status(409).json({ 
+        error: 'Time slot conflict detected',
+        conflicts: mainConflicts,
+        message: `This time slot is already booked: ${conflictMessages}`
+      })
+    }
+    
+    // Check conflicts for all duplicate dates before creating any schedules
+    const allConflicts = []
+    for (const dupDate of duplicateDates) {
+      // Skip if duplicate date is the same as original date
+      const dupDateStr = new Date(dupDate).toISOString().split('T')[0]
+      const originalDateStr = finalStartTime.toISOString().split('T')[0]
+      if (dupDateStr === originalDateStr) continue
+      
+      // Preserve the time and duration from the original event
+      const dupStartTime = new Date(dupDate)
+      dupStartTime.setHours(finalStartTime.getHours(), finalStartTime.getMinutes(), finalStartTime.getSeconds(), 0)
+      // Calculate duration and apply to duplicate date
+      const duration = finalEndTime.getTime() - finalStartTime.getTime()
+      const dupEndTime = new Date(dupStartTime.getTime() + duration)
+      
+      // Check for conflicts on duplicate dates
+      const dupConflicts = await checkConflict(dupStartTime, dupEndTime)
+      if (dupConflicts && dupConflicts.length > 0) {
+        allConflicts.push({
+          date: dupDate,
+          conflicts: dupConflicts
+        })
+      }
+    }
+    
+    // If any conflicts found, return error before creating any schedules
+    if (allConflicts.length > 0) {
+      const conflictMessages = allConflicts.map(({ date, conflicts }) => {
+        const dateStr = new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        const conflictDetails = conflicts.map(c => {
+          const startStr = new Date(c.startTime).toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          })
+          const endStr = new Date(c.endTime).toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          })
+          return `"${c.title}" for ${c.student} (${c.course}) from ${startStr} to ${endStr}`
+        }).join(', ')
+        return `${dateStr}: ${conflictDetails}`
+      }).join('; ')
+      
+      return res.status(409).json({ 
+        error: 'Time slot conflict detected on duplicate dates',
+        conflicts: allConflicts.flatMap(ac => ac.conflicts),
+        message: `Time slot conflicts detected: ${conflictMessages}`
+      })
+    }
+    
+    // All checks passed, now create all schedules
     const schedules = []
     // Create event on original date first
       const scheduleData = {
@@ -2002,9 +2152,12 @@ app.post('/api/admin/schedules', requireAdmin, async (req, res) => {
       const originalDateStr = finalStartTime.toISOString().split('T')[0]
       if (dupDateStr === originalDateStr) continue
       
+      // Preserve the time and duration from the original event
       const dupStartTime = new Date(dupDate)
-      dupStartTime.setHours(finalStartTime.getHours(), finalStartTime.getMinutes(), 0, 0)
-      const dupEndTime = new Date(dupStartTime.getTime() + (finalEndTime.getTime() - finalStartTime.getTime()))
+      dupStartTime.setHours(finalStartTime.getHours(), finalStartTime.getMinutes(), finalStartTime.getSeconds(), 0)
+      // Calculate duration and apply to duplicate date
+      const duration = finalEndTime.getTime() - finalStartTime.getTime()
+      const dupEndTime = new Date(dupStartTime.getTime() + duration)
       
       const dupScheduleData = {
         courseId: courseId || '',
@@ -2032,7 +2185,30 @@ app.post('/api/admin/schedules', requireAdmin, async (req, res) => {
     return res.status(201).json(schedules)
   }
   
-  // Single event creation
+  // Single event creation - check for conflicts
+  const conflicts = await checkConflict(finalStartTime, finalEndTime)
+  if (conflicts && conflicts.length > 0) {
+    const conflictMessages = conflicts.map(c => {
+      const startStr = new Date(c.startTime).toLocaleString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      })
+      const endStr = new Date(c.endTime).toLocaleString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      })
+      return `"${c.title}" for ${c.student} (${c.course}) from ${startStr} to ${endStr}`
+    }).join(', ')
+    
+    return res.status(409).json({ 
+      error: 'Time slot conflict detected',
+      conflicts: conflicts,
+      message: `This time slot is already booked: ${conflictMessages}`
+    })
+  }
+  
   const scheduleData = {
     courseId: courseId || '',
     title,
@@ -2156,10 +2332,14 @@ app.get('/api/admin/student-schedules', requireAdmin, async (req, res) => {
     query.courseId = courseId
   }
   if (date) {
-    const startOfDay = new Date(date)
-    startOfDay.setHours(0, 0, 0, 0)
-    const endOfDay = new Date(date)
-    endOfDay.setHours(23, 59, 59, 999)
+    // Handle date filtering with proper timezone handling
+    // Create date range in UTC to avoid timezone issues
+    const dateObj = new Date(date)
+    // Get the date string in YYYY-MM-DD format
+    const dateStr = date.includes('T') ? date.split('T')[0] : date
+    // Create start and end of day in UTC
+    const startOfDay = new Date(`${dateStr}T00:00:00.000Z`)
+    const endOfDay = new Date(`${dateStr}T23:59:59.999Z`)
     query.startTime = { $gte: startOfDay, $lte: endOfDay }
   }
   

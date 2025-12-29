@@ -16,7 +16,20 @@ export async function apiPost(path, body, token) {
 		headers,
 		body: JSON.stringify(body || {}),
 	})
-	if (!res.ok) throw new Error(`POST ${path} failed: ${res.status}`)
+	if (!res.ok) {
+		let errorMessage = `POST ${path} failed: ${res.status}`
+		let errorData = null
+		try {
+			errorData = await res.json()
+			errorMessage = errorData.error || errorData.message || errorMessage
+		} catch (e) {
+			// If response is not JSON, use status text
+			errorMessage = res.statusText || errorMessage
+		}
+		const error = new Error(errorMessage)
+		error.response = { status: res.status, data: errorData }
+		throw error
+	}
 	return res.json()
 }
 

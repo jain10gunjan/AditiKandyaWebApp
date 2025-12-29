@@ -1,13 +1,14 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { apiGet, apiPost, apiPut, API_BASE_URL } from '../lib/api.js'
-import { SignedIn, SignedOut, SignInButton, useAuth } from '@clerk/clerk-react'
+import { SignedIn, SignedOut, SignInButton, useAuth, useUser } from '@clerk/clerk-react'
 import toast from 'react-hot-toast'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
 import { getUserCountry, getRegionFromCountry, formatPrice } from '../lib/pricingUtils.js'
 
 function CourseLeadForm({ course, onSuccess }) {
+  const { user, isLoaded } = useUser()
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
   const [touched, setTouched] = useState({})
@@ -18,6 +19,28 @@ function CourseLeadForm({ course, onSuccess }) {
     country: ''
   })
   const nameInputRef = useRef(null)
+
+  // Auto-fill form with Clerk user data when user is loaded
+  useEffect(() => {
+    if (isLoaded && user) {
+      const userName = user.firstName && user.lastName 
+        ? `${user.firstName} ${user.lastName}`.trim()
+        : user.firstName || user.lastName || user.fullName || ''
+      const userEmail = user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress || ''
+      
+      // Auto-fill only if fields are currently empty
+      setFormData(prev => {
+        const newData = { ...prev }
+        if (!prev.fullName && userName) {
+          newData.fullName = userName
+        }
+        if (!prev.email && userEmail) {
+          newData.email = userEmail
+        }
+        return newData
+      })
+    }
+  }, [isLoaded, user])
 
   // Validation functions
   const validateFullName = (name) => {
@@ -430,12 +453,15 @@ function CourseLeadForm({ course, onSuccess }) {
 
 function CourseLeadModal({ open, onClose, course }) {
   const [isClosing, setIsClosing] = useState(false)
+  const [formKey, setFormKey] = useState(0)
 
   useEffect(() => {
     if (open) {
       setIsClosing(false)
       // Prevent body scroll when modal is open
       document.body.style.overflow = 'hidden'
+      // Reset form key to trigger auto-fill when modal opens
+      setFormKey(prev => prev + 1)
     } else {
       document.body.style.overflow = 'unset'
     }
@@ -513,7 +539,7 @@ function CourseLeadModal({ open, onClose, course }) {
               <span>Fill in your details below and our team will contact you shortly to complete your enrollment!</span>
             </p>
           </div>
-          <CourseLeadForm course={course} onSuccess={handleSuccess} />
+          <CourseLeadForm key={formKey} course={course} onSuccess={handleSuccess} />
         </div>
 
         {/* Modal Footer */}
@@ -1277,9 +1303,19 @@ export default function CourseDetailPage() {
                       <span className="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-sm font-medium">
                         {course.level || 'All Levels'}
                       </span>
-                      <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                        Best Seller
-                      </span>
+                      {course.badgeText && (
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          course.badgeColor === 'green' ? 'bg-green-100 text-green-700' :
+                          course.badgeColor === 'blue' ? 'bg-blue-100 text-blue-700' :
+                          course.badgeColor === 'purple' ? 'bg-purple-100 text-purple-700' :
+                          course.badgeColor === 'orange' ? 'bg-orange-100 text-orange-700' :
+                          course.badgeColor === 'red' ? 'bg-red-100 text-red-700' :
+                          course.badgeColor === 'pink' ? 'bg-pink-100 text-pink-700' :
+                          'bg-green-100 text-green-700'
+                        }`}>
+                          {course.badgeText}
+                        </span>
+                      )}
                     </div>
                     <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
                       {course.title}
@@ -1364,12 +1400,20 @@ export default function CourseDetailPage() {
                 <div className="bg-white rounded-2xl p-6 border border-slate-200">
                   <div className="text-center py-12">
                     <div className="text-6xl mb-4">🎥</div>
-                    <h3 className="text-xl font-semibold text-slate-800 mb-2">Ready to Learn?</h3>
-                    <p className="text-slate-600 mb-6">Click on any lesson below to start watching videos</p>
-                    <div className="flex items-center justify-center space-x-4 text-sm text-slate-500">
-                      <span>✓ HD Quality Videos</span>
-                      <span>✓ Mobile & Desktop</span>
-                      <span>✓ Progress Tracking</span>
+                    <h3 className="text-xl font-semibold text-slate-800 mb-2">
+                      {course.videoPlayerText || 'Ready to Learn?'}
+                    </h3>
+                    <p className="text-slate-600 mb-6">
+                      {course.videoPlayerSubtext || 'Click on any lesson below to start watching videos'}
+                    </p>
+                    <div className="flex items-center justify-center space-x-4 text-sm text-slate-500 flex-wrap gap-2">
+                      {(course.videoPlayerFeatures && course.videoPlayerFeatures.length > 0 ? course.videoPlayerFeatures : [
+                        'HD Quality Videos',
+                        'Mobile & Desktop',
+                        'Progress Tracking'
+                      ]).map((feature, index) => (
+                        <span key={index}>✓ {feature}</span>
+                      ))}
                     </div>
                   </div>
           </div>
@@ -1414,23 +1458,18 @@ export default function CourseDetailPage() {
                 </div>
                 
                 <div className="space-y-3 mb-6">
-                  <div className="flex items-center text-sm text-slate-600">
-                    <span className="mr-2">✓</span>
-                    Lifetime access
-                  </div>
-                  <div className="flex items-center text-sm text-slate-600">
-                    <span className="mr-2">✓</span>
-                    Mobile & desktop
-                  </div>
-                  <div className="flex items-center text-sm text-slate-600">
-                    <span className="mr-2">✓</span>
-                    Certificate of completion
-                  </div>
-                  <div className="flex items-center text-sm text-slate-600">
-                    <span className="mr-2">✓</span>
-                    30-day money-back guarantee
-                  </div>
-                          </div>
+                  {(course.pricingFeatures && course.pricingFeatures.length > 0 ? course.pricingFeatures : [
+                    'Lifetime access',
+                    'Mobile & desktop',
+                    'Certificate of completion',
+                    '30-day money-back guarantee'
+                  ]).map((feature, index) => (
+                    <div key={index} className="flex items-center text-sm text-slate-600">
+                      <span className="mr-2">✓</span>
+                      {feature}
+                    </div>
+                  ))}
+                </div>
 
                 <SignedOut>
                   <SignInButton>

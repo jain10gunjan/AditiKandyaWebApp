@@ -61,13 +61,20 @@ function CourseForm({ course, onSave, onCancel, loading, teachers = [] }) {
 
   useEffect(() => {
     if (course) {
+      // Build image URL - prioritize image, then thumbnailPath
+      let imageUrl = course.image || ''
+      if (!imageUrl && course.thumbnailPath) {
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+        imageUrl = `${baseUrl}${course.thumbnailPath}`
+      }
+      
       setFormData(prev => ({
         ...prev,
         title: course.title || '',
         description: course.description || '',
         price: course.price || 0,
         level: course.level || 'Beginner',
-        image: course.image || '',
+        image: imageUrl,
         teacherId: course.teacherId || ''
       }))
     }
@@ -213,6 +220,19 @@ function CourseForm({ course, onSave, onCancel, loading, teachers = [] }) {
             placeholder="https://example.com/image.jpg"
             className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
           />
+          {formData.image && (
+            <div className="mt-3">
+              <p className="text-sm text-slate-600 mb-2">Preview:</p>
+              <img 
+                src={formData.image} 
+                alt="Course preview" 
+                className="w-full h-48 object-cover rounded-lg border border-slate-200"
+                onError={(e) => {
+                  e.target.style.display = 'none'
+                }}
+              />
+            </div>
+          )}
         </div>
 
         <div>
@@ -1308,6 +1328,11 @@ export default function AdminPage() {
                   <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">👤</div>
                   <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-purple-700 transition-colors">Student Schedules</h3>
                   <p className="text-sm text-slate-600">Create individual schedules for students</p>
+                </a>
+                <a href="/admin/teacher-calendar" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-orange-300 active:scale-95">
+                  <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">📅</div>
+                  <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-orange-700 transition-colors">Teacher Calendar</h3>
+                  <p className="text-sm text-slate-600">View all student bookings and class schedules</p>
                 </a>
                 <a href="/admin/resources" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-sky-300 active:scale-95">
                   <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">📚</div>

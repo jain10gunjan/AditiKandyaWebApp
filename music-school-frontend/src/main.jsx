@@ -21,6 +21,7 @@ import StudentResources from './routes/StudentResources.jsx'
 import AdminAttendance from './routes/AdminAttendance.jsx'
 import AdminCalendar from './routes/AdminCalendar.jsx'
 import AdminStudentSchedules from './routes/AdminStudentSchedules.jsx'
+import AdminTeacherCalendar from './routes/AdminTeacherCalendar.jsx'
 import AdminResources from './routes/AdminResources.jsx'
 import AdminEnrollmentLeads from './routes/AdminEnrollmentLeads.jsx'
 import AdminTeachersPage from './routes/AdminTeachersPage.jsx'
@@ -65,6 +66,7 @@ const router = createBrowserRouter([
   { path: '/admin/attendance', element: <AdminAttendance /> },
   { path: '/admin/calendar', element: <AdminCalendar /> },
   { path: '/admin/student-schedules', element: <AdminStudentSchedules /> },
+  { path: '/admin/teacher-calendar', element: <AdminTeacherCalendar /> },
   { path: '/admin/resources', element: <AdminResources /> },
   { path: '/admin/enrollment-leads', element: <AdminEnrollmentLeads /> },
   { path: '/admin/teachers', element: <AdminTeachersPage /> },

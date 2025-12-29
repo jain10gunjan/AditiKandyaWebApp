@@ -4,6 +4,7 @@ import { apiGet, apiPost, apiDelete } from '../lib/api'
 import toast from 'react-hot-toast'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
+import TimeSlotPicker from '../components/TimeSlotPicker.jsx'
 
 export default function AdminStudentSchedules() {
   const { getToken } = useAuth()
@@ -15,6 +16,8 @@ export default function AdminStudentSchedules() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const [allSchedulesForDate, setAllSchedulesForDate] = useState([]) // All schedules for the selected date (for conflict detection)
+  const [loadingSchedules, setLoadingSchedules] = useState(false)
   const [showEventForm, setShowEventForm] = useState(false)
   const [showDuplicateDates, setShowDuplicateDates] = useState(false)
   const [selectedDuplicateDates, setSelectedDuplicateDates] = useState([])
@@ -28,6 +31,7 @@ export default function AdminStudentSchedules() {
     description: '',
     date: '',
     time: '',
+    endTime: '',
     courseId: '',
     studentId: '',
     type: 'class',
@@ -60,6 +64,7 @@ export default function AdminStudentSchedules() {
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
       const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
       
+      // Use ISO date format to ensure proper timezone handling
       const params = new URLSearchParams({ date: selectedDate })
       if (selectedCourse) params.append('courseId', selectedCourse)
       if (selectedStudent) params.append('studentId', selectedStudent)
@@ -69,7 +74,19 @@ export default function AdminStudentSchedules() {
       })
       if (!response.ok) throw new Error('Failed to load events')
       const data = await response.json()
-      setEvents(data || [])
+      
+      // Sort events by start time and ensure proper date handling
+      const sortedEvents = (data || []).map(event => ({
+        ...event,
+        startTime: event.startTime ? new Date(event.startTime).toISOString() : event.startTime,
+        endTime: event.endTime ? new Date(event.endTime).toISOString() : event.endTime
+      })).sort((a, b) => {
+        const timeA = a.startTime ? new Date(a.startTime).getTime() : 0
+        const timeB = b.startTime ? new Date(b.startTime).getTime() : 0
+        return timeA - timeB
+      })
+      
+      setEvents(sortedEvents)
     } catch (error) {
       console.error('Error loading events:', error)
       toast.error('Failed to load events. Please try again.')
@@ -104,6 +121,95 @@ export default function AdminStudentSchedules() {
       toast.error('Failed to load enrollments.')
     }
   }
+
+  // Load all schedules for the selected date (for conflict detection in time picker)
+  const loadAllSchedulesForDate = async (date) => {
+    if (!date) {
+      setAllSchedulesForDate([])
+      return
+    }
+    try {
+      setLoadingSchedules(true)
+      const token = await getToken()
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+      const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
+      
+      // Fetch all student schedules for this date (no course/student filter)
+      const params = new URLSearchParams({ date })
+      const response = await fetch(`${baseUrl}/admin/student-schedules?${params}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      
+      if (!response.ok) throw new Error('Failed to load schedules')
+      const data = await response.json()
+      
+      // Format schedules with student and course info
+      const formattedSchedules = await Promise.all((data || []).map(async (schedule) => {
+        let studentInfo = 'Unknown Student'
+        let courseInfo = 'Unknown Course'
+        
+        // Get student info
+        if (schedule.studentId) {
+          const enrollment = enrollments.find(e => e.userId === schedule.studentId)
+          if (enrollment) {
+            studentInfo = enrollment.name || enrollment.email || 'Unknown Student'
+          } else {
+            // Try to fetch from all enrollments
+            try {
+              const token = await getToken()
+              const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+              const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
+              const enrollRes = await fetch(`${baseUrl}/admin/courses/${schedule.courseId}/enrollments`, {
+                headers: { Authorization: `Bearer ${token}` }
+              })
+              if (enrollRes.ok) {
+                const enrollData = await enrollRes.json()
+                const foundEnroll = enrollData.find(e => e.userId === schedule.studentId)
+                if (foundEnroll) {
+                  studentInfo = foundEnroll.name || foundEnroll.email || 'Unknown Student'
+                }
+              }
+            } catch (e) {
+              console.warn('Could not fetch enrollment info:', e)
+            }
+          }
+        }
+        
+        // Get course info
+        if (schedule.courseId) {
+          const course = courses.find(c => c._id === schedule.courseId)
+          if (course) {
+            courseInfo = course.title
+          }
+        }
+        
+        return {
+          ...schedule,
+          startTime: schedule.startTime ? new Date(schedule.startTime).toISOString() : schedule.startTime,
+          endTime: schedule.endTime ? new Date(schedule.endTime).toISOString() : schedule.endTime,
+          student: studentInfo,
+          course: courseInfo
+        }
+      }))
+      
+      setAllSchedulesForDate(formattedSchedules)
+    } catch (error) {
+      console.error('Error loading all schedules:', error)
+      // Don't show error toast, just set empty array
+      setAllSchedulesForDate([])
+    } finally {
+      setLoadingSchedules(false)
+    }
+  }
+
+  // Load schedules when date changes in the form
+  useEffect(() => {
+    if (showEventForm && newEvent.date) {
+      loadAllSchedulesForDate(newEvent.date)
+    } else {
+      setAllSchedulesForDate([])
+    }
+  }, [newEvent.date, showEventForm])
 
   const handleDateSelect = (date) => {
     if (selectedDuplicateDates.includes(date)) {
@@ -180,8 +286,14 @@ export default function AdminStudentSchedules() {
       return
     }
 
-    if (!newEvent.title || !newEvent.date || !newEvent.time) {
+    if (!newEvent.title || !newEvent.date || !newEvent.time || !newEvent.endTime) {
       toast.error('Please fill in all required fields')
+      return
+    }
+
+    // Validate that end time is after start time
+    if (newEvent.endTime <= newEvent.time) {
+      toast.error('End time must be after start time')
       return
     }
 
@@ -209,11 +321,15 @@ export default function AdminStudentSchedules() {
         }
       }
 
+      // Construct proper ISO datetime strings with timezone handling
+      const startDateTime = `${newEvent.date}T${newEvent.time}:00`
+      const endDateTime = `${newEvent.date}T${newEvent.endTime}:00`
+      
       const payload = {
         title: newEvent.title,
         description: newEvent.description || '',
-        date: newEvent.date,
-        time: newEvent.time,
+        startTime: startDateTime,
+        endTime: endDateTime,
         courseId: selectedCourse,
         studentId: selectedStudent,
         type: newEvent.type,
@@ -239,6 +355,7 @@ export default function AdminStudentSchedules() {
         description: '',
         date: '',
         time: '',
+        endTime: '',
         courseId: '',
         studentId: '',
         type: 'class',
@@ -248,7 +365,34 @@ export default function AdminStudentSchedules() {
       loadEvents()
     } catch (error) {
       console.error('Error creating event:', error)
-      toast.error(error.message || 'Failed to create event. Please try again.')
+      
+      // Handle conflict errors specifically
+      if (error.response?.status === 409 || error.message?.includes('conflict') || error.message?.includes('already booked')) {
+        const errorData = error.response?.data || error
+        let conflictMessage = errorData.message || error.message || 'This time slot is already booked for another student.'
+        
+        // Show detailed conflict information
+        if (errorData.conflicts && Array.isArray(errorData.conflicts) && errorData.conflicts.length > 0) {
+          const conflictDetails = errorData.conflicts.map((c, idx) => {
+            const startTime = new Date(c.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+            const endTime = new Date(c.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+            return `\n${idx + 1}. "${c.title}" - ${c.student} (${c.course})\n   Time: ${startTime} - ${endTime}`
+          }).join('')
+          
+          conflictMessage = `⚠️ Time Slot Conflict!\n\nThis time slot is already booked:${conflictDetails}`
+        }
+        
+        toast.error(conflictMessage, { 
+          duration: 10000,
+          style: {
+            maxWidth: '500px',
+            whiteSpace: 'pre-line',
+            fontSize: '14px'
+          }
+        })
+      } else {
+        toast.error(error.message || 'Failed to create event. Please try again.')
+      }
     } finally {
       setSubmitting(false)
     }
@@ -292,8 +436,13 @@ export default function AdminStudentSchedules() {
 
   const formatTime = (dateString) => {
     if (!dateString) return ''
-    const date = new Date(dateString)
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return dateString // Return original if invalid date
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+    } catch (error) {
+      return dateString
+    }
   }
 
   const formatDate = (dateString) => {
@@ -396,7 +545,14 @@ export default function AdminStudentSchedules() {
                   <button
                     onClick={() => {
                       setShowEventForm(true)
-                      setNewEvent(prev => ({ ...prev, date: selectedDate, courseId: selectedCourse, studentId: selectedStudent }))
+                      setNewEvent(prev => ({ 
+                        ...prev, 
+                        date: selectedDate, 
+                        courseId: selectedCourse, 
+                        studentId: selectedStudent,
+                        time: '',
+                        endTime: ''
+                      }))
                     }}
                     className="px-5 py-3 bg-gradient-to-r from-sky-600 to-blue-600 text-white rounded-lg hover:from-sky-700 hover:to-blue-700 font-medium shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 mt-6 sm:mt-0"
                   >
@@ -491,23 +647,27 @@ export default function AdminStudentSchedules() {
                     <input
                       type="date"
                       value={newEvent.date}
-                      onChange={(e) => setNewEvent({...newEvent, date: e.target.value})}
+                      onChange={(e) => setNewEvent({...newEvent, date: e.target.value, time: '', endTime: ''})}
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
                       required
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Time <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="time"
-                      value={newEvent.time}
-                      onChange={(e) => setNewEvent({...newEvent, time: e.target.value})}
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
-                      required
+                  <div className="sm:col-span-2">
+                    <TimeSlotPicker
+                      selectedDate={newEvent.date}
+                      startTime={newEvent.time}
+                      endTime={newEvent.endTime}
+                      onStartTimeChange={(time) => setNewEvent({...newEvent, time, endTime: ''})}
+                      onEndTimeChange={(endTime) => setNewEvent({...newEvent, endTime})}
+                      bookedSlots={allSchedulesForDate}
+                      intervalMinutes={30}
+                      startHour={8}
+                      endHour={22}
                     />
+                    {loadingSchedules && (
+                      <p className="text-xs text-slate-500 mt-1">Loading available slots...</p>
+                    )}
                   </div>
 
                   <div>
@@ -907,7 +1067,14 @@ export default function AdminStudentSchedules() {
                   <button
                     onClick={() => {
                       setShowEventForm(true)
-                      setNewEvent(prev => ({ ...prev, date: selectedDate, courseId: selectedCourse, studentId: selectedStudent }))
+                      setNewEvent(prev => ({ 
+                        ...prev, 
+                        date: selectedDate, 
+                        courseId: selectedCourse, 
+                        studentId: selectedStudent,
+                        time: '',
+                        endTime: ''
+                      }))
                     }}
                     className="px-6 py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700 font-medium transition-colors"
                   >

@@ -1010,44 +1010,11 @@ export default function StudentDashboard() {
     }
   }, [location.state, navigate, location.pathname])
 
-  // If courseId is present, show course learning view
-  if (courseId) {
-    return (
-      <div className="h-screen overflow-hidden">
-        <SignedIn>
-          <div className="flex h-screen">
-            <StudentSidebar 
-              activeTab="courses" 
-              onTabChange={setActiveTab} 
-              isOpen={sidebarOpen}
-              onClose={() => setSidebarOpen(false)}
-            />
-            <div className="lg:ml-16 xl:ml-20 flex-1 overflow-y-auto h-screen">
-              <CourseLearningView 
-                courseId={courseId} 
-                onBack={() => navigate('/dashboard')}
-              />
-            </div>
-          </div>
-        </SignedIn>
-        <SignedOut>
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center">
-              <div className="text-6xl mb-6">🎶</div>
-              <h1 className="text-2xl font-bold text-slate-900 mb-4">Please Sign In</h1>
-              <SignInButton>
-                <button className="px-8 py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors font-medium">
-                  Sign In
-                </button>
-              </SignInButton>
-            </div>
-          </div>
-        </SignedOut>
-      </div>
-    )
-  }
-
+  // Load dashboard data - only when NOT viewing a course
   useEffect(() => {
+    // Skip loading if we're viewing a course
+    if (courseId) return
+    
     ;(async () => {
       setLoading(true)
       try {
@@ -1169,7 +1136,46 @@ export default function StudentDashboard() {
         setLoading(false)
       }
     })()
-  }, [])
+  }, [courseId, getToken])
+
+  // If courseId is present, show course learning view
+  if (courseId) {
+    return (
+      <div className="min-h-screen">
+        <StudentNavbar />
+        <SignedIn>
+          <div className="flex min-h-screen pt-20">
+            <StudentSidebar 
+              activeTab="courses" 
+              onTabChange={setActiveTab} 
+              isOpen={sidebarOpen}
+              onClose={() => setSidebarOpen(false)}
+            />
+            <div className="flex-1 overflow-y-auto pb-16 md:pb-0 md:ml-64 px-4 lg:px-6 xl:px-8">
+              <CourseLearningView 
+                courseId={courseId} 
+                onBack={() => navigate('/dashboard')}
+              />
+            </div>
+          </div>
+        </SignedIn>
+        <SignedOut>
+          <div className="flex items-center justify-center min-h-screen py-20">
+            <div className="text-center">
+              <div className="text-6xl mb-6">🎶</div>
+              <h1 className="text-2xl font-bold text-slate-900 mb-4">Please Sign In</h1>
+              <SignInButton>
+                <button className="px-8 py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors font-medium">
+                  Sign In
+                </button>
+              </SignInButton>
+            </div>
+          </div>
+        </SignedOut>
+        <StudentFooter />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen">
