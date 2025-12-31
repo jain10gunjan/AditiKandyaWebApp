@@ -322,8 +322,22 @@ export default function AdminStudentSchedules() {
       }
 
       // Construct proper ISO datetime strings with timezone handling
-      const startDateTime = `${newEvent.date}T${newEvent.time}:00`
-      const endDateTime = `${newEvent.date}T${newEvent.endTime}:00`
+      // Create Date objects in user's local timezone, then convert to UTC ISO strings
+      // This ensures the time is interpreted correctly regardless of server timezone
+      // Without this, a time like "14:00" would be interpreted as server local time (e.g., UTC in production)
+      // causing a time shift. By converting to ISO string here, we preserve the user's intended time.
+      const localStartDate = new Date(`${newEvent.date}T${newEvent.time}:00`)
+      const localEndDate = new Date(`${newEvent.date}T${newEvent.endTime}:00`)
+      
+      // Validate dates were created successfully
+      if (isNaN(localStartDate.getTime()) || isNaN(localEndDate.getTime())) {
+        toast.error('Invalid date or time format')
+        return
+      }
+      
+      // Convert to UTC ISO strings to ensure consistent storage
+      const startDateTime = localStartDate.toISOString()
+      const endDateTime = localEndDate.toISOString()
       
       const payload = {
         title: newEvent.title,
