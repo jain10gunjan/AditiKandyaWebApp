@@ -18,11 +18,19 @@ function BarChart({ data, height = 200 }) {
               className="w-full bg-gradient-to-t from-sky-500 to-blue-600 rounded-t-lg transition-all hover:from-sky-600 hover:to-blue-700"
               style={{ height: `${(item.value / maxValue) * 100}%`, minHeight: item.value > 0 ? '4px' : '0' }}
             />
-            <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-semibold text-slate-700">
+            <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-semibold text-slate-700"
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
+            >
               {item.value}
             </div>
           </div>
-          <div className="text-xs text-slate-600 text-center mt-1">{item.label}</div>
+          <div className="text-xs text-slate-600 text-center mt-1"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >{item.label}</div>
         </div>
       ))}
     </div>
@@ -64,7 +72,11 @@ function LineChart({ data, height = 200 }) {
           )
         })}
       </svg>
-      <div className="flex justify-between mt-2 text-xs text-slate-600">
+      <div className="flex justify-between mt-2 text-xs text-slate-600"
+      style={{
+        fontFamily: "'Bona Nova', serif",
+      }}
+      >
         {data.map((item, index) => (
           <span key={index} className="text-center">{item.label}</span>
         ))}
@@ -118,8 +130,16 @@ function PieChart({ data, size = 150 }) {
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-2xl font-bold text-slate-900">{data.reduce((sum, item) => sum + item.value, 0)}</div>
-          <div className="text-xs text-slate-600">Total</div>
+          <div className="text-2xl font-bold text-slate-900"
+          style={{
+            fontFamily: "'Bona Nova SC', serif",
+          }}
+          >{data.reduce((sum, item) => sum + item.value, 0)}</div>
+          <div className="text-xs text-slate-600"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >Total</div>
         </div>
       </div>
     </div>
@@ -155,18 +175,34 @@ function AttendanceTrends({ attendance, selectedCourse }) {
   if (trendData.length === 0) {
     return (
       <div className="bg-white rounded-2xl p-6 border border-slate-200">
-        <h3 className="text-lg font-bold text-slate-900 mb-4">Attendance Trends</h3>
-        <div className="text-center py-8 text-slate-500">Not enough data to show trends</div>
+        <h3 className="text-lg font-bold text-slate-900 mb-4"
+        style={{
+          fontFamily: "'Bona Nova SC', serif",
+        }}
+        >Attendance Trends</h3>
+        <div className="text-center py-8 text-slate-500"
+        style={{
+          fontFamily: "'Bona Nova', serif",
+        }}
+        >Not enough data to show trends</div>
       </div>
     )
   }
   
   return (
     <div className="bg-white rounded-2xl p-6 border border-slate-200">
-      <h3 className="text-lg font-bold text-slate-900 mb-4">📈 6-Month Attendance Trends</h3>
+      <h3 className="text-lg font-bold text-slate-900 mb-4"
+      style={{
+        fontFamily: "'Bona Nova SC', serif",
+      }}
+      >📈 6-Month Attendance Trends</h3>
       <div className="grid md:grid-cols-2 gap-6">
         <div>
-          <h4 className="text-sm font-semibold text-slate-700 mb-3">Monthly Overview</h4>
+          <h4 className="text-sm font-semibold text-slate-700 mb-3"
+          style={{
+            fontFamily: "'Bona Nova SC', serif",
+          }}
+          >Monthly Overview</h4>
           <BarChart
             data={trendData.map(month => ({
               label: month.label,
@@ -175,7 +211,11 @@ function AttendanceTrends({ attendance, selectedCourse }) {
           />
         </div>
         <div>
-          <h4 className="text-sm font-semibold text-slate-700 mb-3">Attendance Rate Trend</h4>
+          <h4 className="text-sm font-semibold text-slate-700 mb-3"
+          style={{
+            fontFamily: "'Bona Nova SC', serif",
+          }}
+          >Attendance Rate Trend</h4>
           <LineChart
             data={trendData.map(month => ({
               label: month.label,
@@ -211,28 +251,60 @@ function QuickStats({ stats, attendance }) {
     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <div className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-2xl p-6 border border-green-200">
         <div className="flex items-center justify-between mb-2">
-          <div className="text-sm font-medium text-green-700">Overall Rate</div>
+          <div className="text-sm font-medium text-green-700"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >Overall Rate</div>
           <div className="text-2xl">📊</div>
         </div>
-        <div className="text-3xl font-bold text-green-700">{stats.percentage}%</div>
-        <div className="text-xs text-green-600 mt-1">{stats.present}/{stats.total} classes</div>
+        <div className="text-3xl font-bold text-green-700"
+        style={{
+          fontFamily: "'Bona Nova SC', serif",
+        }}
+        >{stats.percentage}%</div>
+        <div className="text-xs text-green-600 mt-1"
+        style={{
+          fontFamily: "'Bona Nova', serif",
+        }}
+        >{stats.present}/{stats.total} classes</div>
       </div>
       
       <div className="bg-gradient-to-br from-blue-50 to-sky-100 rounded-2xl p-6 border border-blue-200">
         <div className="flex items-center justify-between mb-2">
-          <div className="text-sm font-medium text-blue-700">This Week</div>
+          <div className="text-sm font-medium text-blue-700"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >This Week</div>
           <div className="text-2xl">📅</div>
         </div>
-        <div className="text-3xl font-bold text-blue-700">{weekPercentage}%</div>
-        <div className="text-xs text-blue-600 mt-1">{weekStats.present}/{weekStats.total} classes</div>
+        <div className="text-3xl font-bold text-blue-700"
+        style={{
+          fontFamily: "'Bona Nova SC', serif",
+        }}
+        >{weekPercentage}%</div>
+        <div className="text-xs text-blue-600 mt-1"
+        style={{
+          fontFamily: "'Bona Nova', serif",
+        }}
+        >{weekStats.present}/{weekStats.total} classes</div>
       </div>
       
       <div className="bg-gradient-to-br from-amber-50 to-yellow-100 rounded-2xl p-6 border border-amber-200">
         <div className="flex items-center justify-between mb-2">
-          <div className="text-sm font-medium text-amber-700">Best Streak</div>
+          <div className="text-sm font-medium text-amber-700"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >Best Streak</div>
           <div className="text-2xl">🔥</div>
         </div>
-        <div className="text-3xl font-bold text-amber-700">
+        <div className="text-3xl font-bold text-amber-700"
+        style={{
+          fontFamily: "'Bona Nova SC', serif",
+        }}
+        >
           {(() => {
             let maxStreak = 0
             let currentStreak = 0
@@ -248,20 +320,36 @@ function QuickStats({ stats, attendance }) {
             return maxStreak
           })()}
         </div>
-        <div className="text-xs text-amber-600 mt-1">consecutive days</div>
+        <div className="text-xs text-amber-600 mt-1"
+        style={{
+          fontFamily: "'Bona Nova', serif",
+        }}
+        >consecutive days</div>
       </div>
       
       <div className="bg-gradient-to-br from-purple-50 to-violet-100 rounded-2xl p-6 border border-purple-200">
         <div className="flex items-center justify-between mb-2">
-          <div className="text-sm font-medium text-purple-700">Status</div>
+          <div className="text-sm font-medium text-purple-700"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >Status</div>
           <div className="text-2xl">⭐</div>
         </div>
-        <div className="text-lg font-bold text-purple-700">
+        <div className="text-lg font-bold text-purple-700"
+        style={{
+          fontFamily: "'Bona Nova SC', serif",
+        }}
+        >
           {stats.percentage >= 90 ? 'Excellent' :
            stats.percentage >= 75 ? 'Good' :
            stats.percentage >= 60 ? 'Fair' : 'Needs Improvement'}
         </div>
-        <div className="text-xs text-purple-600 mt-1">Current standing</div>
+        <div className="text-xs text-purple-600 mt-1"
+        style={{
+          fontFamily: "'Bona Nova', serif",
+        }}
+        >Current standing</div>
       </div>
     </div>
   )
@@ -277,7 +365,11 @@ function AttendanceDistribution({ stats }) {
   
   return (
     <div className="bg-white rounded-2xl p-6 border border-slate-200">
-      <h3 className="text-lg font-bold text-slate-900 mb-4">📊 Attendance Distribution</h3>
+      <h3 className="text-lg font-bold text-slate-900 mb-4"
+      style={{
+        fontFamily: "'Bona Nova SC', serif",
+      }}
+      >📊 Attendance Distribution</h3>
       <div className="flex flex-col md:flex-row items-center gap-8">
         <PieChart data={pieData} />
         <div className="flex-1 space-y-3">
@@ -289,8 +381,16 @@ function AttendanceDistribution({ stats }) {
                 <div className="w-4 h-4 rounded-full" style={{ backgroundColor: color }} />
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-slate-700">{item.label}</span>
-                    <span className="text-sm font-semibold text-slate-900">{item.value} ({item.percentage}%)</span>
+                    <span className="text-sm font-medium text-slate-700"
+                    style={{
+                      fontFamily: "'Bona Nova', serif",
+                    }}
+                    >{item.label}</span>
+                    <span className="text-sm font-semibold text-slate-900"
+                    style={{
+                      fontFamily: "'Bona Nova', serif",
+                    }}
+                    >{item.value} ({item.percentage}%)</span>
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-2 mt-1">
                     <div
@@ -422,10 +522,22 @@ export default function StudentAttendance() {
         <div className="flex items-center justify-center min-h-screen py-20">
           <div className="text-center">
             <div className="text-6xl mb-6">🔒</div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">Sign In Required</h2>
-            <p className="text-slate-600 mb-6">Please sign in to view your attendance records</p>
+            <h2 className="text-2xl font-bold text-slate-900 mb-4"
+            style={{
+              fontFamily: "'Bona Nova SC', serif",
+            }}
+            >Sign In Required</h2>
+            <p className="text-slate-600 mb-6"
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
+            >Please sign in to view your attendance records</p>
             <SignInButton>
-              <button className="px-6 py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors font-medium">
+              <button className="px-6 py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors font-medium"
+              style={{
+                fontFamily: "'Bona Nova', serif",
+              }}
+              >
                 Sign In
               </button>
             </SignInButton>
@@ -457,7 +569,11 @@ export default function StudentAttendance() {
                     <div className="w-8 h-8 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg flex items-center justify-center">
                       <span className="text-white font-bold text-sm">🎶</span>
                     </div>
-                    <span className="font-bold text-slate-900">Attendance</span>
+                    <span className="font-bold text-slate-900"
+                    style={{
+                      fontFamily: "'Bona Nova SC', serif",
+                    }}
+                    >Attendance</span>
                   </div>
                   <div className="w-8"></div> {/* Spacer for centering */}
                 </div>
@@ -465,8 +581,16 @@ export default function StudentAttendance() {
 
               {/* Header */}
               <div className="mb-6 lg:mb-8">
-                <h1 className="text-2xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-2">My Attendance</h1>
-                <p className="text-slate-600 text-sm lg:text-base">Track your attendance and view detailed insights</p>
+                <h1 className="text-2xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-2"
+                style={{
+                  fontFamily: "'Bona Nova SC', serif",
+                }}
+                >My Attendance</h1>
+                <p className="text-slate-600 text-sm lg:text-base"
+                style={{
+                  fontFamily: "'Bona Nova', serif",
+                }}
+                >Track your attendance and view detailed insights</p>
               </div>
         
               <div className="max-w-7xl">
@@ -479,9 +603,21 @@ export default function StudentAttendance() {
                     {enrollments.length === 0 ? (
                       <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 text-center">
                         <div className="text-5xl mb-4">🎓</div>
-                        <h3 className="text-xl font-semibold text-amber-800 mb-2">No Enrollments Found</h3>
-                        <p className="text-amber-700 mb-6">You need to be enrolled in courses to view your attendance records.</p>
-                        <a href="/courses" className="inline-block px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium">
+                        <h3 className="text-xl font-semibold text-amber-800 mb-2"
+                        style={{
+                          fontFamily: "'Bona Nova SC', serif",
+                        }}
+                        >No Enrollments Found</h3>
+                        <p className="text-amber-700 mb-6"
+                        style={{
+                          fontFamily: "'Bona Nova', serif",
+                        }}
+                        >You need to be enrolled in courses to view your attendance records.</p>
+                        <a href="/courses" className="inline-block px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium"
+                        style={{
+                          fontFamily: "'Bona Nova', serif",
+                        }}
+                        >
                           Browse Courses
                         </a>
                       </div>
@@ -491,11 +627,18 @@ export default function StudentAttendance() {
                         <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200 mb-6">
                           <div className="grid md:grid-cols-3 gap-4">
                             <div>
-                              <label className="block text-sm font-medium text-slate-700 mb-2">Course</label>
+                              <label className="block text-sm font-medium text-slate-700 mb-2"
+                              style={{
+                                fontFamily: "'Bona Nova', serif",
+                              }}
+                              >Course</label>
                               <select 
                                 value={selectedCourse} 
                                 onChange={(e) => setSelectedCourse(e.target.value)}
                                 className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white"
+                                style={{
+                                  fontFamily: "'Bona Nova', serif",
+                                }}
                               >
                                 {enrollments.map((enrollment) => (
                                   <option key={enrollment.course._id} value={enrollment.course._id}>
@@ -505,11 +648,18 @@ export default function StudentAttendance() {
                               </select>
                             </div>
                             <div>
-                              <label className="block text-sm font-medium text-slate-700 mb-2">Month</label>
+                              <label className="block text-sm font-medium text-slate-700 mb-2"
+                              style={{
+                                fontFamily: "'Bona Nova', serif",
+                              }}
+                              >Month</label>
                               <select 
                                 value={selectedMonth} 
                                 onChange={(e) => setSelectedMonth(Number(e.target.value))}
                                 className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white"
+                                style={{
+                                  fontFamily: "'Bona Nova', serif",
+                                }}
                               >
                                 {Array.from({ length: 12 }, (_, i) => (
                                   <option key={i + 1} value={i + 1}>
@@ -519,11 +669,18 @@ export default function StudentAttendance() {
                               </select>
                             </div>
                             <div>
-                              <label className="block text-sm font-medium text-slate-700 mb-2">Year</label>
+                              <label className="block text-sm font-medium text-slate-700 mb-2"
+                              style={{
+                                fontFamily: "'Bona Nova', serif",
+                              }}
+                              >Year</label>
                               <select 
                                 value={selectedYear} 
                                 onChange={(e) => setSelectedYear(Number(e.target.value))}
                                 className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white"
+                                style={{
+                                  fontFamily: "'Bona Nova', serif",
+                                }}
                               >
                                 {Array.from({ length: 5 }, (_, i) => {
                                   const year = new Date().getFullYear() - 2 + i
@@ -549,15 +706,31 @@ export default function StudentAttendance() {
                         {/* Attendance Records List */}
                         <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
                           <div className="p-6 border-b border-slate-200 bg-slate-50">
-                            <h2 className="text-xl font-bold text-slate-900">Attendance Records</h2>
-                            <p className="text-sm text-slate-600 mt-1">All attendance marked by your instructor</p>
+                            <h2 className="text-xl font-bold text-slate-900"
+                            style={{
+                              fontFamily: "'Bona Nova SC', serif",
+                            }}
+                            >Attendance Records</h2>
+                            <p className="text-sm text-slate-600 mt-1"
+                            style={{
+                              fontFamily: "'Bona Nova', serif",
+                            }}
+                            >All attendance marked by your instructor</p>
                           </div>
                           <div className="p-6">
                             {attendance.length === 0 ? (
                               <div className="text-center py-12 text-slate-500">
                                 <div className="text-5xl mb-4">📋</div>
-                                <p className="text-lg font-medium">No attendance records found</p>
-                                <p className="text-sm mt-2">Attendance will appear here once your instructor marks it.</p>
+                                <p className="text-lg font-medium"
+                                style={{
+                                  fontFamily: "'Bona Nova SC', serif",
+                                }}
+                                >No attendance records found</p>
+                                <p className="text-sm mt-2"
+                                style={{
+                                  fontFamily: "'Bona Nova', serif",
+                                }}
+                                >Attendance will appear here once your instructor marks it.</p>
                               </div>
                             ) : (
                               <div className="space-y-3">
@@ -566,7 +739,11 @@ export default function StudentAttendance() {
                                     <div className="flex items-center gap-4">
                                       <div className="text-3xl">{getStatusIcon(record.status)}</div>
                                       <div>
-                                        <div className="font-semibold text-slate-900">
+                                        <div className="font-semibold text-slate-900"
+                                        style={{
+                                          fontFamily: "'Bona Nova SC', serif",
+                                        }}
+                                        >
                                           {new Date(record.date).toLocaleDateString('en-US', {
                                             weekday: 'long',
                                             year: 'numeric',
@@ -575,11 +752,19 @@ export default function StudentAttendance() {
                                           })}
                                         </div>
                                         {record.notes && (
-                                          <div className="text-sm text-slate-600 mt-1">{record.notes}</div>
+                                          <div className="text-sm text-slate-600 mt-1"
+                                          style={{
+                                            fontFamily: "'Bona Nova', serif",
+                                          }}
+                                          >{record.notes}</div>
                                         )}
                                       </div>
                                     </div>
-                                    <div className={`px-4 py-2 rounded-full text-sm font-semibold border-2 ${getStatusColor(record.status)}`}>
+                                    <div className={`px-4 py-2 rounded-full text-sm font-semibold border-2 ${getStatusColor(record.status)}`}
+                                    style={{
+                                      fontFamily: "'Bona Nova', serif",
+                                    }}
+                                    >
                                       {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
                                     </div>
                                   </div>

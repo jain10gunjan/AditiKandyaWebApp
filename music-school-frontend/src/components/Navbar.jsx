@@ -124,6 +124,7 @@ export default function Navbar({ subtitle = 'Aditi Kandya' }) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
+                {console.log(user)}
                 {dropdownOpen === 'programs' && (
                   <div className="absolute top-full left-0 mt-2 w-48 bg-black border border-[#F5E6E0]/30 rounded-lg shadow-xl py-2 z-50">
                     {programsDropdown.map((link) => (

@@ -35,9 +35,21 @@ function AdminGuard({ children }) {
       <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-pink-50 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-6">🔒</div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-4">Access Denied</h1>
-          <p className="text-slate-600 mb-6">You don't have permission to access the admin panel.</p>
-          <a href="/" className="px-6 py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors">
+          <h1 className="text-2xl font-bold text-slate-900 mb-4"
+          style={{
+            fontFamily: "'Bona Nova SC', serif",
+          }}
+          >Access Denied</h1>
+          <p className="text-slate-600 mb-6"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >You don't have permission to access the admin panel.</p>
+          <a href="/" className="px-6 py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >
             Go Home
           </a>
         </div>
@@ -95,14 +107,22 @@ function CourseForm({ course, onSave, onCancel, loading, teachers = [] }) {
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-8 border border-slate-200">
-      <h2 className="text-2xl font-bold text-slate-900 mb-6">
+      <h2 className="text-2xl font-bold text-slate-900 mb-6"
+      style={{
+        fontFamily: "'Bona Nova SC', serif",
+      }}
+      >
         {course ? 'Edit Course' : 'Create New Course'}
       </h2>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Course Title</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2"
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
+            >Course Title</label>
             <input
               name="title"
               value={formData.title}
@@ -110,11 +130,18 @@ function CourseForm({ course, onSave, onCancel, loading, teachers = [] }) {
               placeholder="e.g., Guitar Basics for Beginners"
               className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
               required
+              style={{
+                fontFamily: "'Bona Nova', serif",
+              }}
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Price (₹)</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2"
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
+            >Price (₹)</label>
             <input
               name="price"
               type="number"
@@ -123,12 +150,19 @@ function CourseForm({ course, onSave, onCancel, loading, teachers = [] }) {
               placeholder="2999"
               className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
               required
+              style={{
+                fontFamily: "'Bona Nova', serif",
+              }}
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
+          <label className="block text-sm font-medium text-slate-700 mb-2"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >Description</label>
           <textarea
             name="description"
             value={formData.description}
@@ -137,17 +171,27 @@ function CourseForm({ course, onSave, onCancel, loading, teachers = [] }) {
             rows={4}
             className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
             required
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
           />
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Level</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2"
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
+            >Level</label>
             <select
               name="level"
               value={formData.level}
               onChange={handleChange}
               className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+              style={{
+                fontFamily: "'Bona Nova', serif",
+              }}
             >
               <option value="Beginner">Beginner</option>
               <option value="Intermediate">Intermediate</option>
@@ -157,7 +201,11 @@ function CourseForm({ course, onSave, onCancel, loading, teachers = [] }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
+            <label className="block text-sm font-medium text-slate-700 mb-2"
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
+            >
               Assign Teacher <span className="text-slate-400 text-xs">(Optional)</span>
             </label>
             <select
@@ -165,6 +213,9 @@ function CourseForm({ course, onSave, onCancel, loading, teachers = [] }) {
               value={formData.teacherId}
               onChange={handleChange}
               className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+              style={{
+                fontFamily: "'Bona Nova', serif",
+              }}
             >
               <option value="">-- Select a teacher --</option>
               {teachers.map((teacher) => (
@@ -189,8 +240,16 @@ function CourseForm({ course, onSave, onCancel, loading, teachers = [] }) {
                     </div>
                   )}
                   <div className="flex-1">
-                    <p className="font-medium text-slate-900 text-sm">{selectedTeacher.name}</p>
-                    <p className="text-xs text-slate-600">🎵 {selectedTeacher.instrument}</p>
+                    <p className="font-medium text-slate-900 text-sm"
+                    style={{
+                      fontFamily: "'Bona Nova', serif",
+                    }}
+                    >{selectedTeacher.name}</p>
+                    <p className="text-xs text-slate-600"
+                    style={{
+                      fontFamily: "'Bona Nova', serif",
+                    }}
+                    >🎵 {selectedTeacher.instrument}</p>
                   </div>
                   <button
                     type="button"
@@ -204,7 +263,11 @@ function CourseForm({ course, onSave, onCancel, loading, teachers = [] }) {
               ) : null
             })()}
             {teachers.length === 0 && (
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-500 mt-1"
+              style={{
+                fontFamily: "'Bona Nova', serif",
+              }}
+              >
                 No teachers available. <span className="text-green-600 font-medium">Add a teacher from Quick Actions → Manage Teachers</span>
               </p>
             )}
@@ -212,17 +275,28 @@ function CourseForm({ course, onSave, onCancel, loading, teachers = [] }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Image URL</label>
+          <label className="block text-sm font-medium text-slate-700 mb-2"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >Image URL</label>
           <input
             name="image"
             value={formData.image}
             onChange={handleChange}
             placeholder="https://example.com/image.jpg"
             className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
           />
           {formData.image && (
             <div className="mt-3">
-              <p className="text-sm text-slate-600 mb-2">Preview:</p>
+              <p className="text-sm text-slate-600 mb-2"
+              style={{
+                fontFamily: "'Bona Nova', serif",
+              }}
+              >Preview:</p>
               <img 
                 src={formData.image} 
                 alt="Course preview" 
@@ -236,15 +310,26 @@ function CourseForm({ course, onSave, onCancel, loading, teachers = [] }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Course Thumbnail</label>
+          <label className="block text-sm font-medium text-slate-700 mb-2"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >Course Thumbnail</label>
           <input
             name="thumbnail"
             type="file"
             onChange={handleChange}
             accept="image/*"
             className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
           />
-          <p className="text-sm text-slate-500 mt-1">Upload a thumbnail image for the course</p>
+          <p className="text-sm text-slate-500 mt-1"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >Upload a thumbnail image for the course</p>
         </div>
 
         <div className="flex gap-4 pt-4">
@@ -252,6 +337,9 @@ function CourseForm({ course, onSave, onCancel, loading, teachers = [] }) {
             type="submit"
             disabled={loading}
             className="px-6 py-3 bg-gradient-to-r from-sky-600 to-blue-600 text-white rounded-lg hover:from-sky-700 hover:to-blue-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl disabled:opacity-50"
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
           >
             {loading ? 'Saving...' : (course ? 'Update Course' : 'Create Course')}
           </button>
@@ -259,6 +347,9 @@ function CourseForm({ course, onSave, onCancel, loading, teachers = [] }) {
             type="button"
             onClick={onCancel}
             className="px-6 py-3 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors font-medium"
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
           >
             Cancel
           </button>
@@ -275,9 +366,21 @@ function CourseCard({ course, onEdit, onDelete, onView, teachers = [] }) {
     <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 hover:border-sky-300 group">
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
-          <h3 className="font-bold text-lg text-slate-800 mb-2">{course.title}</h3>
-          <p className="text-sm text-slate-600 line-clamp-2 mb-3">{course.description}</p>
-          <div className="flex items-center space-x-4 text-sm text-slate-500 mb-2">
+          <h3 className="font-bold text-lg text-slate-800 mb-2"
+          style={{
+            fontFamily: "'Bona Nova SC', serif",
+          }}
+          >{course.title}</h3>
+          <p className="text-sm text-slate-600 line-clamp-2 mb-3"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >{course.description}</p>
+          <div className="flex items-center space-x-4 text-sm text-slate-500 mb-2"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >
             <span className="px-2 py-1 bg-sky-100 text-sky-700 rounded-full">{course.level}</span>
             <span className="font-semibold text-slate-800">₹{course.price?.toLocaleString()}</span>
           </div>
@@ -311,24 +414,36 @@ function CourseCard({ course, onEdit, onDelete, onView, teachers = [] }) {
         <button
           onClick={() => onView(course)}
           className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-all shadow-sm hover:shadow-md active:scale-95"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
         >
           View
         </button>
         <button
           onClick={() => onEdit(course)}
           className="px-3 py-1.5 bg-sky-600 text-white rounded-lg text-sm hover:bg-sky-700 transition-all shadow-sm hover:shadow-md active:scale-95"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
         >
           Edit
         </button>
         <a
           href={`/admin/courses/${course._id}`}
           className="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 transition-all shadow-sm hover:shadow-md active:scale-95 text-center"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
         >
           Build
         </a>
         <button
           onClick={() => onDelete(course)}
           className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-all shadow-sm hover:shadow-md active:scale-95"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
         >
           Delete
         </button>
@@ -345,14 +460,26 @@ function StatsCard({ title, value, icon, color, onClick }) {
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className="text-sm text-slate-600 mb-1">{title}</p>
-          <p className="text-2xl font-bold text-slate-900 group-hover:text-sky-700 transition-colors">{value}</p>
+          <p className="text-sm text-slate-600 mb-1"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >{title}</p>
+          <p className="text-2xl font-bold text-slate-900 group-hover:text-sky-700 transition-colors"
+          style={{
+            fontFamily: "'Bona Nova SC', serif",
+          }}
+          >{value}</p>
         </div>
         <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
           <span className="text-2xl">{icon}</span>
         </div>
       </div>
-      <div className="mt-3 flex items-center text-xs text-slate-500 group-hover:text-sky-600 transition-colors">
+      <div className="mt-3 flex items-center text-xs text-slate-500 group-hover:text-sky-600 transition-colors"
+      style={{
+        fontFamily: "'Bona Nova', serif",
+      }}
+      >
         <span>Click to view details</span>
         <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
       </div>
@@ -414,7 +541,11 @@ function MetricModal({ isOpen, onClose, title, icon, children }) {
         <div className="p-6 border-b border-slate-200 bg-gradient-to-r from-sky-50 to-blue-50 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-3xl">{icon}</span>
-            <h2 className="text-2xl font-bold text-slate-900">{title}</h2>
+            <h2 className="text-2xl font-bold text-slate-900"
+            style={{
+              fontFamily: "'Bona Nova SC', serif",
+            }}
+            >{title}</h2>
           </div>
           <button 
             onClick={handleClose} 
@@ -438,7 +569,11 @@ function CoursesDetailModal({ isOpen, onClose, courses, onView, onEdit, onDelete
       {courses.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">📚</div>
-          <p className="text-slate-600">No courses available</p>
+          <p className="text-slate-600"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >No courses available</p>
         </div>
       ) : (
         <div className="grid gap-4">
@@ -447,13 +582,29 @@ function CoursesDetailModal({ isOpen, onClose, courses, onView, onEdit, onDelete
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-semibold text-lg text-slate-900">{course.title}</h3>
-                    <span className="px-2 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-medium">
+                    <h3 className="font-semibold text-lg text-slate-900"
+                    style={{
+                      fontFamily: "'Bona Nova SC', serif",
+                    }}
+                    >{course.title}</h3>
+                    <span className="px-2 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-medium"
+                    style={{
+                      fontFamily: "'Bona Nova', serif",
+                    }}
+                    >
                       {course.level}
                     </span>
                   </div>
-                  <p className="text-sm text-slate-600 mb-3 line-clamp-2">{course.description}</p>
-                  <div className="flex items-center gap-4 text-sm">
+                  <p className="text-sm text-slate-600 mb-3 line-clamp-2"
+                  style={{
+                    fontFamily: "'Bona Nova', serif",
+                  }}
+                  >{course.description}</p>
+                  <div className="flex items-center gap-4 text-sm"
+                  style={{
+                    fontFamily: "'Bona Nova', serif",
+                  }}
+                  >
                     <span className="font-semibold text-slate-800">₹{course.price?.toLocaleString() || 0}</span>
                     <span className="text-slate-500">{course.modules?.length || 0} modules</span>
                     <span className="text-slate-500">
@@ -473,24 +624,36 @@ function CoursesDetailModal({ isOpen, onClose, courses, onView, onEdit, onDelete
                 <button
                   onClick={() => onView(course)}
                   className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-all active:scale-95"
+                  style={{
+                    fontFamily: "'Bona Nova', serif",
+                  }}
                 >
                   View
                 </button>
                 <button
                   onClick={() => { onEdit(course); onClose(); }}
                   className="px-3 py-1.5 bg-sky-600 text-white rounded-lg text-sm hover:bg-sky-700 transition-all active:scale-95"
+                  style={{
+                    fontFamily: "'Bona Nova', serif",
+                  }}
                 >
                   Edit
                 </button>
                 <a
                   href={`/admin/courses/${course._id}`}
                   className="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 transition-all active:scale-95 text-center"
+                  style={{
+                    fontFamily: "'Bona Nova', serif",
+                  }}
                 >
                   Build
                 </a>
                 <button
                   onClick={() => { onDelete(course); }}
                   className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-all active:scale-95"
+                  style={{
+                    fontFamily: "'Bona Nova', serif",
+                  }}
                 >
                   Delete
                 </button>
@@ -509,8 +672,16 @@ function TeachersDetailModal({ isOpen, onClose, teachers }) {
       {teachers.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">👩‍🏫</div>
-          <p className="text-slate-600">No teachers added yet</p>
-          <p className="text-sm text-slate-500 mt-2">Add teachers from Quick Actions → Manage Teachers</p>
+          <p className="text-slate-600"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >No teachers added yet</p>
+          <p className="text-sm text-slate-500 mt-2"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >Add teachers from Quick Actions → Manage Teachers</p>
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
@@ -529,8 +700,16 @@ function TeachersDetailModal({ isOpen, onClose, teachers }) {
                   </div>
                 )}
                 <div className="flex-1">
-                  <h3 className="font-semibold text-lg text-slate-900">{teacher.name}</h3>
-                  <p className="text-sm text-slate-600 mt-1">🎵 {teacher.instrument}</p>
+                  <h3 className="font-semibold text-lg text-slate-900"
+                  style={{
+                    fontFamily: "'Bona Nova SC', serif",
+                  }}
+                  >{teacher.name}</h3>
+                  <p className="text-sm text-slate-600 mt-1"
+                  style={{
+                    fontFamily: "'Bona Nova', serif",
+                  }}
+                  >🎵 {teacher.instrument}</p>
                 </div>
               </div>
             </div>
@@ -567,8 +746,16 @@ function EnrollmentsDetailModal({ isOpen, onClose, enrollments, leads, courses, 
       {allPending.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">✅</div>
-          <p className="text-slate-600 font-medium">All enrollments are approved!</p>
-          <p className="text-sm text-slate-500 mt-2">No pending enrollments at the moment.</p>
+          <p className="text-slate-600 font-medium"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >All enrollments are approved!</p>
+          <p className="text-sm text-slate-500 mt-2"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >No pending enrollments at the moment.</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -580,12 +767,24 @@ function EnrollmentsDetailModal({ isOpen, onClose, enrollments, leads, courses, 
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-slate-900">{lead.fullName || 'Anonymous User'}</h3>
-                      <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">
+                      <h3 className="font-semibold text-slate-900"
+                      style={{
+                        fontFamily: "'Bona Nova SC', serif",
+                      }}
+                      >{lead.fullName || 'Anonymous User'}</h3>
+                      <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium"
+                      style={{
+                        fontFamily: "'Bona Nova', serif",
+                      }}
+                      >
                         ⏳ New Lead
                       </span>
                     </div>
-                    <div className="text-sm text-slate-600 space-y-1">
+                    <div className="text-sm text-slate-600 space-y-1"
+                    style={{
+                      fontFamily: "'Bona Nova', serif",
+                    }}
+                    >
                       <p>📧 {lead.email || 'Not provided'}</p>
                       <p>📚 {course?.title || lead.courseTitle || lead.courseId}</p>
                       {lead.whatsapp && <p>📱 {lead.whatsapp}</p>}
@@ -596,6 +795,9 @@ function EnrollmentsDetailModal({ isOpen, onClose, enrollments, leads, courses, 
                   <button
                     onClick={() => { onApproveLead(lead); }}
                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-medium shadow-sm hover:shadow-md active:scale-95 ml-4"
+                    style={{
+                      fontFamily: "'Bona Nova', serif",
+                    }}
                   >
                     ✓ Approve
                   </button>
@@ -612,12 +814,24 @@ function EnrollmentsDetailModal({ isOpen, onClose, enrollments, leads, courses, 
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-slate-900">{enrollment.name || 'Anonymous User'}</h3>
-                      <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">
+                      <h3 className="font-semibold text-slate-900"
+                      style={{
+                        fontFamily: "'Bona Nova SC', serif",
+                      }}
+                      >{enrollment.name || 'Anonymous User'}</h3>
+                      <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium"
+                      style={{
+                        fontFamily: "'Bona Nova', serif",
+                      }}
+                      >
                         ⏳ Pending
                       </span>
                     </div>
-                    <div className="text-sm text-slate-600 space-y-1">
+                    <div className="text-sm text-slate-600 space-y-1"
+                    style={{
+                      fontFamily: "'Bona Nova', serif",
+                    }}
+                    >
                       <p>📧 {enrollment.email || 'Not provided'}</p>
                       <p>📚 {course?.title || enrollment.courseId}</p>
                       {enrollment.instrument && <p>🎵 {enrollment.instrument}</p>}
@@ -627,6 +841,9 @@ function EnrollmentsDetailModal({ isOpen, onClose, enrollments, leads, courses, 
                   <button
                     onClick={() => { onApprove(enrollment._id); }}
                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-medium shadow-sm hover:shadow-md active:scale-95 ml-4"
+                    style={{
+                      fontFamily: "'Bona Nova', serif",
+                    }}
                   >
                     ✓ Approve
                   </button>
@@ -648,7 +865,11 @@ function StudentsDetailModal({ isOpen, onClose, enrollments, courses }) {
       {students.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">👥</div>
-          <p className="text-slate-600">No enrolled students yet</p>
+          <p className="text-slate-600"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >No enrolled students yet</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -660,17 +881,33 @@ function StudentsDetailModal({ isOpen, onClose, enrollments, courses }) {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2 flex-wrap">
-                      <h3 className="font-semibold text-slate-900">{enrollment.name || 'Anonymous User'}</h3>
-                      <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                      <h3 className="font-semibold text-slate-900"
+                      style={{
+                        fontFamily: "'Bona Nova SC', serif",
+                      }}
+                      >{enrollment.name || 'Anonymous User'}</h3>
+                      <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium"
+                      style={{
+                        fontFamily: "'Bona Nova', serif",
+                      }}
+                      >
                         ✓ Enrolled
                       </span>
                       {isManual && (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium"
+                        style={{
+                          fontFamily: "'Bona Nova', serif",
+                        }}
+                        >
                           👤 Manual
                         </span>
                       )}
                     </div>
-                    <div className="text-sm text-slate-600 space-y-1">
+                    <div className="text-sm text-slate-600 space-y-1"
+                    style={{
+                      fontFamily: "'Bona Nova', serif",
+                    }}
+                    >
                       <p>📧 {enrollment.email || 'Not provided'}</p>
                       <p>📚 {course?.title || enrollment.courseId}</p>
                       {enrollment.instrument && <p>🎵 {enrollment.instrument}</p>}
@@ -688,6 +925,308 @@ function StudentsDetailModal({ isOpen, onClose, enrollments, courses }) {
         </div>
       )}
     </MetricModal>
+  )
+}
+
+function TokenManagementModal({ isOpen, onClose, enrollments, courses, getToken }) {
+  const [tokens, setTokens] = useState({})
+  const [loading, setLoading] = useState(false)
+  const [editingToken, setEditingToken] = useState(null)
+  const [selectedCourse, setSelectedCourse] = useState('')
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1)
+  const [saving, setSaving] = useState(false)
+
+  const students = enrollments.filter(e => e.approved)
+
+  useEffect(() => {
+    if (isOpen && selectedCourse) {
+      loadTokens()
+    }
+  }, [isOpen, selectedCourse, selectedYear, selectedMonth])
+
+  const loadTokens = async () => {
+    if (!selectedCourse) return
+    setLoading(true)
+    try {
+      const token = await getToken().catch(() => undefined)
+      if (!token) return
+
+      const tokensMap = {}
+      for (const enrollment of students.filter(e => e.courseId === selectedCourse)) {
+        try {
+          const res = await fetch(
+            `${import.meta.env.VITE_API_BASE_URL}/admin/tokens/${enrollment.userId}/${selectedCourse}?year=${selectedYear}&month=${selectedMonth}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
+          if (res.ok) {
+            const tokenData = await res.json()
+            tokensMap[enrollment.userId] = tokenData
+          }
+        } catch (err) {
+          console.error('Error loading tokens for student:', enrollment.userId, err)
+        }
+      }
+      setTokens(tokensMap)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSaveToken = async (studentId, courseId, updates) => {
+    setSaving(true)
+    try {
+      const token = await getToken().catch(() => undefined)
+      if (!token) return
+
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/admin/tokens/${studentId}/${courseId}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            ...updates,
+            year: selectedYear,
+            month: selectedMonth
+          })
+        }
+      )
+
+      if (res.ok) {
+        const updated = await res.json()
+        setTokens(prev => ({ ...prev, [studentId]: updated }))
+        setEditingToken(null)
+        toast.success('Token updated successfully')
+      } else {
+        toast.error('Failed to update token')
+      }
+    } catch (err) {
+      console.error('Error updating token:', err)
+      toast.error('Error updating token')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const course = courses.find(c => c._id === selectedCourse)
+
+  return (
+    <MetricModal isOpen={isOpen} onClose={onClose} title="Token Management" icon="🎫">
+      <div className="space-y-4">
+        {/* Filters */}
+        <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Course</label>
+              <select
+                value={selectedCourse}
+                onChange={(e) => setSelectedCourse(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+              >
+                <option value="">Select a course</option>
+                {courses.map(c => (
+                  <option key={c._id} value={c._id}>{c.title}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Year</label>
+              <input
+                type="number"
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Month</label>
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+              >
+                {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => (
+                  <option key={m} value={m}>{new Date(2000, m-1).toLocaleDateString('en-US', { month: 'long' })}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {!selectedCourse ? (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🎫</div>
+            <p className="text-slate-600">Please select a course to view tokens</p>
+          </div>
+        ) : loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+              <p className="text-sm text-blue-800">
+                <strong>Course:</strong> {course?.title || selectedCourse} | 
+                <strong> Period:</strong> {new Date(selectedYear, selectedMonth-1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              </p>
+            </div>
+            {students.filter(e => e.courseId === selectedCourse).length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-slate-600">No students enrolled in this course</p>
+              </div>
+            ) : (
+              students.filter(e => e.courseId === selectedCourse).map((enrollment) => {
+                const tokenData = tokens[enrollment.userId] || {
+                  remainingTokens: 4,
+                  totalTokens: 4,
+                  waivedTokens: 0,
+                  manualAdjustment: 0
+                }
+                const isEditing = editingToken === enrollment.userId
+
+                return (
+                  <div key={enrollment._id} className="bg-white rounded-xl p-4 border border-slate-200">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h3 className="font-semibold text-slate-900">{enrollment.name || 'Anonymous User'}</h3>
+                        <p className="text-sm text-slate-600">{enrollment.email}</p>
+                      </div>
+                      <button
+                        onClick={() => setEditingToken(isEditing ? null : enrollment.userId)}
+                        className="px-3 py-1 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm"
+                      >
+                        {isEditing ? 'Cancel' : 'Edit'}
+                      </button>
+                    </div>
+
+                    {isEditing ? (
+                      <TokenEditForm
+                        tokenData={tokenData}
+                        onSave={(updates) => handleSaveToken(enrollment.userId, selectedCourse, updates)}
+                        onCancel={() => setEditingToken(null)}
+                        saving={saving}
+                      />
+                    ) : (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                          <p className="text-xs text-slate-600 mb-1">Total Tokens</p>
+                          <p className="text-lg font-bold text-slate-900">{tokenData.totalTokens}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-600 mb-1">Remaining</p>
+                          <p className={`text-lg font-bold ${tokenData.remainingTokens === 0 ? 'text-red-600' : tokenData.remainingTokens <= 1 ? 'text-amber-600' : 'text-green-600'}`}>
+                            {tokenData.remainingTokens}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-600 mb-1">Waived</p>
+                          <p className="text-lg font-bold text-blue-600">{tokenData.waivedTokens}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-600 mb-1">Manual Adjustment</p>
+                          <p className={`text-lg font-bold ${tokenData.manualAdjustment >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {tokenData.manualAdjustment >= 0 ? '+' : ''}{tokenData.manualAdjustment}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })
+            )}
+          </div>
+        )}
+      </div>
+    </MetricModal>
+  )
+}
+
+function TokenEditForm({ tokenData, onSave, onCancel, saving }) {
+  const [formData, setFormData] = useState({
+    totalTokens: tokenData.totalTokens || 4,
+    remainingTokens: tokenData.remainingTokens || 4,
+    waivedTokens: tokenData.waivedTokens || 0,
+    manualAdjustment: tokenData.manualAdjustment || 0,
+    notes: tokenData.notes || ''
+  })
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    onSave(formData)
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Total Tokens</label>
+          <input
+            type="number"
+            min="0"
+            value={formData.totalTokens}
+            onChange={(e) => setFormData({ ...formData, totalTokens: parseInt(e.target.value) || 0 })}
+            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Remaining Tokens</label>
+          <input
+            type="number"
+            min="0"
+            value={formData.remainingTokens}
+            onChange={(e) => setFormData({ ...formData, remainingTokens: parseInt(e.target.value) || 0 })}
+            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Waived Tokens</label>
+          <input
+            type="number"
+            min="0"
+            value={formData.waivedTokens}
+            onChange={(e) => setFormData({ ...formData, waivedTokens: parseInt(e.target.value) || 0 })}
+            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Manual Adjustment</label>
+          <input
+            type="number"
+            value={formData.manualAdjustment}
+            onChange={(e) => setFormData({ ...formData, manualAdjustment: parseInt(e.target.value) || 0 })}
+            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+          />
+        </div>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
+        <textarea
+          value={formData.notes}
+          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+          rows="2"
+        />
+      </div>
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          disabled={saving}
+          className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors disabled:opacity-50"
+        >
+          {saving ? 'Saving...' : 'Save'}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
   )
 }
 
@@ -821,11 +1360,19 @@ function ManualEnrollmentForm({ courses, onEnroll, onCancel, loading }) {
     <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 lg:p-8 mb-6 border-2 border-green-200 shadow-lg">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-xl lg:text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+          <h3 className="text-xl lg:text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2"
+          style={{
+            fontFamily: "'Bona Nova SC', serif",
+          }}
+          >
             <span className="text-2xl">👤</span>
             Manual Student Enrollment
           </h3>
-          <p className="text-sm text-slate-600">Enroll a student directly by their email address</p>
+          <p className="text-sm text-slate-600"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >Enroll a student directly by their email address</p>
         </div>
         <button
           onClick={onCancel}
@@ -839,7 +1386,11 @@ function ManualEnrollmentForm({ courses, onEnroll, onCancel, loading }) {
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Email Input */}
         <div>
-          <label htmlFor="manual-email" className="block text-sm font-medium text-slate-700 mb-2">
+          <label htmlFor="manual-email" className="block text-sm font-medium text-slate-700 mb-2"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >
             Student Email Address <span className="text-red-500">*</span>
           </label>
           <input
@@ -860,23 +1411,42 @@ function ManualEnrollmentForm({ courses, onEnroll, onCancel, loading }) {
             }`}
             required
             aria-invalid={errors.email && touched.email ? 'true' : 'false'}
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
           />
           {errors.email && touched.email ? (
-            <p className="mt-1 text-sm text-red-600 flex items-center gap-1 animate-fade-in">
+            <p className="mt-1 text-sm text-red-600 flex items-center gap-1 animate-fade-in"
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
+            >
               <span>⚠️</span> {errors.email}
             </p>
           ) : formData.email && !errors.email ? (
-            <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+            <p className="mt-1 text-xs text-green-600 flex items-center gap-1"
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
+            >
               <span>✓</span> Valid email address
             </p>
           ) : (
-            <p className="mt-1 text-xs text-slate-500">Enter the student's email address</p>
+            <p className="mt-1 text-xs text-slate-500"
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
+            >Enter the student's email address</p>
           )}
         </div>
 
         {/* Course Selection */}
         <div>
-          <label htmlFor="manual-course" className="block text-sm font-medium text-slate-700 mb-2">
+          <label htmlFor="manual-course" className="block text-sm font-medium text-slate-700 mb-2"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >
             Select Course <span className="text-red-500">*</span>
           </label>
           <select
@@ -894,6 +1464,9 @@ function ManualEnrollmentForm({ courses, onEnroll, onCancel, loading }) {
             }`}
             required
             aria-invalid={errors.courseId && touched.courseId ? 'true' : 'false'}
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
           >
             <option value="">-- Select a course --</option>
             {courses.map((course) => (
@@ -903,7 +1476,11 @@ function ManualEnrollmentForm({ courses, onEnroll, onCancel, loading }) {
             ))}
           </select>
           {errors.courseId && touched.courseId ? (
-            <p className="mt-1 text-sm text-red-600 flex items-center gap-1 animate-fade-in">
+            <p className="mt-1 text-sm text-red-600 flex items-center gap-1 animate-fade-in"
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
+            >
               <span>⚠️</span> {errors.courseId}
             </p>
           ) : selectedCourse ? (
@@ -917,8 +1494,16 @@ function ManualEnrollmentForm({ courses, onEnroll, onCancel, loading }) {
                   />
                 )}
                 <div className="flex-1">
-                  <p className="font-medium text-slate-900">{selectedCourse.title}</p>
-                  <p className="text-xs text-slate-600">{selectedCourse.level} • {selectedCourse.modules?.length || 0} modules</p>
+                  <p className="font-medium text-slate-900"
+                  style={{
+                    fontFamily: "'Bona Nova', serif",
+                  }}
+                  >{selectedCourse.title}</p>
+                  <p className="text-xs text-slate-600"
+                  style={{
+                    fontFamily: "'Bona Nova', serif",
+                  }}
+                  >{selectedCourse.level} • {selectedCourse.modules?.length || 0} modules</p>
                 </div>
               </div>
             </div>
@@ -927,7 +1512,11 @@ function ManualEnrollmentForm({ courses, onEnroll, onCancel, loading }) {
 
         {/* Optional Name */}
         <div>
-          <label htmlFor="manual-name" className="block text-sm font-medium text-slate-700 mb-2">
+          <label htmlFor="manual-name" className="block text-sm font-medium text-slate-700 mb-2"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >
             Student Name <span className="text-slate-400 text-xs">(Optional)</span>
           </label>
           <input
@@ -938,8 +1527,15 @@ function ManualEnrollmentForm({ courses, onEnroll, onCancel, loading }) {
             onChange={handleChange}
             placeholder="Student's full name (auto-detected if available)"
             className="w-full border border-slate-300 rounded-lg p-3 bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
           />
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-500"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >
             If left empty, the system will try to find the student's name from their account
           </p>
         </div>
@@ -956,7 +1552,11 @@ function ManualEnrollmentForm({ courses, onEnroll, onCancel, loading }) {
             }`}
           >
             {loading ? (
-              <span className="flex items-center justify-center gap-2">
+              <span className="flex items-center justify-center gap-2"
+              style={{
+                fontFamily: "'Bona Nova', serif",
+              }}
+              >
                 <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -964,7 +1564,11 @@ function ManualEnrollmentForm({ courses, onEnroll, onCancel, loading }) {
                 Enrolling...
               </span>
             ) : (
-              <span className="flex items-center justify-center gap-2">
+              <span className="flex items-center justify-center gap-2"
+              style={{
+                fontFamily: "'Bona Nova', serif",
+              }}
+              >
                 <span>✅</span>
                 <span>Enroll Student</span>
               </span>
@@ -975,6 +1579,9 @@ function ManualEnrollmentForm({ courses, onEnroll, onCancel, loading }) {
             onClick={onCancel}
             disabled={loading}
             className="px-6 py-3 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors font-medium disabled:opacity-50"
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
           >
             Cancel
           </button>
@@ -982,7 +1589,11 @@ function ManualEnrollmentForm({ courses, onEnroll, onCancel, loading }) {
 
         {/* Info Banner */}
         <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-xs text-blue-800 flex items-start gap-2">
+          <p className="text-xs text-blue-800 flex items-start gap-2"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >
             <span className="text-sm">💡</span>
             <span>
               <strong>Note:</strong> The student will be automatically enrolled and approved. 
@@ -1010,7 +1621,7 @@ export default function AdminPage() {
   const [enrolling, setEnrolling] = useState(false)
   const [enrollmentSearch, setEnrollmentSearch] = useState('')
   const [enrollmentFilter, setEnrollmentFilter] = useState('all') // 'all', 'approved', 'pending'
-  const [activeModal, setActiveModal] = useState(null) // 'courses', 'teachers', 'enrollments', 'students'
+  const [activeModal, setActiveModal] = useState(null) // 'courses', 'teachers', 'enrollments', 'students', 'tokens'
 
   const reload = async () => {
     try {
@@ -1238,16 +1849,27 @@ export default function AdminPage() {
             {/* Welcome Section */}
             <div className="mb-8 flex items-center justify-between">
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
+                <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2"
+                style={{
+                  fontFamily: "'Bona Nova SC', serif",
+                }}
+                >
                   Welcome back, {user?.firstName || 'Admin'}! 👋
                 </h1>
-                <p className="text-slate-600">Manage your music academy with ease</p>
+                <p className="text-slate-600"
+                style={{
+                  fontFamily: "'Bona Nova', serif",
+                }}
+                >Manage your music academy with ease</p>
               </div>
               <button
                 onClick={reload}
                 disabled={loading}
                 className="px-4 py-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all font-medium text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm hover:shadow-md active:scale-95"
                 title="Refresh data"
+                style={{
+                  fontFamily: "'Bona Nova', serif",
+                }}
               >
                 <span className={`text-lg ${loading ? 'animate-spin' : ''}`}>🔄</span>
                 <span className="hidden sm:inline">Refresh</span>
@@ -1305,19 +1927,49 @@ export default function AdminPage() {
                 color="bg-purple-100"
                 onClick={() => setActiveModal('students')}
               />
+              <StatsCard 
+                title="Token Management" 
+                value="🎫" 
+                icon="🎫" 
+                color="bg-indigo-100"
+                onClick={() => setActiveModal('tokens')}
+              />
             </div>
 
             {/* Quick Actions - Moved to Top */}
             <div className="mb-8">
-              <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+              <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2"
+              style={{
+                fontFamily: "'Bona Nova SC', serif",
+              }}
+              >
                 <span>⚡</span>
                 <span>Quick Actions</span>
               </h2>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <a href="/admin/tokens" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-sky-300 active:scale-95">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <span className="text-2xl">🎫</span>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900 group-hover:text-sky-700 transition-colors">Token Management</h3>
+                      <p className="text-sm text-slate-600">Debug & manage student tokens</p>
+                    </div>
+                  </div>
+                </a>
                 <a href="/admin/attendance" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-sky-300 active:scale-95">
                   <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">📊</div>
-                  <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-sky-700 transition-colors">Attendance</h3>
-                  <p className="text-sm text-slate-600">Mark and manage student attendance</p>
+                  <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-sky-700 transition-colors"
+                  style={{
+                    fontFamily: "'Bona Nova SC', serif",
+                  }}
+                  >Attendance</h3>
+                  <p className="text-sm text-slate-600"
+                  style={{
+                    fontFamily: "'Bona Nova', serif",
+                  }}
+                  >Mark and manage student attendance</p>
                 </a>
                 {/* <a href="/admin/calendar" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-sky-300 active:scale-95">
                   <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">📅</div>
@@ -1326,18 +1978,42 @@ export default function AdminPage() {
                 </a> */}
                 <a href="/admin/student-schedules" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-purple-300 active:scale-95">
                   <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">👤</div>
-                  <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-purple-700 transition-colors">Student Schedules</h3>
-                  <p className="text-sm text-slate-600">Create individual schedules for students</p>
+                  <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-purple-700 transition-colors"
+                  style={{
+                    fontFamily: "'Bona Nova SC', serif",
+                  }}
+                  >Student Schedules</h3>
+                  <p className="text-sm text-slate-600"
+                  style={{
+                    fontFamily: "'Bona Nova', serif",
+                  }}
+                  >Create individual schedules for students</p>
                 </a>
                 <a href="/admin/teacher-calendar" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-orange-300 active:scale-95">
                   <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">📅</div>
-                  <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-orange-700 transition-colors">Teacher Calendar</h3>
-                  <p className="text-sm text-slate-600">View all student bookings and class schedules</p>
+                  <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-orange-700 transition-colors"
+                  style={{
+                    fontFamily: "'Bona Nova SC', serif",
+                  }}
+                  >Teacher Calendar</h3>
+                  <p className="text-sm text-slate-600"
+                  style={{
+                    fontFamily: "'Bona Nova', serif",
+                  }}
+                  >View all student bookings and class schedules</p>
                 </a>
                 <a href="/admin/resources" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-sky-300 active:scale-95">
                   <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">📚</div>
-                  <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-sky-700 transition-colors">Resources</h3>
-                  <p className="text-sm text-slate-600">Upload and manage course resources</p>
+                  <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-sky-700 transition-colors"
+                  style={{
+                    fontFamily: "'Bona Nova SC', serif",
+                  }}
+                  >Resources</h3>
+                  <p className="text-sm text-slate-600"
+                  style={{
+                    fontFamily: "'Bona Nova', serif",
+                  }}
+                  >Upload and manage course resources</p>
                 </a>
                 {/* <a href="/admin/courses/new" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-sky-300 active:scale-95">
                   <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">➕</div>
@@ -1659,6 +2335,13 @@ export default function AdminPage() {
           onClose={() => setActiveModal(null)}
           enrollments={enrollments}
           courses={courses}
+        />
+        <TokenManagementModal
+          isOpen={activeModal === 'tokens'}
+          onClose={() => setActiveModal(null)}
+          enrollments={enrollments}
+          courses={courses}
+          getToken={getToken}
         />
 
         <Footer showAdminTools={true} />

@@ -134,21 +134,6 @@ export default function Footer({ showAdminTools = false }) {
               <div className="flex items-center gap-2">
               <a href="/" className="flex items-center gap-2">
           <div className="relative bg-black px-4 py-1.5 flex flex-col items-center justify-center">
-            {/* Top full border */}
-            <div className="absolute top-0 left-0 right-0 h-0 border-t-2 border-white"></div>
-            
-            {/* Left side border */}
-            <div className="absolute top-0 left-0 bottom-0 w-0 border-l-2 border-white"></div>
-            
-            {/* Right side border */}
-            <div className="absolute top-0 right-0 bottom-0 w-0 border-r-2 border-white"></div>
-            
-            {/* Bottom left corner */}
-            <div className="absolute bottom-0 left-0 w-12 h-0 border-b-2 border-white"></div>
-            
-            {/* Bottom right corner */}
-            <div className="absolute bottom-0 right-0 w-12 h-0 border-b-2 border-white"></div>
-            
             <span 
               className="text-white text-lg leading-none"
               style={{
@@ -283,9 +268,7 @@ export default function Footer({ showAdminTools = false }) {
         </div>
 
         <div className="border-t border-[#F5E6E0]/30 mt-8 pt-6 text-center text-white/70 text-sm font-medium"
-        style={{
-          fontFamily: "'Bona Nova SC', serif"
-        }}
+        s
         >
           © {new Date().getFullYear()} themusinest.com • made with 🎶 and ❤️
         </div>

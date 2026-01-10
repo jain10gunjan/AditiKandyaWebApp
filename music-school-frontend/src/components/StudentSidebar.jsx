@@ -8,6 +8,7 @@ export default function StudentSidebar({ activeTab, onTabChange, isOpen, onClose
   const menuItems = [
     { id: 'overview', label: 'Overview', icon: '🏠', href: '/dashboard' },
     { id: 'courses', label: 'My Courses', icon: '📚', href: '/dashboard' },
+    { id: 'tokens', label: 'My Tokens', icon: '🎫', href: '/dashboard' },
     { id: 'calendar', label: 'Calendar', icon: '📅', href: '/student/calendar' },
     { id: 'attendance', label: 'Attendance', icon: '📊', href: '/student/attendance' },
     { id: 'resources', label: 'Resources', icon: '📖', href: '/student/resources' },
@@ -46,10 +47,10 @@ export default function StudentSidebar({ activeTab, onTabChange, isOpen, onClose
              
             {/* Navigation Menu */}
             <nav className="p-3 mt-8 lg:p-2">
-              <ul className="space-y-1 lg:space-y-2">
+              <ul className="space-y-1 lg:space-y-2 text-bold">
                 {menuItems.map((item) => {
-                  // Only Overview and My Courses should change tabs (for dashboard page)
-                  const isDashboardTab = item.id === 'overview' || item.id === 'courses'
+                  // Overview, My Courses, and My Tokens should change tabs (for dashboard page)
+                  const isDashboardTab = item.id === 'overview' || item.id === 'courses' || item.id === 'tokens'
                   const isActive = currentActive === item.id
                   
                   return (
@@ -69,7 +70,11 @@ export default function StudentSidebar({ activeTab, onTabChange, isOpen, onClose
                           }`}
                         >
                           <span className="text-lg lg:text-xl">{item.icon}</span>
-                          <span className="font-medium text-sm lg:text-base">{item.label}</span>
+                          <span className="font-medium text-sm lg:text-base"
+                          style={{
+                            fontFamily: "'Bona Nova', serif",
+                          }}
+                          >{item.label}</span>
                         </button>
                       ) : (
                         <Link
@@ -90,7 +95,11 @@ export default function StudentSidebar({ activeTab, onTabChange, isOpen, onClose
                           }`}
                         >
                           <span className="text-lg lg:text-xl">{item.icon}</span>
-                          <span className="font-medium text-sm lg:text-base">{item.label}</span>
+                          <span className="font-medium text-sm lg:text-base"
+                          style={{
+                            fontFamily: "'Bona Nova', serif",
+                          }}
+                          >{item.label}</span>
                         </Link>
                       )}
                     </li>

@@ -82,7 +82,11 @@ function CalendarGrid({ schedules, selectedDate, onDateSelect, view }) {
             >
               <span className="text-lg">‹</span>
             </button>
-            <h2 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900">
+            <h2 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900"
+            style={{
+              fontFamily: "'Bona Nova SC', serif",
+            }}
+            >
               {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
             </h2>
             <button
@@ -96,6 +100,9 @@ function CalendarGrid({ schedules, selectedDate, onDateSelect, view }) {
           <button
             onClick={() => setCurrentDate(new Date())}
             className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-sky-100 text-sky-700 rounded-lg hover:bg-sky-200 transition-colors whitespace-nowrap"
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
           >
             Today
           </button>
@@ -107,7 +114,11 @@ function CalendarGrid({ schedules, selectedDate, onDateSelect, view }) {
         {/* Week day headers */}
         <div className="grid grid-cols-7 gap-1 mb-2">
           {weekDays.map(day => (
-            <div key={day} className="text-center text-xs sm:text-sm font-medium text-slate-500 py-1 sm:py-2">
+            <div key={day} className="text-center text-xs sm:text-sm font-medium text-slate-500 py-1 sm:py-2"
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
+            >
               {day}
             </div>
           ))}
@@ -138,7 +149,11 @@ function CalendarGrid({ schedules, selectedDate, onDateSelect, view }) {
               >
                 <div className={`text-xs sm:text-sm font-medium mb-0.5 ${
                   isCurrentDay ? 'text-sky-700' : 'text-slate-900'
-                }`}>
+                }`}
+                style={{
+                  fontFamily: "'Bona Nova', serif",
+                }}
+                >
                   {date.getDate()}
                 </div>
                 <div className="space-y-0.5">
@@ -148,13 +163,20 @@ function CalendarGrid({ schedules, selectedDate, onDateSelect, view }) {
                         key={event._id}
                         className="text-[10px] sm:text-xs px-1 py-0.5 rounded truncate bg-purple-500 text-white"
                         title={`${event.title} (Individual)`}
+                        style={{
+                          fontFamily: "'Bona Nova', serif",
+                        }}
                       >
                         {formatTime(event.startTime)}
                       </div>
                     )
                   })}
                   {events.length > 1 && (
-                    <div className="text-[10px] sm:text-xs text-slate-500">
+                    <div className="text-[10px] sm:text-xs text-slate-500"
+                    style={{
+                      fontFamily: "'Bona Nova', serif",
+                    }}
+                    >
                       +{events.length - 1}
                     </div>
                   )}
@@ -247,7 +269,11 @@ function EventDetail({ selectedDate, schedules, onClose, isMobile = false }) {
     <div className={`bg-white rounded-xl lg:rounded-2xl shadow-sm border border-slate-200 ${isMobile ? 'fixed inset-x-4 bottom-4 top-auto max-h-[70vh] overflow-y-auto z-50' : ''}`}>
       <div className="p-3 sm:p-4 lg:p-6 border-b border-slate-200 sticky top-0 bg-white z-10">
         <div className="flex items-center justify-between">
-          <h3 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900">
+          <h3 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900"
+          style={{
+            fontFamily: "'Bona Nova SC', serif",
+          }}
+          >
             {formatDate(selectedDate)}
           </h3>
           <button
@@ -271,15 +297,31 @@ function EventDetail({ selectedDate, schedules, onClose, isMobile = false }) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      <h4 className="font-semibold text-slate-900 text-sm sm:text-base">{event.title}</h4>
-                      <span className="px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                      <h4 className="font-semibold text-slate-900 text-sm sm:text-base"
+                      style={{
+                        fontFamily: "'Bona Nova SC', serif",
+                      }}
+                      >{event.title}</h4>
+                      <span className="px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800"
+                      style={{
+                        fontFamily: "'Bona Nova', serif",
+                      }}
+                      >
                         Individual
                       </span>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}
+                      style={{
+                        fontFamily: "'Bona Nova', serif",
+                      }}
+                      >
                         {event.status}
                       </span>
                     </div>
-                    <div className="text-xs sm:text-sm text-slate-600 space-y-1">
+                    <div className="text-xs sm:text-sm text-slate-600 space-y-1"
+                    style={{
+                      fontFamily: "'Bona Nova', serif",
+                    }}
+                    >
                       <div className="flex items-center gap-2">
                         <span>🕐</span>
                         <span>{formatTime(event.startTime)} - {formatTime(event.endTime)}</span>
@@ -306,6 +348,9 @@ function EventDetail({ selectedDate, schedules, onClose, isMobile = false }) {
                           <button
                             onClick={() => joinMeeting(event.meetingLink)}
                             className="w-full sm:w-auto px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm font-medium"
+                            style={{
+                              fontFamily: "'Bona Nova', serif",
+                            }}
                           >
                             Join Class
                           </button>
@@ -314,6 +359,9 @@ function EventDetail({ selectedDate, schedules, onClose, isMobile = false }) {
                             disabled
                             className="w-full sm:w-auto px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed text-sm font-medium"
                             title="Join button will be available 15 minutes before class starts"
+                            style={{
+                              fontFamily: "'Bona Nova', serif",
+                            }}
                           >
                             Join Class (Available 15 min before)
                           </button>
@@ -328,8 +376,16 @@ function EventDetail({ selectedDate, schedules, onClose, isMobile = false }) {
         ) : (
           <div className="text-center py-6 sm:py-8">
             <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">📅</div>
-            <h4 className="text-base sm:text-lg font-semibold text-slate-900 mb-2">No Classes Scheduled</h4>
-            <p className="text-xs sm:text-sm text-slate-600">You don't have any classes on this date.</p>
+            <h4 className="text-base sm:text-lg font-semibold text-slate-900 mb-2"
+            style={{
+              fontFamily: "'Bona Nova SC', serif",
+            }}
+            >No Classes Scheduled</h4>
+            <p className="text-xs sm:text-sm text-slate-600"
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
+            >You don't have any classes on this date.</p>
           </div>
         )}
       </div>
@@ -337,7 +393,7 @@ function EventDetail({ selectedDate, schedules, onClose, isMobile = false }) {
   )
 }
 
-function CalendarContent({ schedules, enrollments, loading, onMenuClick }) {
+function CalendarContent({ schedules, enrollments, loading, onMenuClick, courseTokens }) {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [showMobileEventDetail, setShowMobileEventDetail] = useState(false)
   
@@ -422,7 +478,11 @@ function CalendarContent({ schedules, enrollments, loading, onMenuClick }) {
             <div className="w-8 h-8 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">🎶</span>
             </div>
-            <span className="font-bold text-slate-900 text-sm sm:text-base">Calendar</span>
+            <span className="font-bold text-slate-900 text-sm sm:text-base"
+            style={{
+              fontFamily: "'Bona Nova SC', serif",
+            }}
+            >Calendar</span>
           </div>
           <div className="w-8"></div>
         </div>
@@ -430,10 +490,18 @@ function CalendarContent({ schedules, enrollments, loading, onMenuClick }) {
 
       {/* Header */}
       <div className="mb-4 sm:mb-6 lg:mb-8">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-2">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-2"
+        style={{
+          fontFamily: 'Bona Nova SC, serif',
+        }}
+        >
           {getGreeting()}, Your Calendar 📅
         </h1>
-        <p className="text-slate-600 text-xs sm:text-sm lg:text-base">
+        <p className="text-slate-600 text-xs sm:text-sm lg:text-base"
+        style={{
+          fontFamily: 'Bona Nova, serif',
+        }}
+        >
           View your individual class schedules and practice sessions.
         </p>
       </div>
@@ -444,13 +512,24 @@ function CalendarContent({ schedules, enrollments, loading, onMenuClick }) {
           <div className="flex items-start gap-3 sm:gap-4">
             <div className="text-xl sm:text-2xl">🎓</div>
             <div className="flex-1">
-              <h3 className="font-semibold text-amber-800 mb-2 text-sm sm:text-base">No Enrollments Found</h3>
-              <p className="text-amber-700 text-xs sm:text-sm mb-4">
+              <h3 className="font-semibold text-amber-800 mb-2 text-sm sm:text-base"
+              style={{
+                fontFamily: 'Bona Nova SC, serif',
+              }}
+              >No Enrollments Found</h3>
+              <p className="text-amber-700 text-xs sm:text-sm mb-4"
+              style={{
+                fontFamily: 'Bona Nova, serif',
+              }}
+              >
                 You need to be enrolled in courses to see your class schedule.
               </p>
               <a 
                 href="/courses" 
                 className="inline-block px-4 sm:px-6 py-2 sm:py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium text-xs sm:text-sm"
+                style={{
+                  fontFamily: 'Bona Nova, serif',
+                }}
               >
                 Browse Courses
               </a>
@@ -461,10 +540,145 @@ function CalendarContent({ schedules, enrollments, loading, onMenuClick }) {
 
       {enrollments.length > 0 && (
         <>
+          {/* Token Status by Course */}
+          {enrollments.length > 0 && (
+            <div className="mb-4 sm:mb-6 lg:mb-8">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <h2 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900"
+                style={{
+                  fontFamily: "'Bona Nova SC', serif",
+                }}
+                >Monthly Tokens by Course</h2>
+                <button
+                  onClick={() => enrollments.length > 0 && loadTokens(enrollments)}
+                  className="px-3 py-1.5 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-2"
+                  style={{
+                    fontFamily: "'Bona Nova', serif",
+                  }}
+                  title="Refresh token data"
+                >
+                  <span>🔄</span>
+                  <span className="hidden sm:inline">Refresh</span>
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {enrollments
+                  .filter(e => e.course && e.course._id)
+                  .map((enrollment) => {
+                    const courseId = enrollment.course._id
+                    const tokens = courseTokens[courseId] || { remainingTokens: 4, totalTokens: 4, waivedTokens: 0, manualAdjustment: 0 }
+                    const tokenPercentage = tokens.totalTokens > 0 ? Math.round((tokens.remainingTokens / tokens.totalTokens) * 100) : 0
+                    // Calculate used tokens: total - remaining - waived (to show only tokens used for present/absent)
+                    const usedTokens = Math.max(0, tokens.totalTokens - tokens.remainingTokens - (tokens.waivedTokens || 0))
+                    
+                    return (
+                      <div key={courseId} className="bg-white rounded-xl lg:rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 hover:shadow-md transition-all">
+                        <div className="mb-4">
+                          <h3 className="font-semibold text-slate-900 text-sm sm:text-base mb-2 truncate"
+                          style={{
+                            fontFamily: "'Bona Nova SC', serif",
+                          }}
+                          >{enrollment.course.title}</h3>
+                        </div>
+                        
+                        {/* Token Progress Bar */}
+                        <div className="mb-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs sm:text-sm text-slate-600"
+                            style={{
+                              fontFamily: "'Bona Nova', serif",
+                            }}
+                            >Token Status</span>
+                            <span className={`text-xs sm:text-sm font-bold ${
+                              tokens.remainingTokens === 0 ? 'text-red-600' : 
+                              tokens.remainingTokens <= 1 ? 'text-amber-600' : 
+                              'text-green-600'
+                            }`}>
+                              {tokens.remainingTokens}/{tokens.totalTokens}
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                            <div 
+                              className={`h-3 rounded-full transition-all duration-500 ${
+                                tokens.remainingTokens === 0 ? 'bg-red-500' : 
+                                tokens.remainingTokens <= 1 ? 'bg-amber-500' : 
+                                'bg-green-500'
+                              }`}
+                              style={{ width: `${tokenPercentage}%` }} 
+                            />
+                          </div>
+                        </div>
+
+                        {/* Detailed Token Information */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
+                            <span className="text-xs sm:text-sm text-slate-700"
+                            style={{
+                              fontFamily: "'Bona Nova', serif",
+                            }}
+                            >Total Tokens:</span>
+                            <span className="text-xs sm:text-sm font-semibold text-slate-900">{tokens.totalTokens}</span>
+                          </div>
+                          <div className="flex items-center justify-between p-2 bg-green-50 rounded-lg">
+                            <span className="text-xs sm:text-sm text-green-700"
+                            style={{
+                              fontFamily: "'Bona Nova', serif",
+                            }}
+                            >Remaining:</span>
+                            <span className={`text-xs sm:text-sm font-semibold ${
+                              tokens.remainingTokens === 0 ? 'text-red-600' : 
+                              tokens.remainingTokens <= 1 ? 'text-amber-600' : 
+                              'text-green-600'
+                            }`}>
+                              {tokens.remainingTokens}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between p-2 bg-red-50 rounded-lg">
+                            <span className="text-xs sm:text-sm text-red-700"
+                            style={{
+                              fontFamily: "'Bona Nova', serif",
+                            }}
+                            >Used:</span>
+                            <span className="text-xs sm:text-sm font-semibold text-red-600">{usedTokens}</span>
+                          </div>
+                          {tokens.waivedTokens > 0 && (
+                            <div className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
+                              <span className="text-xs sm:text-sm text-blue-700"
+                              style={{
+                                fontFamily: "'Bona Nova', serif",
+                              }}
+                              >Waived:</span>
+                              <span className="text-xs sm:text-sm font-semibold text-blue-600">{tokens.waivedTokens}</span>
+                            </div>
+                          )}
+                          {tokens.manualAdjustment !== 0 && (
+                            <div className="flex items-center justify-between p-2 bg-purple-50 rounded-lg">
+                              <span className="text-xs sm:text-sm text-purple-700"
+                              style={{
+                                fontFamily: "'Bona Nova', serif",
+                              }}
+                              >Manual Adjustment:</span>
+                              <span className={`text-xs sm:text-sm font-semibold ${tokens.manualAdjustment >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {tokens.manualAdjustment >= 0 ? '+' : ''}{tokens.manualAdjustment}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+              </div>
+            </div>
+          )}
+
           {/* Today's Classes Quick View */}
           {todaysSchedules.length > 0 && (
             <div className="mb-4 sm:mb-6 lg:mb-8">
-              <h2 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Today's Classes</h2>
+              <h2 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 mb-3 sm:mb-4"
+              style={{
+                fontFamily: 'Bona Nova SC, serif',
+              }}
+              >Today's Classes</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {todaysSchedules.map(schedule => {
                   return (
@@ -475,12 +689,24 @@ function CalendarContent({ schedules, enrollments, loading, onMenuClick }) {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                            <h3 className="font-semibold text-slate-900 truncate text-sm sm:text-base">{schedule.title}</h3>
-                            <span className="px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-medium bg-purple-100 text-purple-800 flex-shrink-0">
+                            <h3 className="font-semibold text-slate-900 truncate text-sm sm:text-base"
+                            style={{
+                              fontFamily: "'Bona Nova SC', serif",
+                            }}
+                            >{schedule.title}</h3>
+                            <span className="px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-medium bg-purple-100 text-purple-800 flex-shrink-0"
+                            style={{
+                              fontFamily: 'Bona Nova, serif',
+                            }}
+                            >
                               Individual
                             </span>
                           </div>
-                          <p className="text-xs sm:text-sm text-green-600 mt-0.5">
+                          <p className="text-xs sm:text-sm text-green-600 mt-0.5"
+                          style={{
+                            fontFamily: 'Bona Nova, serif',
+                          }}
+                          >
                             {new Date(schedule.startTime).toLocaleTimeString('en-US', {
                               hour: '2-digit',
                               minute: '2-digit',
@@ -494,6 +720,9 @@ function CalendarContent({ schedules, enrollments, loading, onMenuClick }) {
                           <button
                             onClick={() => window.open(schedule.meetingLink, '_blank')}
                             className="w-full px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm font-medium"
+                            style={{
+                              fontFamily: 'Bona Nova, serif',
+                            }}
                           >
                             Join Class
                           </button>
@@ -502,6 +731,9 @@ function CalendarContent({ schedules, enrollments, loading, onMenuClick }) {
                             disabled
                             className="w-full px-3 sm:px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed text-xs sm:text-sm font-medium"
                             title="Join button will be available 15 minutes before class starts"
+                            style={{
+                              fontFamily: 'Bona Nova, serif',
+                            }}
                           >
                             Join Class (Available 15 min before)
                           </button>
@@ -561,7 +793,11 @@ function CalendarContent({ schedules, enrollments, loading, onMenuClick }) {
           {/* Upcoming Classes */}
           {upcomingSchedules.length > 0 && (
             <div className="mb-4 sm:mb-6">
-              <h2 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 mb-3 sm:mb-4">Upcoming Classes</h2>
+              <h2 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 mb-3 sm:mb-4"
+              style={{
+                fontFamily: "'Bona Nova SC', serif",
+              }}
+              >Upcoming Classes</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {upcomingSchedules.map(schedule => {
                   return (
@@ -572,12 +808,24 @@ function CalendarContent({ schedules, enrollments, loading, onMenuClick }) {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                            <h3 className="font-semibold text-slate-900 truncate text-sm sm:text-base">{schedule.title}</h3>
-                            <span className="px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-medium bg-purple-100 text-purple-800 flex-shrink-0">
+                            <h3 className="font-semibold text-slate-900 truncate text-sm sm:text-base"
+                            style={{
+                              fontFamily: "'Bona Nova SC', serif",
+                            }}
+                            >{schedule.title}</h3>
+                            <span className="px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-medium bg-purple-100 text-purple-800 flex-shrink-0"
+                            style={{
+                              fontFamily: "'Bona Nova', serif",
+                            }}
+                            >
                               Individual
                             </span>
                           </div>
-                          <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
+                          <p className="text-xs sm:text-sm text-slate-600 mt-0.5"
+                          style={{
+                            fontFamily: "'Bona Nova', serif",
+                          }}
+                          >
                             {new Date(schedule.startTime).toLocaleDateString('en-US', {
                               month: 'short',
                               day: 'numeric'
@@ -590,13 +838,20 @@ function CalendarContent({ schedules, enrollments, loading, onMenuClick }) {
                         </div>
                       </div>
                       {schedule.instructor && (
-                        <p className="text-xs sm:text-sm text-slate-500 mb-2 sm:mb-3">Instructor: {schedule.instructor}</p>
+                        <p className="text-xs sm:text-sm text-slate-500 mb-2 sm:mb-3"
+                        style={{
+                          fontFamily: "'Bona Nova', serif",
+                        }}
+                        >Instructor: {schedule.instructor}</p>
                       )}
                       {schedule.meetingLink && (
                         canJoinClass(schedule.startTime, schedule.endTime) ? (
                           <button
                             onClick={() => window.open(schedule.meetingLink, '_blank')}
                             className="w-full px-3 sm:px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-xs sm:text-sm font-medium"
+                            style={{
+                              fontFamily: "'Bona Nova', serif",
+                            }}
                           >
                             Join Class
                           </button>
@@ -605,6 +860,9 @@ function CalendarContent({ schedules, enrollments, loading, onMenuClick }) {
                             disabled
                             className="w-full px-3 sm:px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed text-xs sm:text-sm font-medium"
                             title="Join button will be available 15 minutes before class starts"
+                            style={{
+                              fontFamily: "'Bona Nova', serif",
+                            }}
                           >
                             Join Class (Available 15 min before)
                           </button>
@@ -621,9 +879,21 @@ function CalendarContent({ schedules, enrollments, loading, onMenuClick }) {
           {individualSchedules.length === 0 && (
             <div className="bg-white rounded-xl lg:rounded-2xl p-6 sm:p-8 lg:p-12 text-center border border-slate-200">
               <div className="text-3xl sm:text-4xl lg:text-6xl mb-3 sm:mb-4">📅</div>
-              <h3 className="text-base sm:text-lg lg:text-xl font-semibold text-slate-900 mb-2">No Individual Classes Scheduled</h3>
-              <p className="text-sm sm:text-base text-slate-600 mb-4 sm:mb-6">You don't have any individual classes scheduled yet.</p>
-              <p className="text-xs sm:text-sm text-slate-500">
+              <h3 className="text-base sm:text-lg lg:text-xl font-semibold text-slate-900 mb-2"
+              style={{
+                fontFamily: "'Bona Nova SC', serif",
+              }}
+              >No Individual Classes Scheduled</h3>
+              <p className="text-sm sm:text-base text-slate-600 mb-4 sm:mb-6"
+              style={{
+                fontFamily: "'Bona Nova', serif",
+              }}
+              >You don't have any individual classes scheduled yet.</p>
+              <p className="text-xs sm:text-sm text-slate-500"
+              style={{
+                fontFamily: "'Bona Nova', serif",
+              }}
+              >
                 Your instructor will create individual schedules for you soon.
               </p>
             </div>
@@ -638,13 +908,44 @@ export default function StudentCalendar() {
   const { getToken } = useAuth()
   const [schedules, setSchedules] = useState([])
   const [enrollments, setEnrollments] = useState([])
+  const [courseTokens, setCourseTokens] = useState({})
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('calendar')
 
   useEffect(() => {
     loadEnrollments()
+    
+    // Refresh tokens when page regains focus (e.g., after admin marks attendance)
+    const handleFocus = () => {
+      if (enrollments.length > 0) {
+        loadTokens(enrollments)
+      }
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
   }, [])
+  
+  // Refresh tokens when enrollments change
+  useEffect(() => {
+    if (enrollments.length > 0) {
+      loadTokens(enrollments)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enrollments.length])
+  
+  // Set up periodic token refresh (every 30 seconds) to show real-time updates
+  useEffect(() => {
+    if (enrollments.length === 0) return
+    
+    const tokenRefreshInterval = setInterval(() => {
+      loadTokens(enrollments)
+    }, 30000) // Refresh every 30 seconds
+    
+    return () => clearInterval(tokenRefreshInterval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enrollments.length])
 
   const loadEnrollments = async () => {
     try {
@@ -661,12 +962,67 @@ export default function StudentCalendar() {
         setEnrollments(data)
         if (data.length > 0) {
           loadSchedules()
+          loadTokens(data)
         }
       }
     } catch (error) {
       console.error('Error loading enrollments:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadTokens = async (enrollmentsData) => {
+    try {
+      const token = await getToken().catch(() => undefined)
+      if (!token) {
+        console.error('No auth token available')
+        return
+      }
+      
+      const headers = { Authorization: `Bearer ${token}` }
+      
+      const now = new Date()
+      const year = now.getFullYear()
+      const month = now.getMonth() + 1
+      
+      const tokensMap = {}
+      for (const enrollment of enrollmentsData) {
+        if (!enrollment.course || !enrollment.course._id) continue
+        try {
+          // Use same pattern as admin - simple fetch without cache-busting
+          const tokenUrl = `${import.meta.env.VITE_API_BASE_URL}/me/tokens/${enrollment.course._id}?year=${year}&month=${month}`
+          const tokenRes = await fetch(tokenUrl, { 
+            headers,
+            cache: 'no-store'
+          })
+          if (tokenRes.ok) {
+            const tokenData = await tokenRes.json()
+            // Use the raw API response directly - no transformation or aggregation
+            // The API returns: { _id, studentId, courseId, year, month, totalTokens, remainingTokens, waivedTokens, manualAdjustment, ... }
+            tokensMap[enrollment.course._id] = {
+              totalTokens: tokenData.totalTokens || 4,
+              remainingTokens: tokenData.remainingTokens || 4,
+              waivedTokens: tokenData.waivedTokens || 0,
+              manualAdjustment: tokenData.manualAdjustment || 0
+            }
+            console.log('Loaded tokens for course:', enrollment.course._id, 'Raw API data:', tokenData, 'Processed:', tokensMap[enrollment.course._id])
+          } else {
+            const errorText = await tokenRes.text()
+            console.error('Failed to load tokens for course:', enrollment.course._id, tokenRes.status, errorText)
+            // Set default tokens if API fails
+            tokensMap[enrollment.course._id] = { remainingTokens: 4, totalTokens: 4, waivedTokens: 0, manualAdjustment: 0 }
+          }
+        } catch (err) {
+          console.error('Error loading tokens for course:', enrollment.course._id, err)
+          // Set default tokens on error
+          tokensMap[enrollment.course._id] = { remainingTokens: 4, totalTokens: 4, waivedTokens: 0, manualAdjustment: 0 }
+        }
+      }
+      console.log('Final tokens map:', tokensMap)
+      setCourseTokens(tokensMap)
+    } catch (error) {
+      console.error('Error loading tokens:', error)
     }
   }
 
@@ -699,10 +1055,22 @@ export default function StudentCalendar() {
         <div className="flex items-center justify-center min-h-screen py-20">
           <div className="text-center px-4">
             <div className="text-6xl mb-6">🎶</div>
-            <h1 className="text-2xl font-bold text-slate-900 mb-4">Welcome to Music Academy</h1>
-            <p className="text-slate-600 mb-6">Please sign in to access your calendar</p>
+            <h1 className="text-2xl font-bold text-slate-900 mb-4"
+            style={{
+              fontFamily: "'Bona Nova SC', serif",
+            }}
+            >Welcome to Music Academy</h1>
+            <p className="text-slate-600 mb-6"
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
+            >Please sign in to access your calendar</p>
             <SignInButton>
-              <button className="px-8 py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors font-medium">
+              <button className="px-8 py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors font-medium"
+              style={{
+                fontFamily: "'Bona Nova', serif",
+              }}
+              >
                 Sign In
               </button>
             </SignInButton>
@@ -723,6 +1091,7 @@ export default function StudentCalendar() {
               schedules={schedules}
               enrollments={enrollments}
               loading={loading}
+              courseTokens={courseTokens}
               onMenuClick={() => setSidebarOpen(true)}
             />
           </div>

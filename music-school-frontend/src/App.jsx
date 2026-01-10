@@ -872,16 +872,7 @@ function HeroCarousel() {
       buttonText2: 'About Musinest',
       href2: '/about',
     },
-    {
-      image: 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=1920&q=80',
-      title: 'Music Arrangements & Notations',
-      subtitle: 'Clear, accurate music arrangements and notations for easy learning.',
-      badge: '95% Success Rate',
-      buttonText1: 'Start Learning Today',
-      href1: '#enroll',
-      buttonText2: 'Browse Courses',
-      href2: '#courses',
-    },
+     
     {
       image: 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=1920&q=80',
       title: 'One-on-One Lessons',
@@ -947,7 +938,7 @@ function HeroCarousel() {
               <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                  
                 <h1 
-                  className="text-5xl md:text-7xl lg:text-8xl font-cinema font-bold leading-tight text-white mb-6"
+                  className="text-5xl md:text-7xl lg:text-8xl font-cinema text-white mb-6"
                   style={{
                     fontFamily: "'Dancing Script', cursive"
                   }}
@@ -963,9 +954,9 @@ function HeroCarousel() {
                   ))}
                 </h1>
                 <p 
-                  className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed font-medium max-w-3xl mx-auto"
+                  className="text-xl md:text-2xl text-white/90 mb-8 font-medium max-w-3xl mx-auto"
                   style={{
-                    fontFamily: "'Satisfy', cursive"
+                    fontFamily: "'Bona Nova SC', serif"
                   }}
                 >
                   {slide.subtitle}
@@ -991,7 +982,8 @@ function HeroCarousel() {
                           window.open(href, '_blank', 'noopener,noreferrer')
                         }
                       }}
-                      className="px-8 py-4 rounded-lg bg-[#F5E6E0] text-black hover:bg-[#E8D5CC] font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 text-center whitespace-nowrap cursor-pointer"
+                      className="px-8 py-4 rounded-none bg-[#F5E6E0] text-black hover:bg-[#E8D5CC] font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 text-center whitespace-nowrap cursor-pointer"
+                      style={{ fontFamily: "'Bona Nova SC', serif" }}
                     >
                       {slide.buttonText1}
                     </button>
@@ -1014,7 +1006,8 @@ function HeroCarousel() {
                           window.open(href, '_blank', 'noopener,noreferrer')
                         }
                       }}
-                      className="px-8 py-4 rounded-lg bg-transparent border-2 border-[#F5E6E0] hover:bg-[#F5E6E0]/10 font-bold text-[#F5E6E0] text-lg transition-all duration-300 text-center whitespace-nowrap cursor-pointer"
+                      className="px-8 py-4 rounded-none bg-[#F5E6E0] text-black hover:bg-[#E8D5CC] font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 text-center whitespace-nowrap cursor-pointer"
+                      style={{ fontFamily: "'Bona Nova SC', serif" }}
                     >
                       {slide.buttonText2}
                     </button>

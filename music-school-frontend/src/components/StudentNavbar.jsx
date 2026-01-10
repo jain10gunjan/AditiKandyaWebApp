@@ -94,35 +94,35 @@ export default function StudentNavbar() {
         <nav className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
           {/* Desktop Navbar */}
           <div className="hidden md:flex items-center justify-center h-20 relative">
-            {/* Logo - Absolute Left */}
-            <div className="absolute left-0 flex items-center">
-      <a href="/" className="flex items-center hover:opacity-80 transition-opacity">
-        <div className="bg-white px-4 py-2 flex flex-col items-center justify-center">
-          <span 
-            className="text-slate-900 text-3xl leading-none"
-            style={{
-              fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive",
-              fontWeight: 400,
-              fontStyle: 'italic'
-            }}
-          >
-            The Musinest
-          </span>
-          <div className="w-full flex justify-center mt-1">
-            <span 
-              className="text-slate-900 text-sm leading-none"
-              style={{
-                fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive",
-                fontWeight: 300,
-                fontStyle: 'italic'
-              }}
-            >
-              Aditi Kandya
-            </span>
-          </div>
-        </div>
-      </a>
-    </div>
+            {/* Logo - Absolute Left (match main navbar sizing) */}
+            <div className="absolute left-4 flex items-center gap-3">
+              <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                <div className="relative flex flex-col items-center justify-center">
+                  <span 
+                    className="text-slate-900 text-3xl leading-none"
+                    style={{
+                      fontFamily: "'Satisfy', cursive",
+                      fontWeight: 400,
+                      fontStyle: 'italic'
+                    }}
+                  >
+                    The Musinest
+                  </span>
+                  <div className="w-full flex justify-center mt-1">
+                    <span 
+                      className="text-slate-900 text-sm leading-none"
+                      style={{
+                        fontFamily: "'Dancing Script', cursive",
+                        fontWeight: 300,
+                        fontStyle: 'italic'
+                      }}
+                    >
+                      Aditi Kandya
+                    </span>
+                  </div>
+                </div>
+              </a>
+            </div>
             {/* Centered Navigation Links */}
             <div className="flex items-center gap-4 lg:gap-6">
               {mainLinks.map((link) => (
@@ -161,7 +161,7 @@ export default function StudentNavbar() {
                         className="block px-4 py-2 text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-colors text-sm font-medium"
                         onClick={() => setDropdownOpen(null)}
                         style={{
-                          fontFamily: "'Dancing Script', cursive"
+                          fontFamily: "'Bona Nova', serif"
                         }}
                       >
                         {link.label}
@@ -193,6 +193,9 @@ export default function StudentNavbar() {
                         href={link.href}
                         className="block px-4 py-2 text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-colors text-sm font-medium"
                         onClick={() => setDropdownOpen(null)}
+                        style={{
+                          fontFamily: "'Bona Nova', serif"
+                        }}
                       >
                         {link.label}
                       </a>
@@ -252,14 +255,14 @@ export default function StudentNavbar() {
           </div>
 
           {/* Mobile Navbar - Top */}
-           {/* Mobile Logo */}
+          {/* Mobile Logo (match main navbar sizing) */}
        <div className="md:hidden flex items-center justify-between h-16 w-full px-0">
-         <a href="/" className="flex items-center">
-           <div className="bg-white px-3 py-1.5 flex flex-col items-center justify-center">
+         <a href="/" className="flex items-center gap-2">
+           <div className="relative flex flex-col items-center justify-center">
              <span 
                className="text-slate-900 text-lg leading-none"
                style={{
-                 fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive",
+                 fontFamily: "'Satisfy', cursive",
                  fontWeight: 400,
                  fontStyle: 'italic'
                }}
@@ -270,7 +273,7 @@ export default function StudentNavbar() {
                <span 
                  className="text-slate-900 text-xs leading-none"
                  style={{
-                   fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive",
+                   fontFamily: "'Dancing Script', cursive",
                    fontWeight: 300,
                    fontStyle: 'italic'
                  }}

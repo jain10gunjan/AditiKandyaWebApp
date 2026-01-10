@@ -8,7 +8,7 @@ import StudentNavbar from '../components/StudentNavbar.jsx'
 import StudentFooter from '../components/StudentFooter.jsx'
 import Navbar from '../components/Navbar.jsx'
 
-function DashboardContent({ activeTab, items, pending, loading, onMenuClick, schedules, attendanceSummary, courseProgress }) {
+function DashboardContent({ activeTab, items, pending, loading, onMenuClick, schedules, attendanceSummary, courseProgress, courseTokens }) {
   const getGreeting = () => {
     const hour = new Date().getHours()
     if (hour < 12) return 'Good Morning'
@@ -20,6 +20,224 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
+      </div>
+    )
+  }
+
+  // My Tokens View - Detailed token information
+  if (activeTab === 'tokens') {
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const currentMonth = now.getMonth() + 1
+    const monthName = new Date(currentYear, currentMonth - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    
+    return (
+      <div className="flex-1 p-4 lg:p-6 xl:p-8">
+        {/* Mobile Header */}
+        <div className="lg:hidden mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">🎫</span>
+              </div>
+              <span className="font-bold text-slate-900">My Tokens</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Header */}
+        <div className="mb-6 lg:mb-8">
+          <h1 className="text-2xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-2"
+          style={{
+            fontFamily: 'Bona Nova SC, serif',
+          }}
+          >
+            My Tokens
+          </h1>
+          <p className="text-slate-600 text-sm lg:text-base"
+          style={{
+            fontFamily: 'Bona Nova, serif',
+          }}
+          >
+            Track your monthly tokens for each course - {monthName}
+          </p>
+        </div>
+
+        {/* Tokens Table */}
+        {items.filter(it => it.course && it.course._id).length > 0 ? (
+          <div className="bg-white rounded-xl lg:rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase"
+                    style={{
+                      fontFamily: "'Bona Nova SC', serif",
+                    }}
+                    >Course</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase"
+                    style={{
+                      fontFamily: "'Bona Nova SC', serif",
+                    }}
+                    >Total</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase"
+                    style={{
+                      fontFamily: "'Bona Nova SC', serif",
+                    }}
+                    >Remaining</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase"
+                    style={{
+                      fontFamily: "'Bona Nova SC', serif",
+                    }}
+                    >Used</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase"
+                    style={{
+                      fontFamily: "'Bona Nova SC', serif",
+                    }}
+                    >Waived</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase"
+                    style={{
+                      fontFamily: "'Bona Nova SC', serif",
+                    }}
+                    >Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {items.filter(it => it.course && it.course._id).map((it) => {
+                    const courseIdStr = String(it.course._id)
+                    const tokenData = courseTokens[courseIdStr] || courseTokens[it.course._id]
+                    const tokens = tokenData ? {
+                      totalTokens: tokenData.totalTokens || 4,
+                      remainingTokens: tokenData.remainingTokens || 4,
+                      waivedTokens: tokenData.waivedTokens || 0,
+                      manualAdjustment: tokenData.manualAdjustment || 0
+                    } : { remainingTokens: 4, totalTokens: 4, waivedTokens: 0, manualAdjustment: 0 }
+                    const usedTokens = Math.max(0, tokens.totalTokens - tokens.remainingTokens - tokens.waivedTokens)
+                    const tokenPercentage = tokens.totalTokens > 0 ? Math.round((tokens.remainingTokens / tokens.totalTokens) * 100) : 0
+                    const statusColor = tokens.remainingTokens === 0 ? 'text-red-600' : tokens.remainingTokens <= 1 ? 'text-amber-600' : 'text-green-600'
+                    const statusText = tokens.remainingTokens === 0 ? 'Exhausted' : tokens.remainingTokens <= 1 ? 'Low' : 'Good'
+                    
+                    return (
+                      <tr key={it.course._id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-4">
+                          <div className="font-semibold text-slate-900"
+                          style={{
+                            fontFamily: "'Bona Nova', serif",
+                          }}
+                          >{it.course.title}</div>
+                          <div className="text-xs text-slate-500 mt-1">{monthName}</div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className="font-semibold text-slate-900">{tokens.totalTokens}</span>
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className={`font-bold ${statusColor}`}>{tokens.remainingTokens}</span>
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className="font-semibold text-red-600">{usedTokens}</span>
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className="font-semibold text-blue-600">{tokens.waivedTokens}</span>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-3">
+                            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${statusColor} bg-opacity-10`}>
+                              {statusText}
+                            </span>
+                            <div className="w-16 bg-slate-200 rounded-full h-2 overflow-hidden">
+                              <div 
+                                className={`h-2 rounded-full transition-all duration-500 ${
+                                  tokens.remainingTokens === 0 ? 'bg-red-500' : 
+                                  tokens.remainingTokens <= 1 ? 'bg-amber-500' : 
+                                  'bg-green-500'
+                                }`}
+                                style={{ width: `${tokenPercentage}%` }} 
+                              />
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Summary Card */}
+            <div className="bg-gradient-to-r from-sky-50 to-blue-50 px-4 lg:px-6 py-4 border-t border-slate-200">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {(() => {
+                  const allTokens = items.filter(it => it.course && it.course._id).map(it => {
+                    const courseIdStr = String(it.course._id)
+                    const tokenData = courseTokens[courseIdStr] || courseTokens[it.course._id]
+                    return tokenData ? {
+                      totalTokens: tokenData.totalTokens || 4,
+                      remainingTokens: tokenData.remainingTokens || 4,
+                      waivedTokens: tokenData.waivedTokens || 0
+                    } : { totalTokens: 4, remainingTokens: 4, waivedTokens: 0 }
+                  })
+                  const totalTokens = allTokens.reduce((sum, t) => sum + t.totalTokens, 0)
+                  const totalRemaining = allTokens.reduce((sum, t) => sum + t.remainingTokens, 0)
+                  const totalUsed = allTokens.reduce((sum, t) => sum + (t.totalTokens - t.remainingTokens - t.waivedTokens), 0)
+                  const totalWaived = allTokens.reduce((sum, t) => sum + t.waivedTokens, 0)
+                  
+                  return (
+                    <>
+                      <div>
+                        <div className="text-xs text-slate-600 mb-1"
+                        style={{
+                          fontFamily: "'Bona Nova', serif",
+                        }}
+                        >Total Tokens</div>
+                        <div className="text-lg font-bold text-slate-900">{totalTokens}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-slate-600 mb-1"
+                        style={{
+                          fontFamily: "'Bona Nova', serif",
+                        }}
+                        >Remaining</div>
+                        <div className="text-lg font-bold text-green-600">{totalRemaining}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-slate-600 mb-1"
+                        style={{
+                          fontFamily: "'Bona Nova', serif",
+                        }}
+                        >Used</div>
+                        <div className="text-lg font-bold text-red-600">{totalUsed}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-slate-600 mb-1"
+                        style={{
+                          fontFamily: "'Bona Nova', serif",
+                        }}
+                        >Waived</div>
+                        <div className="text-lg font-bold text-blue-600">{totalWaived}</div>
+                      </div>
+                    </>
+                  )
+                })()}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl lg:rounded-2xl p-8 lg:p-12 text-center border border-slate-200"
+          style={{
+            fontFamily: 'Bona Nova, serif',
+          }}
+          >
+            <div className="text-4xl lg:text-6xl mb-4">🎫</div>
+            <h3 className="text-lg lg:text-xl font-semibold text-slate-900 mb-2">No Courses Enrolled</h3>
+            <p className="text-sm lg:text-base text-slate-600 mb-6">Enroll in a course to start tracking your tokens!</p>
+            <a 
+              href="/courses" 
+              className="inline-block px-4 py-2 lg:px-6 lg:py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors font-medium text-sm lg:text-base"
+            >
+              Browse Courses
+            </a>
+          </div>
+        )}
       </div>
     )
   }
@@ -50,10 +268,18 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
 
         {/* Header */}
         <div className="mb-6 lg:mb-8">
-          <h1 className="text-2xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-2">
+          <h1 className="text-2xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-2"
+          style={{
+            fontFamily: 'Bona Nova SC, serif',
+          }}
+          >
             My Courses
           </h1>
-          <p className="text-slate-600 text-sm lg:text-base">
+          <p className="text-slate-600 text-sm lg:text-base"
+          style={{
+            fontFamily: 'Bona Nova, serif',
+          }}
+          >
             All your enrolled courses in one place.
           </p>
         </div>
@@ -75,18 +301,34 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
                       className="h-40 lg:h-48 w-full object-cover group-hover:scale-105 transition-transform duration-200" 
                       alt={it.course.title}
                     />
-                    <div className="absolute top-3 right-3 lg:top-4 lg:right-4 bg-green-500 text-white px-2 py-1 lg:px-3 lg:py-1 rounded-full text-xs font-medium">
+                    <div className="absolute top-3 right-3 lg:top-4 lg:right-4 bg-green-500 text-white px-2 py-1 lg:px-3 lg:py-1 rounded-full text-xs font-medium"
+                    style={{
+                      fontFamily: 'Bona Nova, serif',
+                    }}
+                    >
                       Enrolled
                     </div>
                   </div>
                   <div className="p-4 lg:p-6">
-                    <h3 className="font-bold text-slate-900 mb-2 group-hover:text-sky-700 transition-colors text-sm lg:text-base">
+                    <h3 className="font-bold text-slate-900 mb-2 group-hover:text-sky-700 transition-colors text-sm lg:text-base"
+                    style={{
+                      fontFamily: 'Bona Nova, serif',
+                    }}
+                    >
                       {it.course.title}
                     </h3>
-                    <p className="text-xs lg:text-sm text-slate-600 mb-4 line-clamp-2">
+                    <p className="text-xs lg:text-sm text-slate-600 mb-4 line-clamp-2"
+                    style={{
+                      fontFamily: 'Bona Nova, serif',
+                    }}
+                    >
                       {it.course.description || 'Continue your musical journey with this course.'}
                     </p>
-                    <div className="mb-3">
+                    <div className="mb-3"
+                    style={{
+                      fontFamily: 'Bona Nova, serif',
+                    }}
+                    >
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-xs text-slate-600">Progress</span>
                         <span className="text-xs font-semibold text-sky-700">{prog.pct}%</span>
@@ -111,7 +353,11 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
             })}
           </div>
         ) : (
-          <div className="bg-white rounded-xl lg:rounded-2xl p-8 lg:p-12 text-center border border-slate-200">
+          <div className="bg-white rounded-xl lg:rounded-2xl p-8 lg:p-12 text-center border border-slate-200"
+          style={{
+            fontFamily: 'Bona Nova, serif',
+          }}
+          >
             <div className="text-4xl lg:text-6xl mb-4">🎵</div>
             <h3 className="text-lg lg:text-xl font-semibold text-slate-900 mb-2">No Courses Yet</h3>
             <p className="text-sm lg:text-base text-slate-600 mb-6">Start your musical journey by enrolling in a course!</p>
@@ -152,10 +398,17 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
 
       {/* Header */}
       <div className="mb-6 lg:mb-8">
-        <h1 className="text-2xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-2">
+        <h1 className="text-2xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-2"
+        style={{
+          fontFamily: 'Bona Nova SC, serif',
+        }}
+        >
           {getGreeting()}, Welcome back! 👋
         </h1>
-        <p className="text-slate-600 text-sm lg:text-base">
+        <p className="text-slate-600 text-sm lg:text-base"
+        style={{
+          fontFamily: 'Bona Nova, serif',
+        }}>
           Here's what's happening with your music learning journey today.
         </p>
       </div>
@@ -188,7 +441,11 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
         <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              <p className="text-xs lg:text-sm text-slate-600">Enrolled Courses</p>
+              <p className="text-xs lg:text-sm text-slate-600"
+              style={{
+                fontFamily: 'Bona Nova SC, serif',
+              }}
+              >Enrolled Courses</p>
               <p className="text-lg lg:text-2xl font-bold text-slate-900">{items.length}</p>
             </div>
             <div className="w-8 h-8 lg:w-10 lg:h-10 bg-blue-100 rounded-lg lg:rounded-xl flex items-center justify-center ml-2 flex-shrink-0">
@@ -200,7 +457,11 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
         <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              <p className="text-xs lg:text-sm text-slate-600">Pending</p>
+              <p className="text-xs lg:text-sm text-slate-600"
+              style={{
+                fontFamily: 'Bona Nova SC, serif',
+              }}
+              >Pending</p>
               <p className="text-lg lg:text-2xl font-bold text-slate-900">{pending.length}</p>
             </div>
             <div className="w-8 h-8 lg:w-10 lg:h-10 bg-amber-100 rounded-lg lg:rounded-xl flex items-center justify-center ml-2 flex-shrink-0">
@@ -212,7 +473,11 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
         <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              <p className="text-xs lg:text-sm text-slate-600">This Week</p>
+              <p className="text-xs lg:text-sm text-slate-600"
+              style={{
+                fontFamily: 'Bona Nova SC, serif',
+              }}
+              >This Week</p>
               <p className="text-lg lg:text-2xl font-bold text-slate-900">{schedules.length}</p>
             </div>
             <div className="w-8 h-8 lg:w-10 lg:h-10 bg-green-100 rounded-lg lg:rounded-xl flex items-center justify-center ml-2 flex-shrink-0">
@@ -224,7 +489,11 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
         <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              <p className="text-xs lg:text-sm text-slate-600">Attendance</p>
+              <p className="text-xs lg:text-sm text-slate-600"
+              style={{
+                fontFamily: 'Bona Nova SC, serif',
+              }}
+              >Attendance</p>
               <p className="text-lg lg:text-2xl font-bold text-slate-900">{attendanceSummary?.overallPct || 0}%</p>
             </div>
             <div className="w-8 h-8 lg:w-10 lg:h-10 bg-purple-100 rounded-lg lg:rounded-xl flex items-center justify-center ml-2 flex-shrink-0">
@@ -237,11 +506,27 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
       {/* Course Progress */}
       {items.filter(it => it.course && it.course._id).length > 0 && (
         <div className="mb-6 lg:mb-8">
-          <h2 className="text-lg lg:text-xl font-bold text-slate-900 mb-4">Course Progress</h2>
+          <h2 className="text-lg lg:text-xl font-bold text-slate-900 mb-4"
+          style={{
+            fontFamily: 'Bona Nova SC, serif',
+          }}
+          >Course Progress</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
             {items.filter(it => it.course && it.course._id).map((it) => {
               const prog = courseProgress[it.course._id] || { pct: 0, completed: 0, total: 0 }
               const isComplete = prog.pct === 100
+              // Use token data directly from API - ensure we have the correct structure
+              // Try both string and object ID formats
+              const courseIdStr = String(it.course._id)
+              const tokenData = courseTokens[courseIdStr] || courseTokens[it.course._id]
+              const tokens = tokenData ? {
+                totalTokens: tokenData.totalTokens || 4,
+                remainingTokens: tokenData.remainingTokens || 4,
+                waivedTokens: tokenData.waivedTokens || 0,
+                manualAdjustment: tokenData.manualAdjustment || 0
+              } : { remainingTokens: 4, totalTokens: 4, waivedTokens: 0, manualAdjustment: 0 }
+              console.log('Course Progress - Course:', it.course.title, 'CourseId:', courseIdStr, 'TokenData:', tokenData, 'Tokens:', tokens)
+              const tokenPercentage = tokens.totalTokens > 0 ? Math.round((tokens.remainingTokens / tokens.totalTokens) * 100) : 0
               return (
                 <a 
                   key={it.course._id} 
@@ -249,7 +534,11 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
                   className="group bg-white rounded-xl lg:rounded-2xl p-4 lg:p-6 shadow-sm border border-slate-200 hover:shadow-md hover:border-sky-300 transition-all duration-200"
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-slate-900 text-sm lg:text-base truncate group-hover:text-sky-700 transition-colors">{it.course.title}</h3>
+                    <h3 className="font-semibold text-slate-900 text-sm lg:text-base truncate group-hover:text-sky-700 transition-colors"
+                    style={{
+                      fontFamily: 'Bona Nova SC, serif',
+                    }}
+                    >{it.course.title}</h3>
                     <span className="text-xs text-slate-600">{prog.completed}/{prog.total}</span>
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden mb-3">
@@ -258,11 +547,43 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
                       style={{ width: `${prog.pct}%` }} 
                     />
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-3">
                     <div className="text-sm font-semibold text-sky-700">{prog.pct}%</div>
-                    <span className="text-xs text-slate-500 group-hover:text-sky-600 transition-colors">
+                    <span className="text-xs text-slate-500 group-hover:text-sky-600 transition-colors"
+                    style={{
+                      fontFamily: 'Bona Nova SC, serif',
+                    }}
+                    >
                       {isComplete ? '🎉 Completed' : 'Continue →'}
                     </span>
+                  </div>
+                  {/* Token Display */}
+                  <div className="pt-3 border-t border-slate-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-slate-600"
+                      style={{
+                        fontFamily: 'Bona Nova SC, serif',
+                      }}
+                      >Monthly Tokens</span>
+                      <span className={`text-xs font-semibold ${tokens.remainingTokens === 0 ? 'text-red-600' : tokens.remainingTokens <= 1 ? 'text-amber-600' : 'text-green-600'}`}>
+                        {tokens.remainingTokens}/{tokens.totalTokens}
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                      <div 
+                        className={`h-2 rounded-full transition-all duration-500 ${
+                          tokens.remainingTokens === 0 ? 'bg-red-500' : 
+                          tokens.remainingTokens <= 1 ? 'bg-amber-500' : 
+                          'bg-green-500'
+                        }`}
+                        style={{ width: `${tokenPercentage}%` }} 
+                      />
+                    </div>
+                    {tokens.waivedTokens > 0 && (
+                      <div className="text-xs text-blue-600 mt-1">
+                        {tokens.waivedTokens} waived
+                      </div>
+                    )}
                   </div>
                 </a>
               )
@@ -274,29 +595,57 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
       {/* Attendance Glimpse */}
       {attendanceSummary.total > 0 && (
         <div className="mb-6 lg:mb-8">
-          <h2 className="text-lg lg:text-xl font-bold text-slate-900 mb-4">Attendance Overview</h2>
+          <h2 className="text-lg lg:text-xl font-bold text-slate-900 mb-4"
+          style={{
+            fontFamily: 'Bona Nova SC, serif',
+          }}
+          >Attendance Overview</h2>
           <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-green-200 shadow-sm">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div className="bg-white rounded-lg p-3 text-center">
                 <div className="text-2xl font-bold text-green-600">{attendanceSummary.present || 0}</div>
-                <div className="text-xs text-slate-600">Present</div>
+                <div className="text-xs text-slate-600"
+                style={{
+                  fontFamily: 'Bona Nova, serif',
+                }}
+                >Present</div>
               </div>
               <div className="bg-white rounded-lg p-3 text-center">
                 <div className="text-2xl font-bold text-red-600">{attendanceSummary.absent || 0}</div>
-                <div className="text-xs text-slate-600">Absent</div>
+                <div className="text-xs text-slate-600"
+                style={{
+                  fontFamily: 'Bona Nova, serif',
+                }}
+                >Absent</div>
               </div>
               <div className="bg-white rounded-lg p-3 text-center">
                 <div className="text-2xl font-bold text-blue-600">{attendanceSummary.waived || 0}</div>
-                <div className="text-xs text-slate-600">Waived</div>
+                <div className="text-xs text-slate-600"
+                style={{
+                  fontFamily: 'Bona Nova, serif',
+                }}
+                >Waived</div>
               </div>
               <div className="bg-white rounded-lg p-3 text-center">
-                <div className="text-2xl font-bold text-slate-900">{attendanceSummary.overallPct}%</div>
+                <div className="text-2xl font-bold text-slate-900"
+                style={{
+                  fontFamily: 'Bona Nova SC, serif',
+                }}
+                >{attendanceSummary.overallPct}%</div>
                 <div className="text-xs text-slate-600">Rate</div>
               </div>
             </div>
             <div className="flex items-center justify-between mt-3">
-              <a href="/student/attendance" className="text-sm text-green-700 font-medium hover:text-green-800">View Full Report →</a>
-              <div className="text-xs text-slate-600">Current Month</div>
+              <a href="/student/attendance" className="text-sm text-green-700 font-medium hover:text-green-800"
+              style={{
+                fontFamily: 'Bona Nova, serif',
+              }}
+              >View Full Report →</a>
+              <div className="text-xs text-slate-600"
+              style={{
+                fontFamily: 'Bona Nova, serif',
+              }}
+              >Current Month</div>
             </div>
           </div>
         </div>
@@ -305,72 +654,203 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
       {/* Upcoming Classes (This Week) */}
       <div className="mb-6 lg:mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg lg:text-xl font-bold text-slate-900">Upcoming Classes (This Week)</h2>
-          <a href="/student/calendar" className="text-sm text-sky-600 hover:text-sky-700 font-medium">View Full Calendar →</a>
+          <h2 className="text-lg lg:text-xl font-bold text-slate-900"
+          style={{
+            fontFamily: 'Bona Nova SC, serif',
+          }}
+          >Upcoming Classes (This Week)</h2>
+          <a href="/student/calendar" className="text-sm text-sky-600 hover:text-sky-700 font-medium"
+          style={{
+            fontFamily: 'Bona Nova, serif',
+          }}
+          >View Full Calendar →</a>
         </div>
         {schedules.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-            {schedules.map((s) => {
-              const startDate = new Date(s.startTime)
-              const isToday = startDate.toDateString() === new Date().toDateString()
-              const isTomorrow = startDate.toDateString() === new Date(Date.now() + 86400000).toDateString()
-              
-              return (
-                <div key={s._id} className="bg-white rounded-xl lg:rounded-2xl p-4 lg:p-6 shadow-sm border border-slate-200 hover:shadow-md transition-all">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-slate-900 text-sm lg:text-base mb-1 truncate">{s.title}</h3>
-                      <div className="flex items-center gap-2 text-xs text-slate-600">
-                        <span>🕐 {startDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
-                        {s.location && <span>📍 {s.location}</span>}
+          (() => {
+            // Group schedules by courseId
+            const schedulesByCourse = {}
+            schedules.forEach(s => {
+              const courseId = s.courseId
+              if (!courseId) return
+              if (!schedulesByCourse[courseId]) {
+                schedulesByCourse[courseId] = []
+              }
+              schedulesByCourse[courseId].push(s)
+            })
+
+            // Get course names from items
+            const getCourseName = (courseId) => {
+              const enrollment = items.find(it => it.course && it.course._id === courseId)
+              return enrollment?.course?.title || 'Unknown Course'
+            }
+
+            return (
+              <div className="space-y-6">
+                {Object.entries(schedulesByCourse).map(([courseId, courseSchedules]) => {
+                  const courseName = getCourseName(courseId)
+                  // Use token data directly from API - ensure we have the correct structure
+                  const courseIdStr = String(courseId)
+                  const tokenData = courseTokens[courseIdStr] || courseTokens[courseId]
+                  const tokens = tokenData ? {
+                    totalTokens: tokenData.totalTokens || 4,
+                    remainingTokens: tokenData.remainingTokens || 4,
+                    waivedTokens: tokenData.waivedTokens || 0,
+                    manualAdjustment: tokenData.manualAdjustment || 0
+                  } : { remainingTokens: 4, totalTokens: 4, waivedTokens: 0, manualAdjustment: 0 }
+                  const tokenPercentage = tokens.totalTokens > 0 ? Math.round((tokens.remainingTokens / tokens.totalTokens) * 100) : 0
+
+                  return (
+                    <div key={courseId} className="bg-white rounded-xl lg:rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                      {/* Course Header with Tokens */}
+                      <div className="bg-gradient-to-r from-sky-50 to-blue-50 px-4 lg:px-6 py-3 lg:py-4 border-b border-slate-200">
+                        <div className="flex items-center justify-between flex-wrap gap-3">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-slate-900 text-base lg:text-lg mb-1 truncate"
+                            style={{
+                              fontFamily: 'Bona Nova SC, serif',
+                            }}
+                            >{courseName}</h3>
+                            <div className="flex items-center gap-4 text-xs text-slate-600"
+                            style={{
+                              fontFamily: 'Bona Nova, serif',
+                            }}
+                            >
+                              <span>{courseSchedules.length} {courseSchedules.length === 1 ? 'class' : 'classes'} this week</span>
+                            </div>
+                          </div>
+                          {/* Token Display */}
+                          <div className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 border border-slate-200">
+                            <div className="text-center">
+                              <div className="text-xs text-slate-600 mb-1"
+                              style={{
+                                fontFamily: 'Bona Nova, serif',
+                              }}
+                              >Tokens</div>
+                              <div className={`text-sm font-bold ${
+                                tokens.remainingTokens === 0 ? 'text-red-600' : 
+                                tokens.remainingTokens <= 1 ? 'text-amber-600' : 
+                                'text-green-600'
+                              }`}>
+                                {tokens.remainingTokens}/{tokens.totalTokens}
+                              </div>
+                            </div>
+                            <div className="w-12 bg-slate-200 rounded-full h-2 overflow-hidden">
+                              <div 
+                                className={`h-2 rounded-full transition-all duration-500 ${
+                                  tokens.remainingTokens === 0 ? 'bg-red-500' : 
+                                  tokens.remainingTokens <= 1 ? 'bg-amber-500' : 
+                                  'bg-green-500'
+                                }`}
+                                style={{ width: `${tokenPercentage}%` }} 
+                              />
+                            </div>
+                            {tokens.waivedTokens > 0 && (
+                              <div className="text-xs text-blue-600"
+                              style={{
+                                fontFamily: 'Bona Nova, serif',
+                              }}
+                              >
+                                {tokens.waivedTokens} waived
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Schedules for this course */}
+                      <div className="p-4 lg:p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
+                          {courseSchedules.map((s) => {
+                            const startDate = new Date(s.startTime)
+                            const isToday = startDate.toDateString() === new Date().toDateString()
+                            const isTomorrow = startDate.toDateString() === new Date(Date.now() + 86400000).toDateString()
+                            
+                            return (
+                              <div key={s._id} className="bg-slate-50 rounded-xl lg:rounded-2xl p-4 lg:p-6 shadow-sm border border-slate-200 hover:shadow-md transition-all">
+                                <div className="flex items-start justify-between mb-3">
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="font-semibold text-slate-900 text-sm lg:text-base mb-1 truncate"
+                                    style={{
+                                      fontFamily: 'Bona Nova, serif',
+                                    }}
+                                    >{s.title}</h4>
+                                    <div className="flex items-center gap-2 text-xs text-slate-600"
+                                    style={{
+                                      fontFamily: 'Bona Nova, serif',
+                                    }}
+                                    >
+                                      <span>🕐 {startDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                                      {s.location && <span>📍 {s.location}</span>}
+                                    </div>
+                                  </div>
+                                  <div className="text-right ml-3 flex-shrink-0">
+                                    <div className={`text-xs px-2 py-1 rounded-full font-medium ${
+                                      isToday ? 'bg-green-100 text-green-700' :
+                                      isTomorrow ? 'bg-blue-100 text-blue-700' :
+                                      'bg-slate-100 text-slate-700'
+                                    }`}
+                                    style={{
+                                      fontFamily: 'Bona Nova, serif',
+                                    }}
+                                    >
+                                      {isToday ? 'Today' : isTomorrow ? 'Tomorrow' : startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {s.description && (
+                                  <p className="text-xs text-slate-600 mb-3 line-clamp-2"
+                                  style={{
+                                    fontFamily: 'Bona Nova, serif',
+                                  }}
+                                  >{s.description}</p>
+                                )}
+                                
+                                <div className="flex items-center justify-between"
+                                style={{
+                                  fontFamily: 'Bona Nova, serif',
+                                }}
+                                >
+                                  <div className="flex items-center gap-3 text-xs text-slate-600">
+                                    {s.instructor && (
+                                      <span className="flex items-center gap-1">
+                                        <span>👨‍🏫</span>
+                                        <span>{s.instructor}</span>
+                                      </span>
+                                    )}
+                                    {s.status && (
+                                      <span className={`px-2 py-1 rounded-full text-xs ${
+                                        s.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
+                                        s.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                        'bg-red-100 text-red-700'
+                                      }`}>
+                                        {s.status}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {s.meetingLink && (
+                                    <button 
+                                      onClick={() => window.open(s.meetingLink, '_blank')} 
+                                      className="px-4 py-2 bg-gradient-to-r from-sky-600 to-blue-600 text-white rounded-lg text-sm font-medium hover:from-sky-700 hover:to-blue-700 transition-all shadow-sm hover:shadow-md"
+                                      style={{
+                                        fontFamily: 'Bona Nova , serif',
+                                      }}
+                                    >
+                                      Join Class
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
                       </div>
                     </div>
-                    <div className="text-right ml-3 flex-shrink-0">
-                      <div className={`text-xs px-2 py-1 rounded-full font-medium ${
-                        isToday ? 'bg-green-100 text-green-700' :
-                        isTomorrow ? 'bg-blue-100 text-blue-700' :
-                        'bg-slate-100 text-slate-700'
-                      }`}>
-                        {isToday ? 'Today' : isTomorrow ? 'Tomorrow' : startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {s.description && (
-                    <p className="text-xs text-slate-600 mb-3 line-clamp-2">{s.description}</p>
-                  )}
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 text-xs text-slate-600">
-                      {s.instructor && (
-                        <span className="flex items-center gap-1">
-                          <span>👨‍🏫</span>
-                          <span>{s.instructor}</span>
-                        </span>
-                      )}
-                      {s.status && (
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          s.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
-                          s.status === 'completed' ? 'bg-green-100 text-green-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>
-                          {s.status}
-                        </span>
-                      )}
-                    </div>
-                    {s.meetingLink && (
-                      <button 
-                        onClick={() => window.open(s.meetingLink, '_blank')} 
-                        className="px-4 py-2 bg-gradient-to-r from-sky-600 to-blue-600 text-white rounded-lg text-sm font-medium hover:from-sky-700 hover:to-blue-700 transition-all shadow-sm hover:shadow-md"
-                      >
-                        Join Class
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+                  )
+                })}
+              </div>
+            )
+          })()
         ) : (
           <div className="bg-white rounded-xl lg:rounded-2xl p-8 text-center border border-slate-200">
             <div className="text-4xl mb-4">📅</div>
@@ -385,15 +865,31 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
 
       {/* Quick Actions */}
       <div className="mb-6 lg:mb-8">
-        <h2 className="text-lg lg:text-xl font-bold text-slate-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+        <h2 className="text-lg lg:text-xl font-bold text-slate-900 mb-4"
+        style={{
+          fontFamily: 'Bona Nova SC, serif',
+        }}
+        >Quick Actions</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4"
+        style={{
+          fontFamily: 'Bona Nova, serif',
+        }}
+        >
           <a href="/student/calendar" className="group bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200 hover:shadow-md transition-all duration-200 hover:border-sky-300">
             <div className="text-center">
               <div className="w-10 h-10 lg:w-12 lg:h-12 bg-sky-100 rounded-xl lg:rounded-2xl flex items-center justify-center mx-auto mb-2 lg:mb-3 group-hover:bg-sky-200 transition-colors">
                 <span className="text-sm lg:text-lg">📅</span>
               </div>
-              <h3 className="font-semibold text-slate-900 text-xs lg:text-sm">View Calendar</h3>
-              <p className="text-xs text-slate-600 mt-1">Upcoming classes</p>
+              <h3 className="font-semibold text-slate-900 text-xs lg:text-sm"
+              style={{
+                fontFamily: 'Bona Nova, serif',
+              }}
+              >View Calendar</h3>
+              <p className="text-xs text-slate-600 mt-1"
+              style={{
+                fontFamily: 'Bona Nova, serif',
+              }}
+              >Upcoming classes</p>
             </div>
           </a>
 
@@ -431,30 +927,57 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
 
       {/* Enrolled Courses */}
       <div>
-        <h2 className="text-lg lg:text-xl font-bold text-slate-900 mb-4">My Enrolled Courses</h2>
+        <h2 className="text-lg lg:text-xl font-bold text-slate-900 mb-4"
+        style={{
+          fontFamily: 'Bona Nova SC, serif',
+        }}
+        >My Enrolled Courses</h2>
         {items.filter(it => it.course && it.course._id).length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
             {items.filter(it => it.course && it.course._id).map((it) => (
               <a key={it.course._id} href={`/dashboard/course/${it.course._id}`} className="group bg-white rounded-xl lg:rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-200">
-                <div className="relative">
+                <div className="relative"
+                style={{
+                  fontFamily: 'Bona Nova, serif',
+                }}
+                >
                   <img 
                     src={it.course.thumbnailPath || it.course.image || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=400&auto=format&fit=crop'} 
                     className="h-40 lg:h-48 w-full object-cover group-hover:scale-105 transition-transform duration-200" 
                     alt={it.course.title}
+                    style={{
+                      fontFamily: 'Bona Nova, serif',
+                    }}
                   />
-                  <div className="absolute top-3 right-3 lg:top-4 lg:right-4 bg-green-500 text-white px-2 py-1 lg:px-3 lg:py-1 rounded-full text-xs font-medium">
+                  <div className="absolute top-3 right-3 lg:top-4 lg:right-4 bg-green-500 text-white px-2 py-1 lg:px-3 lg:py-1 rounded-full text-xs font-medium"
+                  style={{
+                    fontFamily: 'Bona Nova, serif',
+                  }}
+                  >
                     Enrolled
                   </div>
                 </div>
-                <div className="p-4 lg:p-6">
+                <div className="p-4 lg:p-6"
+                style={{
+                  fontFamily: 'Bona Nova, serif',
+                }}
+                >
                   <h3 className="font-bold text-slate-900 mb-2 group-hover:text-sky-700 transition-colors text-sm lg:text-base">
                     {it.course.title}
                   </h3>
                   <p className="text-xs lg:text-sm text-slate-600 mb-4 line-clamp-2">
                     {it.course.description || 'Continue your musical journey with this course.'}
                   </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs lg:text-sm text-slate-500">Click to continue</span>
+                  <div className="flex items-center justify-between"
+                  style={{
+                    fontFamily: 'Bona Nova, serif',
+                  }}
+                  >
+                    <span className="text-xs lg:text-sm text-slate-500"
+                    style={{
+                      fontFamily: 'Bona Nova, serif',
+                    }}
+                    >Click to continue</span>
                     <span className="text-sky-600 group-hover:text-sky-700">→</span>
                   </div>
                 </div>
@@ -462,7 +985,11 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-xl lg:rounded-2xl p-8 lg:p-12 text-center border border-slate-200">
+          <div className="bg-white rounded-xl lg:rounded-2xl p-8 lg:p-12 text-center border border-slate-200"
+          style={{
+            fontFamily: 'Bona Nova, serif',
+          }}
+          >
             <div className="text-4xl lg:text-6xl mb-4">🎵</div>
             <h3 className="text-lg lg:text-xl font-semibold text-slate-900 mb-2">No Courses Yet</h3>
             <p className="text-sm lg:text-base text-slate-600 mb-6">Start your musical journey by enrolling in a course!</p>
@@ -987,6 +1514,14 @@ export default function StudentDashboard() {
   const [schedules, setSchedules] = useState([])
   const [attendanceSummary, setAttendanceSummary] = useState({ overallPct: 0, present: 0, absent: 0, waived: 0, total: 0 })
   const [courseProgress, setCourseProgress] = useState({})
+  const [courseTokens, setCourseTokens] = useState({})
+
+  // Debug: Log when courseTokens state changes
+  useEffect(() => {
+    if (Object.keys(courseTokens).length > 0) {
+      console.log('StudentDashboard: courseTokens state updated with', Object.keys(courseTokens).length, 'courses:', JSON.stringify(courseTokens, null, 2))
+    }
+  }, [courseTokens])
 
   // Handle tab from navigation state or custom event
   useEffect(() => {
@@ -1010,10 +1545,105 @@ export default function StudentDashboard() {
     }
   }, [location.state, navigate, location.pathname])
 
+  // Refresh tokens function - using same pattern as admin
+  const refreshTokens = async (enrollmentsData) => {
+    if (!enrollmentsData || enrollmentsData.length === 0) {
+      console.log('refreshTokens: No enrollments data provided')
+      return
+    }
+    const now = new Date()
+    const month = now.getMonth() + 1
+    const year = now.getFullYear()
+    const token = await getToken().catch(() => undefined)
+    if (!token) {
+      console.error('No auth token available for token refresh')
+      return
+    }
+    
+    console.log('refreshTokens: Starting token refresh for', enrollmentsData.length, 'enrollments, year:', year, 'month:', month)
+    
+    const headers = { Authorization: `Bearer ${token}` }
+    const tokensMap = {}
+    
+    // Process each enrollment sequentially to avoid race conditions
+    for (const it of enrollmentsData) {
+      if (!it.course || !it.course._id) {
+        console.warn('refreshTokens: Skipping enrollment without course:', it)
+        continue
+      }
+      
+      const courseId = String(it.course._id) // Ensure it's a string
+      try {
+        // Use same simple pattern as admin - no cache-busting params
+        const tokenUrl = `${import.meta.env.VITE_API_BASE_URL}/me/tokens/${courseId}?year=${year}&month=${month}`
+        console.log('refreshTokens: Fetching tokens for course:', courseId, 'from:', tokenUrl)
+        
+        const tokenRes = await fetch(tokenUrl, { 
+          headers,
+          cache: 'no-store'
+        })
+        
+        if (tokenRes.ok) {
+          const tokenData = await tokenRes.json()
+          console.log('refreshTokens: Received API response for course:', courseId, 'Raw data:', JSON.stringify(tokenData))
+          
+          // Extract only the fields we need from the API response
+          // The API returns: { _id, studentId, courseId, year, month, totalTokens, remainingTokens, waivedTokens, manualAdjustment, ... }
+          const processedTokenData = {
+            totalTokens: tokenData.totalTokens ?? 4,
+            remainingTokens: tokenData.remainingTokens ?? 4,
+            waivedTokens: tokenData.waivedTokens ?? 0,
+            manualAdjustment: tokenData.manualAdjustment ?? 0
+          }
+          
+          // Always store with normalized string courseId
+          const normalizedCourseId = String(courseId)
+          tokensMap[normalizedCourseId] = processedTokenData
+          console.log('refreshTokens: Stored tokens for course:', normalizedCourseId, 'Processed:', JSON.stringify(processedTokenData))
+        } else {
+          const errorText = await tokenRes.text()
+          console.error('refreshTokens: Failed to load tokens for course:', courseId, 'Status:', tokenRes.status, 'Error:', errorText)
+          // Set default tokens if API fails - ALWAYS set something so tokens show
+          tokensMap[courseId] = { 
+            totalTokens: 4, 
+            remainingTokens: 4, 
+            waivedTokens: 0, 
+            manualAdjustment: 0 
+          }
+          console.log('refreshTokens: Set default tokens for course:', courseId)
+        }
+      } catch (err) {
+        console.error('refreshTokens: Error refreshing tokens for course:', courseId, err)
+        // Set default tokens on error - ALWAYS set something so tokens show
+        tokensMap[courseId] = { 
+          totalTokens: 4, 
+          remainingTokens: 4, 
+          waivedTokens: 0, 
+          manualAdjustment: 0 
+        }
+        console.log('refreshTokens: Set default tokens (error) for course:', courseId)
+      }
+    }
+    
+    console.log('refreshTokens: Final tokens map with', Object.keys(tokensMap).length, 'courses:', JSON.stringify(tokensMap, null, 2))
+    console.log('refreshTokens: Course IDs in map:', Object.keys(tokensMap))
+    setCourseTokens(tokensMap)
+    console.log('refreshTokens: State updated with courseTokens - should now be visible in UI')
+  }
+
   // Load dashboard data - only when NOT viewing a course
   useEffect(() => {
     // Skip loading if we're viewing a course
     if (courseId) return
+    
+    // Refresh tokens when page regains focus (e.g., after admin marks attendance)
+    const handleFocus = () => {
+      if (items.length > 0) {
+        refreshTokens(items)
+      }
+    }
+    
+    window.addEventListener('focus', handleFocus)
     
     ;(async () => {
       setLoading(true)
@@ -1132,11 +1762,30 @@ export default function StudentDashboard() {
           }
           setCourseProgress(progressMap)
         }
+        // Load tokens for each course
+        if (enrollmentsData.length > 0) {
+          await refreshTokens(enrollmentsData)
+        }
       } finally {
         setLoading(false)
       }
     })()
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [courseId, getToken])
+  
+  // Set up periodic token refresh (every 30 seconds) to show real-time updates
+  useEffect(() => {
+    if (courseId || items.length === 0) return
+    
+    const tokenRefreshInterval = setInterval(() => {
+      refreshTokens(items)
+    }, 30000) // Refresh every 30 seconds
+    
+    return () => clearInterval(tokenRefreshInterval)
+  }, [courseId, items.length])
 
   // If courseId is present, show course learning view
   if (courseId) {
@@ -1213,6 +1862,7 @@ export default function StudentDashboard() {
               schedules={schedules}
               attendanceSummary={attendanceSummary}
               courseProgress={courseProgress}
+              courseTokens={courseTokens}
               onMenuClick={() => setSidebarOpen(true)}
             />
           </main>

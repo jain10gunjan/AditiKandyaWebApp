@@ -325,7 +325,7 @@ export default function TeachersPage() {
                   Exam Preparation & Guidance.
                 </h3>
                 <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova', serif" }}>
-               Lorem ipsum dolor, sit amet consectetur adipisicing elit. Tempore laudantium accusamus voluptas, molestias qui officiis voluptate cumque asperiores dignissimos animi.
+                Focused exam preparation with step-by-step guidance, syllabus-based lessons, regular assessments, and performance training to build confidence and ensure exam readiness.
                  </p>
               </div>
               <div className="bg-gray-100 rounded-lg p-8 border border-[#F5E6E0]/30">
@@ -334,7 +334,7 @@ export default function TeachersPage() {
                   Live Recital & Workshops.
                 </h3>
                 <p className="text-black/70 font-medium text-sm" style={{ fontFamily: "'Bona Nova', serif" }}>
-                Lorem, ipsum dolor sit amet consectetur adipisicing elit. Aperiam, commodi! Possimus officia beatae ipsam, voluptas obcaecati totam incidunt.
+                Live recitals and workshops that offer students opportunities to perform, learn, interact, and grow through guided sessions and collaborative musical experiences.
                  </p>
               </div>
               

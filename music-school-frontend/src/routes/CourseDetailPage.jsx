@@ -864,11 +864,10 @@ function InstructorCard({ course }) {
     ? course.teacherInstrument 
     : 'Music'
   const teacherAvatar = hasTeacher && course.teacherAvatar && course.teacherAvatar.trim() !== ''
-    ? course.teacherAvatar 
-    : 'https://i.pravatar.cc/150?img=12'
+    'https://media.licdn.com/dms/image/v2/C5603AQHC0WEfpZVHbQ/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1636461338314?e=1769040000&v=beta&t=9RTGGGOIOVnxjnvtIJLiiE4VI1bxCxLghjyDoASIAyw'
   const teacherDescription = hasTeacher && course.teacherDescription && course.teacherDescription.trim() !== ''
     ? course.teacherDescription 
-    : `Expert musician with 10+ years of teaching experience. Specialized in ${teacherInstrument.toLowerCase()} with a passion for helping students discover their musical potential.`
+    : `Expert musician with 4+ years of teaching experience. Specialized in ${teacherInstrument.toLowerCase()} with a passion for helping students discover their musical potential.`
   const rating = course.rating || 4.8
   const studentCount = course.studentCount || 0
   const studentDisplay = studentCount > 0 
@@ -880,7 +879,7 @@ function InstructorCard({ course }) {
       <div className="flex items-start space-x-4">
         <div className="relative group">
           <img 
-            src={teacherAvatar} 
+            src={`https://media.licdn.com/dms/image/v2/C5603AQHC0WEfpZVHbQ/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1636461338314?e=1769040000&v=beta&t=9RTGGGOIOVnxjnvtIJLiiE4VI1bxCxLghjyDoASIAyw`} 
             alt={teacherName}
             className="w-16 h-16 rounded-full object-cover ring-2 ring-slate-200 group-hover:ring-sky-400 transition-all duration-300"
             onError={(e) => {

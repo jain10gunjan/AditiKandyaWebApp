@@ -248,6 +248,30 @@ const Attendance = mongoose.model(
   )
 );
 
+// Token model - tracks monthly tokens per student per course
+const TokenSchema = new mongoose.Schema(
+  {
+    studentId: String, // Keep for backward compatibility
+    studentEmail: String, // Primary identifier - user email
+    courseId: String,
+    year: Number, // e.g., 2025
+    month: Number, // 1-12
+    totalTokens: { type: Number, default: 4 }, // Total tokens for the month (default 4)
+    remainingTokens: { type: Number, default: 4 }, // Remaining tokens
+    waivedTokens: { type: Number, default: 0 }, // Number of waived tokens used
+    manualAdjustment: { type: Number, default: 0 }, // Manual adjustment by admin
+    lastUpdatedBy: String, // userId who last updated (admin for manual adjustments)
+    notes: String, // Notes for manual adjustments
+  },
+  { timestamps: true }
+);
+
+// Create compound indexes for efficient lookups - prioritize email
+TokenSchema.index({ studentEmail: 1, courseId: 1, year: 1, month: 1 }, { unique: true });
+TokenSchema.index({ studentId: 1, courseId: 1, year: 1, month: 1 }); // Keep for backward compatibility
+
+const Token = mongoose.model('Token', TokenSchema);
+
 // Testimonial model
 const Testimonial = mongoose.model(
   'Testimonial',
@@ -1824,6 +1848,272 @@ app.get('/api/me', requireAuthGuarded, (req, res) => {
 
 // ==================== ATTENDANCE ENDPOINTS ====================
 
+// Helper function to get user email from userId
+async function getUserEmail(userId) {
+  if (!userId || !hasClerk) return null
+  try {
+    const user = await clerkClient.users.getUser(userId)
+    return user.emailAddresses?.[0]?.emailAddress?.toLowerCase() || null
+  } catch (err) {
+    console.warn('Could not get user email for userId:', userId, err?.message)
+    return null
+  }
+}
+
+// Helper function to find token record by email or userId (email takes priority)
+async function findTokenRecord(studentEmail, studentId, courseId, year, month) {
+  const normalizedCourseId = String(courseId)
+  
+  // Try email first (primary identifier) - this is the KEY to fixing the issue
+  if (studentEmail) {
+    const normalizedEmail = studentEmail.toLowerCase()
+    const byEmail = await Token.findOne({
+      studentEmail: normalizedEmail,
+      courseId: normalizedCourseId,
+      year,
+      month
+    })
+    if (byEmail) {
+      console.log('✓ Found token record by EMAIL:', normalizedEmail, {
+        remainingTokens: byEmail.remainingTokens,
+        waivedTokens: byEmail.waivedTokens,
+        studentId: byEmail.studentId
+      })
+      return byEmail
+    } else {
+      console.log('✗ No token record found by email:', normalizedEmail)
+    }
+  } else {
+    console.log('⚠ No student email provided for lookup')
+  }
+  
+  // Fallback to userId (for backward compatibility with old records)
+  if (studentId) {
+    const normalizedStudentId = String(studentId)
+    const byUserId = await Token.findOne({
+      studentId: normalizedStudentId,
+      courseId: normalizedCourseId,
+      year,
+      month
+    })
+    if (byUserId) {
+      console.log('✓ Found token record by userId (fallback):', normalizedStudentId, {
+        remainingTokens: byUserId.remainingTokens,
+        waivedTokens: byUserId.waivedTokens,
+        studentEmail: byUserId.studentEmail
+      })
+      // Update to include email for future lookups
+      if (studentEmail && !byUserId.studentEmail) {
+        byUserId.studentEmail = studentEmail.toLowerCase()
+        await byUserId.save()
+        console.log('Updated token record with email:', studentEmail.toLowerCase())
+      }
+      return byUserId
+    } else {
+      console.log('✗ No token record found by userId:', normalizedStudentId)
+    }
+  }
+  
+  // Debug: Show all records for this course/period to help identify issues
+  const allRecords = await Token.find({
+    courseId: normalizedCourseId,
+    year,
+    month
+  })
+  if (allRecords.length > 0) {
+    console.log('All token records for this course/period:', allRecords.map(r => ({
+      _id: r._id,
+      studentId: r.studentId,
+      studentEmail: r.studentEmail,
+      remainingTokens: r.remainingTokens,
+      waivedTokens: r.waivedTokens
+    })))
+  }
+  
+  return null
+}
+
+// Helper function to update tokens when attendance is marked
+async function updateTokensForAttendance(studentId, courseId, date, status, previousStatus, markedBy) {
+  if (!dbConnected) {
+    console.error('Cannot update tokens: Database not connected')
+    return
+  }
+  
+  try {
+    // Parse date - handle both string format (YYYY-MM-DD) and Date object
+    let dateObj
+    if (typeof date === 'string') {
+      // If it's a string like "2025-01-15", parse it correctly
+      const parts = date.split('-')
+      if (parts.length === 3) {
+        dateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]))
+      } else {
+        dateObj = new Date(date)
+      }
+    } else {
+      dateObj = new Date(date)
+    }
+    
+    const year = dateObj.getFullYear()
+    const month = dateObj.getMonth() + 1
+    
+    // Get user email for primary lookup
+    const studentEmail = await getUserEmail(studentId)
+    const normalizedStudentId = String(studentId)
+    const normalizedCourseId = String(courseId)
+    
+    console.log('Updating tokens:', { studentId, studentEmail, courseId, date, year, month, status, previousStatus })
+    
+    // Find token record using email (primary) or userId (fallback)
+    let tokenRecord = await findTokenRecord(studentEmail, normalizedStudentId, normalizedCourseId, year, month)
+    const isNewRecord = !tokenRecord
+    
+    console.log('Token lookup:', { 
+      normalizedStudentId, 
+      normalizedCourseId, 
+      year, 
+      month, 
+      found: !!tokenRecord,
+      existingRecord: tokenRecord ? {
+        remainingTokens: tokenRecord.remainingTokens,
+        totalTokens: tokenRecord.totalTokens,
+        waivedTokens: tokenRecord.waivedTokens
+      } : null
+    })
+    
+    if (!tokenRecord) {
+      // Create new token record with 4 tokens for the month
+      // CRITICAL: Always require email - don't create without it
+      if (!studentEmail) {
+        console.error('CRITICAL ERROR: Cannot create token record without email! studentId:', normalizedStudentId)
+        // Try one more time to get email
+        const retryEmail = await getUserEmail(normalizedStudentId)
+        if (!retryEmail) {
+          console.error('Failed to get email after retry - skipping token record creation')
+          return // Don't create record without email - this prevents duplicate records
+        }
+        studentEmail = retryEmail
+      }
+      
+      tokenRecord = new Token({
+        studentId: normalizedStudentId,
+        studentEmail: studentEmail.toLowerCase(), // ALWAYS lowercase for consistency
+        courseId: normalizedCourseId,
+        year,
+        month,
+        totalTokens: 4,
+        remainingTokens: 4,
+        waivedTokens: 0,
+        manualAdjustment: 0,
+        lastUpdatedBy: markedBy
+      })
+      console.log('Created new token record with email:', studentEmail.toLowerCase(), {
+        studentId: tokenRecord.studentId,
+        studentEmail: tokenRecord.studentEmail,
+        courseId: tokenRecord.courseId,
+        year: tokenRecord.year,
+        month: tokenRecord.month,
+        remainingTokens: tokenRecord.remainingTokens
+      })
+    } else {
+      // Ensure email is ALWAYS set and matches current email
+      if (studentEmail) {
+        const normalizedEmail = studentEmail.toLowerCase()
+        if (!tokenRecord.studentEmail || tokenRecord.studentEmail !== normalizedEmail) {
+          console.log('Updating token record email:', {
+            oldEmail: tokenRecord.studentEmail,
+            newEmail: normalizedEmail,
+            oldStudentId: tokenRecord.studentId,
+            newStudentId: normalizedStudentId
+          })
+          tokenRecord.studentEmail = normalizedEmail
+          tokenRecord.studentId = normalizedStudentId // Also update studentId in case it changed
+          await tokenRecord.save()
+        }
+      }
+      
+      console.log('Found existing token record:', {
+        studentId: tokenRecord.studentId,
+        studentEmail: tokenRecord.studentEmail,
+        courseId: tokenRecord.courseId,
+        year: tokenRecord.year,
+        month: tokenRecord.month,
+        remainingTokens: tokenRecord.remainingTokens,
+        totalTokens: tokenRecord.totalTokens,
+        waivedTokens: tokenRecord.waivedTokens
+      })
+    }
+    
+    // If there was a previous status, we need to reverse its effect first
+    if (previousStatus && previousStatus !== status) {
+      console.log('Reversing previous status:', previousStatus)
+      if (previousStatus === 'present' || previousStatus === 'absent') {
+        // Reverse: add back a token
+        tokenRecord.remainingTokens = Math.min(tokenRecord.remainingTokens + 1, tokenRecord.totalTokens)
+        console.log('Reversed present/absent. Remaining tokens:', tokenRecord.remainingTokens)
+      } else if (previousStatus === 'waived') {
+        // Reverse: add back a token and reduce waived count
+        tokenRecord.remainingTokens = Math.min(tokenRecord.remainingTokens + 1, tokenRecord.totalTokens)
+        tokenRecord.waivedTokens = Math.max((tokenRecord.waivedTokens || 0) - 1, 0)
+        console.log('Reversed waived. Remaining tokens:', tokenRecord.remainingTokens, 'Waived:', tokenRecord.waivedTokens)
+      }
+    }
+    
+    // Apply new status effect
+    if (status === 'present' || status === 'absent') {
+      // Reduce remaining tokens (both present and absent use a token)
+      if (tokenRecord.remainingTokens > 0) {
+        tokenRecord.remainingTokens = Math.max(tokenRecord.remainingTokens - 1, 0)
+        console.log('Reduced token for present/absent. New remaining:', tokenRecord.remainingTokens, 'Status:', status)
+      } else {
+        console.log('Warning: Cannot reduce token - remainingTokens is already 0')
+      }
+    } else if (status === 'waived') {
+      // Reduce remaining tokens and increment waived count
+      if (tokenRecord.remainingTokens > 0) {
+        tokenRecord.remainingTokens = Math.max(tokenRecord.remainingTokens - 1, 0)
+        tokenRecord.waivedTokens = (tokenRecord.waivedTokens || 0) + 1
+        console.log('Reduced token for waived. New remaining:', tokenRecord.remainingTokens, 'Waived:', tokenRecord.waivedTokens)
+      } else {
+        console.log('Warning: Cannot reduce token - remainingTokens is already 0')
+      }
+    }
+    
+    tokenRecord.lastUpdatedBy = markedBy
+    const savedRecord = await tokenRecord.save()
+    
+    console.log('Token saved successfully:', { 
+      studentId: savedRecord.studentId, 
+      courseId: savedRecord.courseId, 
+      year: savedRecord.year, 
+      month: savedRecord.month, 
+      status,
+      isNewRecord,
+      remainingTokens: savedRecord.remainingTokens, 
+      waivedTokens: savedRecord.waivedTokens, 
+      totalTokens: savedRecord.totalTokens,
+      usedTokens: savedRecord.totalTokens - savedRecord.remainingTokens - (savedRecord.waivedTokens || 0),
+      _id: savedRecord._id
+    })
+    
+    // Verify the save by fetching the record again using email (same method as lookup)
+    const verifyRecord = await findTokenRecord(studentEmail, normalizedStudentId, normalizedCourseId, year, month)
+    console.log('Verified saved token record:', verifyRecord ? {
+      _id: verifyRecord._id,
+      studentEmail: verifyRecord.studentEmail,
+      studentId: verifyRecord.studentId,
+      remainingTokens: verifyRecord.remainingTokens,
+      totalTokens: verifyRecord.totalTokens,
+      waivedTokens: verifyRecord.waivedTokens,
+      updatedAt: verifyRecord.updatedAt
+    } : 'NOT FOUND - SAVE FAILED!')
+  } catch (error) {
+    console.error('Error updating tokens:', error)
+    // Don't throw - attendance should still be saved even if token update fails
+  }
+}
+
 // Admin: Mark attendance for a student
 app.post('/api/admin/attendance', requireAdmin, async (req, res) => {
   if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
@@ -1831,6 +2121,10 @@ app.post('/api/admin/attendance', requireAdmin, async (req, res) => {
   if (!studentId || !courseId || !date) return res.status(400).json({ error: 'Missing required fields' })
   
   console.log('Marking attendance:', { studentId, courseId, date, status, notes })
+  
+  // Get previous attendance status if exists
+  const previousAttendance = await Attendance.findOne({ studentId, courseId, date: date })
+  const previousStatus = previousAttendance?.status
   
   const attendance = await Attendance.findOneAndUpdate(
     { studentId, courseId, date: date }, // Use string date instead of Date object
@@ -1844,6 +2138,32 @@ app.post('/api/admin/attendance', requireAdmin, async (req, res) => {
     },
     { upsert: true, new: true }
   )
+  
+  // Update tokens based on attendance status
+  // Get student email first to ensure we're updating the correct record
+  const studentEmail = await getUserEmail(studentId)
+  console.log('Marking attendance - student identifiers:', { studentId, studentEmail, courseId, date, status })
+  
+  try {
+    await updateTokensForAttendance(studentId, courseId, date, status || 'present', previousStatus, req.auth.userId)
+    console.log('Token update completed for attendance')
+    
+    // Verify token was updated correctly by fetching with email
+    if (studentEmail) {
+      const now = new Date()
+      const year = now.getFullYear()
+      const month = now.getMonth() + 1
+      const verifyToken = await findTokenRecord(studentEmail, String(studentId), String(courseId), year, month)
+      console.log('POST-ATTENDANCE Token verification:', verifyToken ? {
+        remainingTokens: verifyToken.remainingTokens,
+        waivedTokens: verifyToken.waivedTokens,
+        studentEmail: verifyToken.studentEmail
+      } : 'NOT FOUND')
+    }
+  } catch (tokenError) {
+    console.error('Token update failed (non-blocking):', tokenError)
+    // Continue even if token update fails
+  }
   
   console.log('Attendance saved:', attendance)
   res.json(attendance)
@@ -1913,6 +2233,300 @@ app.get('/api/me/attendance/:courseId', requireAuthGuarded, async (req, res) => 
   
   const attendance = await Attendance.find(query).sort({ date: -1 })
   res.json(attendance)
+})
+
+// ==================== TOKEN ENDPOINTS ====================
+
+// Student: Get their tokens for a course (current month by default)
+app.get('/api/me/tokens/:courseId', requireAuthGuarded, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const { courseId } = req.params
+  const { year, month } = req.query
+  
+  // Set no-cache headers to ensure fresh data
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private')
+  res.set('Pragma', 'no-cache')
+  res.set('Expires', '0')
+  
+  const now = new Date()
+  const targetYear = year ? parseInt(year) : now.getFullYear()
+  const targetMonth = month ? parseInt(month) : now.getMonth() + 1
+  
+  // Get user email for primary lookup
+  const studentEmail = await getUserEmail(req.auth.userId)
+  const normalizedStudentId = String(req.auth.userId)
+  const normalizedCourseId = String(courseId)
+  
+  console.log('=== STUDENT TOKEN FETCH ===')
+  console.log('Request params:', { courseId, year, month })
+  console.log('User identifiers:', { normalizedStudentId, studentEmail, normalizedCourseId })
+  console.log('Target period:', { targetYear, targetMonth })
+  
+  // Find token record using email (primary) or userId (fallback)
+  let tokenRecord = await findTokenRecord(studentEmail, normalizedStudentId, normalizedCourseId, targetYear, targetMonth)
+  
+  // If not found, try without normalization (in case data was stored differently)
+  if (!tokenRecord) {
+    console.log('First lookup failed, trying alternative lookups...')
+    tokenRecord = await Token.findOne({ 
+      studentId: req.auth.userId, 
+      courseId: courseId, 
+      year: targetYear, 
+      month: targetMonth 
+    })
+  }
+  
+  // If still not found, try with any studentId format for this course/year/month
+  if (!tokenRecord) {
+    const allRecordsForPeriod = await Token.find({ 
+      courseId: normalizedCourseId, 
+      year: targetYear, 
+      month: targetMonth 
+    })
+    console.log('All token records for this course/period:', allRecordsForPeriod.map(r => ({
+      studentId: r.studentId,
+      remainingTokens: r.remainingTokens,
+      waivedTokens: r.waivedTokens
+    })))
+  }
+  
+  console.log('Token record found:', tokenRecord ? {
+    _id: tokenRecord._id,
+    remainingTokens: tokenRecord.remainingTokens,
+    totalTokens: tokenRecord.totalTokens,
+    waivedTokens: tokenRecord.waivedTokens,
+    studentId: tokenRecord.studentId,
+    courseId: tokenRecord.courseId,
+    year: tokenRecord.year,
+    month: tokenRecord.month,
+    updatedAt: tokenRecord.updatedAt
+  } : 'NOT FOUND')
+  
+  // If token record found but email doesn't match, update it
+  if (tokenRecord && studentEmail && tokenRecord.studentEmail !== studentEmail.toLowerCase()) {
+    console.log('Email mismatch - updating token record:', {
+      oldEmail: tokenRecord.studentEmail,
+      newEmail: studentEmail.toLowerCase(),
+      oldStudentId: tokenRecord.studentId,
+      newStudentId: normalizedStudentId
+    })
+    tokenRecord.studentEmail = studentEmail.toLowerCase()
+    tokenRecord.studentId = normalizedStudentId
+    await tokenRecord.save()
+    console.log('Updated token record with correct email and studentId')
+  }
+  
+  // CRITICAL: DO NOT create new token record here!
+  // Token records should ONLY be created when attendance is marked (by admin)
+  // Creating here causes duplicate records when student has different userId in production
+  if (!tokenRecord) {
+    console.log('No token record found - returning default values (record will be created when attendance is marked)')
+    console.log('Lookup used - Email:', studentEmail, 'StudentId:', normalizedStudentId, 'Course:', normalizedCourseId, 'Period:', targetYear, targetMonth)
+    return res.json({
+      studentId: normalizedStudentId,
+      studentEmail: studentEmail,
+      courseId: normalizedCourseId,
+      year: targetYear,
+      month: targetMonth,
+      totalTokens: 4,
+      remainingTokens: 4,
+      waivedTokens: 0,
+      manualAdjustment: 0
+    })
+  }
+  
+  // Return the found token record
+  console.log('Returning token data to student:', {
+    _id: tokenRecord._id,
+    remainingTokens: tokenRecord.remainingTokens,
+    totalTokens: tokenRecord.totalTokens,
+    waivedTokens: tokenRecord.waivedTokens,
+    usedTokens: tokenRecord.totalTokens - tokenRecord.remainingTokens - (tokenRecord.waivedTokens || 0),
+    studentId: tokenRecord.studentId,
+    studentEmail: tokenRecord.studentEmail,
+    courseId: tokenRecord.courseId,
+    year: tokenRecord.year,
+    month: tokenRecord.month,
+    updatedAt: tokenRecord.updatedAt
+  })
+  console.log('=== END STUDENT TOKEN FETCH ===')
+  
+  res.json(tokenRecord)
+})
+
+// Student: Get all their tokens across all courses
+app.get('/api/me/tokens', requireAuthGuarded, async (req, res) => {
+  if (!dbConnected) return res.json([])
+  const { year, month } = req.query
+  
+  // Set no-cache headers to ensure fresh data
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private')
+  res.set('Pragma', 'no-cache')
+  res.set('Expires', '0')
+  
+  // Get user email for primary lookup
+  const studentEmail = await getUserEmail(req.auth.userId)
+  const normalizedStudentId = String(req.auth.userId)
+  
+  const now = new Date()
+  const targetYear = year ? parseInt(year) : now.getFullYear()
+  const targetMonth = month ? parseInt(month) : now.getMonth() + 1
+  
+  // Find tokens by email (primary) or userId (fallback)
+  let tokens = []
+  if (studentEmail) {
+    tokens = await Token.find({ 
+      studentEmail: studentEmail.toLowerCase(), 
+      year: targetYear, 
+      month: targetMonth 
+    })
+  }
+  
+  // If no tokens found by email, try userId (for backward compatibility)
+  if (tokens.length === 0) {
+    tokens = await Token.find({ 
+      studentId: normalizedStudentId, 
+      year: targetYear, 
+      month: targetMonth 
+    })
+  }
+  
+  res.json(tokens)
+})
+
+// Admin: Get tokens for a specific student and course
+app.get('/api/admin/tokens/:studentId/:courseId', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const { studentId, courseId } = req.params
+  const { year, month } = req.query
+  
+  // Set no-cache headers to ensure fresh data
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private')
+  res.set('Pragma', 'no-cache')
+  res.set('Expires', '0')
+  
+  // Get user email for primary lookup
+  const studentEmail = await getUserEmail(studentId)
+  const normalizedStudentId = String(studentId)
+  const normalizedCourseId = String(courseId)
+  
+  const now = new Date()
+  const targetYear = year ? parseInt(year) : now.getFullYear()
+  const targetMonth = month ? parseInt(month) : now.getMonth() + 1
+  
+  console.log('Admin fetching tokens:', { normalizedStudentId, studentEmail, normalizedCourseId, targetYear, targetMonth })
+  
+  // Find token record using email (primary) or userId (fallback)
+  let tokenRecord = await findTokenRecord(studentEmail, normalizedStudentId, normalizedCourseId, targetYear, targetMonth)
+  
+  console.log('Admin token lookup result:', tokenRecord ? {
+    remainingTokens: tokenRecord.remainingTokens,
+    totalTokens: tokenRecord.totalTokens,
+    waivedTokens: tokenRecord.waivedTokens,
+    studentEmail: tokenRecord.studentEmail
+  } : 'NOT FOUND')
+  
+  // If no token record exists, create one with default 4 tokens
+  if (!tokenRecord) {
+    tokenRecord = new Token({
+      studentId: normalizedStudentId,
+      studentEmail: studentEmail ? studentEmail.toLowerCase() : null,
+      courseId: normalizedCourseId,
+      year: targetYear,
+      month: targetMonth,
+      totalTokens: 4,
+      remainingTokens: 4,
+      waivedTokens: 0,
+      manualAdjustment: 0
+    })
+    await tokenRecord.save()
+    console.log('Admin created new token record with email:', studentEmail)
+  }
+  
+  res.json(tokenRecord)
+})
+
+// Admin: Get all tokens for a course
+app.get('/api/admin/courses/:courseId/tokens', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.json([])
+  const { courseId } = req.params
+  const { year, month } = req.query
+  
+  // Set no-cache headers to ensure fresh data
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private')
+  res.set('Pragma', 'no-cache')
+  res.set('Expires', '0')
+  
+  const now = new Date()
+  const targetYear = year ? parseInt(year) : now.getFullYear()
+  const targetMonth = month ? parseInt(month) : now.getMonth() + 1
+  
+  const tokens = await Token.find({ 
+    courseId, 
+    year: targetYear, 
+    month: targetMonth 
+  })
+  
+  res.json(tokens)
+})
+
+// Admin: Manually override tokens for a student
+app.put('/api/admin/tokens/:studentId/:courseId', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const { studentId, courseId } = req.params
+  const { totalTokens, remainingTokens, waivedTokens, manualAdjustment, notes, year, month } = req.body || {}
+  
+  // Get user email for primary lookup
+  const studentEmail = await getUserEmail(studentId)
+  const normalizedStudentId = String(studentId)
+  const normalizedCourseId = String(courseId)
+  
+  const now = new Date()
+  const targetYear = year ? parseInt(year) : now.getFullYear()
+  const targetMonth = month ? parseInt(month) : now.getMonth() + 1
+  
+  console.log('Admin updating tokens:', { normalizedStudentId, studentEmail, normalizedCourseId, targetYear, targetMonth, updates: { totalTokens, remainingTokens, waivedTokens, manualAdjustment } })
+  
+  // Find token record using email (primary) or userId (fallback)
+  let tokenRecord = await findTokenRecord(studentEmail, normalizedStudentId, normalizedCourseId, targetYear, targetMonth)
+  
+  if (!tokenRecord) {
+    tokenRecord = new Token({
+      studentId: normalizedStudentId,
+      studentEmail: studentEmail ? studentEmail.toLowerCase() : null,
+      courseId: normalizedCourseId,
+      year: targetYear,
+      month: targetMonth,
+      totalTokens: totalTokens || 4,
+      remainingTokens: remainingTokens !== undefined ? remainingTokens : (totalTokens || 4),
+      waivedTokens: waivedTokens || 0,
+      manualAdjustment: manualAdjustment || 0,
+      lastUpdatedBy: req.auth.userId
+    })
+    console.log('Admin creating new token record for manual update with email:', studentEmail)
+  } else {
+    // Update existing record - also ensure email is set
+    if (studentEmail && !tokenRecord.studentEmail) {
+      tokenRecord.studentEmail = studentEmail.toLowerCase()
+    }
+    if (totalTokens !== undefined) tokenRecord.totalTokens = totalTokens
+    if (remainingTokens !== undefined) tokenRecord.remainingTokens = remainingTokens
+    if (waivedTokens !== undefined) tokenRecord.waivedTokens = waivedTokens
+    if (manualAdjustment !== undefined) tokenRecord.manualAdjustment = manualAdjustment
+    if (notes !== undefined) tokenRecord.notes = notes
+    console.log('Admin updating existing token record')
+  }
+  
+  tokenRecord.lastUpdatedBy = req.auth.userId
+  const savedRecord = await tokenRecord.save()
+  
+  console.log('Admin token update saved:', {
+    remainingTokens: savedRecord.remainingTokens,
+    totalTokens: savedRecord.totalTokens,
+    waivedTokens: savedRecord.waivedTokens
+  })
+  
+  res.json(savedRecord)
 })
 
 // ==================== CALENDAR/SCHEDULE ENDPOINTS ====================

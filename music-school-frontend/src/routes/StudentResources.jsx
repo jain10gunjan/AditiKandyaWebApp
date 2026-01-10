@@ -83,7 +83,11 @@ function VideoPlayer({ resource, onView, onComplete }) {
       <div className="w-full h-96 bg-slate-100 rounded-lg flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading video...</p>
+          <p className="text-slate-600"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >Loading video...</p>
         </div>
       </div>
     )
@@ -94,8 +98,16 @@ function VideoPlayer({ resource, onView, onComplete }) {
       <div className="w-full h-96 bg-red-50 rounded-lg flex items-center justify-center">
         <div className="text-center p-6">
           <div className="text-4xl mb-4">⚠️</div>
-          <h3 className="text-lg font-semibold text-red-800 mb-2">Video Error</h3>
-          <p className="text-red-600 mb-4">{error}</p>
+          <h3 className="text-lg font-semibold text-red-800 mb-2"
+          style={{
+            fontFamily: "'Bona Nova SC', serif",
+          }}
+          >Video Error</h3>
+          <p className="text-red-600 mb-4"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >{error}</p>
         </div>
       </div>
     )
@@ -120,12 +132,20 @@ function VideoPlayer({ resource, onView, onComplete }) {
         </video>
         
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-          <h3 className="text-white font-semibold">{resource.title}</h3>
+          <h3 className="text-white font-semibold"
+          style={{
+            fontFamily: "'Bona Nova SC', serif",
+          }}
+          >{resource.title}</h3>
         </div>
       </div>
       
       <div className="mt-4 p-4 bg-slate-50 rounded-lg">
-        <div className="flex items-center justify-between text-sm text-slate-600">
+        <div className="flex items-center justify-between text-sm text-slate-600"
+        style={{
+          fontFamily: "'Bona Nova', serif",
+        }}
+        >
           <div className="flex items-center gap-4">
             <span>📺 Video Resource</span>
             {resource.duration && (
@@ -208,7 +228,11 @@ function AudioPlayer({ resource, onView, onComplete }) {
       <div className="w-full h-64 bg-slate-100 rounded-lg flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading audio...</p>
+          <p className="text-slate-600"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >Loading audio...</p>
         </div>
       </div>
     )
@@ -219,8 +243,16 @@ function AudioPlayer({ resource, onView, onComplete }) {
       <div className="w-full h-64 bg-red-50 rounded-lg flex items-center justify-center">
         <div className="text-center p-6">
           <div className="text-4xl mb-4">⚠️</div>
-          <h3 className="text-lg font-semibold text-red-800 mb-2">Audio Error</h3>
-          <p className="text-red-600 mb-4">{error}</p>
+          <h3 className="text-lg font-semibold text-red-800 mb-2"
+          style={{
+            fontFamily: "'Bona Nova SC', serif",
+          }}
+          >Audio Error</h3>
+          <p className="text-red-600 mb-4"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >{error}</p>
         </div>
       </div>
     )
@@ -231,7 +263,11 @@ function AudioPlayer({ resource, onView, onComplete }) {
       <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-6 border border-purple-200">
         <div className="text-center">
           <div className="text-4xl mb-4">🎵</div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">{resource.title}</h3>
+          <h3 className="text-lg font-semibold text-slate-900 mb-4"
+          style={{
+            fontFamily: "'Bona Nova SC', serif",
+          }}
+          >{resource.title}</h3>
           
           <div className="max-w-md mx-auto">
             <audio
@@ -246,7 +282,11 @@ function AudioPlayer({ resource, onView, onComplete }) {
             </audio>
           </div>
           
-          <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+          <div className="mt-4 flex items-center justify-between text-sm text-slate-600"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >
             <div className="flex items-center gap-4">
               <span>🎵 Audio Resource</span>
               {resource.duration && (
@@ -324,26 +364,46 @@ function ResourceCard({ resource, onClick, tracking, onToggleComplete }) {
             <div className="flex-1">
               <h3 className={`font-bold text-slate-900 text-sm lg:text-base group-hover:text-sky-700 transition-colors line-clamp-2 ${
                 isCompleted ? 'line-through text-green-700' : ''
-              }`}>
+              }`}
+              style={{
+                fontFamily: "'Bona Nova SC', serif",
+              }}
+              >
                 {resource.title}
                 {isCompleted && <span className="ml-2 text-green-600">✓</span>}
               </h3>
               {isViewed && !isCompleted && (
-                <span className="text-xs text-sky-600 mt-1 inline-block">👁️ Viewed</span>
+                <span className="text-xs text-sky-600 mt-1 inline-block"
+                style={{
+                  fontFamily: "'Bona Nova', serif",
+                }}
+                >👁️ Viewed</span>
               )}
             </div>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getResourceTypeColor(resource.type)} ml-2 flex-shrink-0`}>
+            <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getResourceTypeColor(resource.type)} ml-2 flex-shrink-0`}
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
+            >
               {resource.type.toUpperCase()}
             </span>
           </div>
           
           {resource.description && (
-            <p className="text-xs lg:text-sm text-slate-600 mb-3 line-clamp-2">
+            <p className="text-xs lg:text-sm text-slate-600 mb-3 line-clamp-2"
+            style={{
+              fontFamily: "'Bona Nova', serif",
+            }}
+            >
               {resource.description}
             </p>
           )}
           
-          <div className="flex items-center justify-between text-xs lg:text-sm text-slate-500">
+          <div className="flex items-center justify-between text-xs lg:text-sm text-slate-500"
+          style={{
+            fontFamily: "'Bona Nova', serif",
+          }}
+          >
             <div className="flex items-center gap-4">
               {resource.duration && (
                 <span>⏱️ {formatDuration(resource.duration)}</span>
@@ -407,8 +467,16 @@ function ResourceModal({ resource, isOpen, onClose, onView, onComplete }) {
               <span className="text-2xl">{getResourceIcon(resource.type)}</span>
             </div>
             <div>
-              <h2 className="text-lg lg:text-xl font-bold text-slate-900">{resource.title}</h2>
-              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getResourceTypeColor(resource.type)}`}>
+              <h2 className="text-lg lg:text-xl font-bold text-slate-900"
+              style={{
+                fontFamily: "'Bona Nova SC', serif",
+              }}
+              >{resource.title}</h2>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getResourceTypeColor(resource.type)}`}
+              style={{
+                fontFamily: "'Bona Nova', serif",
+              }}
+              >
                 {resource.type.toUpperCase()}
               </span>
             </div>
@@ -424,8 +492,16 @@ function ResourceModal({ resource, isOpen, onClose, onView, onComplete }) {
         <div className="p-4 lg:p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 120px)' }}>
           {resource.description && (
             <div className="mb-6 p-4 bg-slate-50 rounded-lg">
-              <h3 className="font-semibold text-slate-900 mb-2">Description</h3>
-              <p className="text-slate-600 text-sm lg:text-base">{resource.description}</p>
+              <h3 className="font-semibold text-slate-900 mb-2"
+              style={{
+                fontFamily: "'Bona Nova SC', serif",
+              }}
+              >Description</h3>
+              <p className="text-slate-600 text-sm lg:text-base"
+              style={{
+                fontFamily: "'Bona Nova', serif",
+              }}
+              >{resource.description}</p>
             </div>
           )}
           
@@ -463,13 +539,24 @@ function ResourceModal({ resource, isOpen, onClose, onView, onComplete }) {
               <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="text-4xl">📄</span>
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">{resource.title}</h3>
-              <p className="text-slate-600 mb-6">Document ready for download</p>
+              <h3 className="text-lg font-semibold text-slate-900 mb-4"
+              style={{
+                fontFamily: "'Bona Nova SC', serif",
+              }}
+              >{resource.title}</h3>
+              <p className="text-slate-600 mb-6"
+              style={{
+                fontFamily: "'Bona Nova', serif",
+              }}
+              >Document ready for download</p>
               <a
                 href={`${import.meta.env.VITE_API_BASE_URL}/resources/${resource._id}/file`}
                 download
                 className="inline-flex items-center gap-2 px-6 py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors font-medium"
                 onClick={onView}
+                style={{
+                  fontFamily: "'Bona Nova', serif",
+                }}
               >
                 <span>⬇️</span>
                 Download Document
@@ -563,17 +650,29 @@ function ResourcesContent({ freeCourses, resources, loading, selectedResource, s
             <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">🎁</span>
             </div>
-            <span className="font-bold text-slate-900">Free Resources</span>
+            <span className="font-bold text-slate-900"
+            style={{
+              fontFamily: "'Bona Nova SC', serif",
+            }}
+            >Free Resources</span>
           </div>
           <div className="w-8"></div>
         </div>
       </div>
 
       <div className="mb-6 lg:mb-8">
-        <h1 className="text-2xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-2">
+        <h1 className="text-2xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-2"
+        style={{
+          fontFamily: "'Bona Nova SC', serif",
+        }}
+        >
           {getGreeting()}, Explore Free Resources 🎁
         </h1>
-        <p className="text-slate-600 text-sm lg:text-base">
+        <p className="text-slate-600 text-sm lg:text-base"
+        style={{
+          fontFamily: "'Bona Nova', serif",
+        }}
+        >
           Access free educational resources, videos, documents, and study materials.
         </p>
       </div>
@@ -583,13 +682,24 @@ function ResourcesContent({ freeCourses, resources, loading, selectedResource, s
           <div className="flex items-start gap-4">
             <div className="text-2xl">🎁</div>
             <div className="flex-1">
-              <h3 className="font-semibold text-amber-800 mb-2">No Free Courses Available</h3>
-              <p className="text-amber-700 text-sm mb-4">
+              <h3 className="font-semibold text-amber-800 mb-2"
+              style={{
+                fontFamily: "'Bona Nova SC', serif",
+              }}
+              >No Free Courses Available</h3>
+              <p className="text-amber-700 text-sm mb-4"
+              style={{
+                fontFamily: "'Bona Nova', serif",
+              }}
+              >
                 There are no free courses available at the moment. Check back later!
               </p>
               <a 
                 href="/courses" 
                 className="inline-block px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium"
+                style={{
+                  fontFamily: "'Bona Nova', serif",
+                }}
               >
                 Browse All Courses
               </a>
@@ -602,11 +712,18 @@ function ResourcesContent({ freeCourses, resources, loading, selectedResource, s
         <>
           <div className="mb-6 lg:mb-8">
             <div className="bg-white rounded-xl lg:rounded-2xl shadow-sm border border-slate-200 p-4 lg:p-6">
-              <h2 className="font-bold text-lg lg:text-xl text-slate-900 mb-4">Select Free Course</h2>
+              <h2 className="font-bold text-lg lg:text-xl text-slate-900 mb-4"
+              style={{
+                fontFamily: "'Bona Nova SC', serif",
+              }}
+              >Select Free Course</h2>
               <select 
                 value={selectedCourse} 
                 onChange={(e) => setSelectedCourse(e.target.value)}
                 className="w-full p-3 lg:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm lg:text-base"
+                style={{
+                  fontFamily: "'Bona Nova', serif",
+                }}
               >
                 {freeCourses.map((course) => (
                   <option key={course._id} value={course._id}>
@@ -615,7 +732,11 @@ function ResourcesContent({ freeCourses, resources, loading, selectedResource, s
                 ))}
               </select>
               <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-700">
+                <p className="text-sm text-green-700"
+                style={{
+                  fontFamily: "'Bona Nova', serif",
+                }}
+                >
                   <span className="font-semibold">🎁 Free Course:</span> All resources in this course are available to you at no cost.
                 </p>
               </div>
@@ -627,51 +748,111 @@ function ResourcesContent({ freeCourses, resources, loading, selectedResource, s
               <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 lg:gap-4 mb-4">
                 <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
                   <div className="text-center">
-                    <div className="text-lg lg:text-2xl font-bold text-slate-900">{stats.total}</div>
-                    <div className="text-xs lg:text-sm text-slate-600">Total</div>
+                    <div className="text-lg lg:text-2xl font-bold text-slate-900"
+                    style={{
+                      fontFamily: "'Bona Nova SC', serif",
+                    }}
+                    >{stats.total}</div>
+                    <div className="text-xs lg:text-sm text-slate-600"
+                    style={{
+                      fontFamily: "'Bona Nova', serif",
+                    }}
+                    >Total</div>
                   </div>
                 </div>
                 <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
                   <div className="text-center">
-                    <div className="text-lg lg:text-2xl font-bold text-green-600">{completedCount}</div>
-                    <div className="text-xs lg:text-sm text-slate-600">Completed</div>
+                    <div className="text-lg lg:text-2xl font-bold text-green-600"
+                    style={{
+                      fontFamily: "'Bona Nova SC', serif",
+                    }}
+                    >{completedCount}</div>
+                    <div className="text-xs lg:text-sm text-slate-600"
+                    style={{
+                      fontFamily: "'Bona Nova', serif",
+                    }}
+                    >Completed</div>
                   </div>
                 </div>
                 <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
                   <div className="text-center">
-                    <div className="text-lg lg:text-2xl font-bold text-sky-600">{viewedCount}</div>
-                    <div className="text-xs lg:text-sm text-slate-600">Viewed</div>
+                    <div className="text-lg lg:text-2xl font-bold text-sky-600"
+                    style={{
+                      fontFamily: "'Bona Nova SC', serif",
+                    }}
+                    >{viewedCount}</div>
+                    <div className="text-xs lg:text-sm text-slate-600"
+                    style={{
+                      fontFamily: "'Bona Nova', serif",
+                    }}
+                    >Viewed</div>
                   </div>
                 </div>
                 <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
                   <div className="text-center">
-                    <div className="text-lg lg:text-2xl font-bold text-red-600">{stats.video}</div>
-                    <div className="text-xs lg:text-sm text-slate-600">Videos</div>
+                    <div className="text-lg lg:text-2xl font-bold text-red-600"
+                    style={{
+                      fontFamily: "'Bona Nova SC', serif",
+                    }}
+                    >{stats.video}</div>
+                    <div className="text-xs lg:text-sm text-slate-600"
+                    style={{
+                      fontFamily: "'Bona Nova', serif",
+                    }}
+                    >Videos</div>
                   </div>
                 </div>
                 <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
                   <div className="text-center">
-                    <div className="text-lg lg:text-2xl font-bold text-blue-600">{stats.pdf}</div>
-                    <div className="text-xs lg:text-sm text-slate-600">PDFs</div>
+                    <div className="text-lg lg:text-2xl font-bold text-blue-600"
+                    style={{
+                      fontFamily: "'Bona Nova SC', serif",
+                    }}
+                    >{stats.pdf}</div>
+                    <div className="text-xs lg:text-sm text-slate-600"
+                    style={{
+                      fontFamily: "'Bona Nova', serif",
+                    }}
+                    >PDFs</div>
                   </div>
                 </div>
                 <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
                   <div className="text-center">
-                    <div className="text-lg lg:text-2xl font-bold text-purple-600">{stats.audio}</div>
-                    <div className="text-xs lg:text-sm text-slate-600">Audio</div>
+                    <div className="text-lg lg:text-2xl font-bold text-purple-600"
+                    style={{
+                      fontFamily: "'Bona Nova SC', serif",
+                    }}
+                    >{stats.audio}</div>
+                    <div className="text-xs lg:text-sm text-slate-600"
+                    style={{
+                      fontFamily: "'Bona Nova', serif",
+                    }}
+                    >Audio</div>
                   </div>
                 </div>
               </div>
               
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="font-semibold text-slate-900">Your Progress</div>
-                  <div className="text-sm text-slate-600">{completedCount}/{total} completed</div>
+                  <div className="font-semibold text-slate-900"
+                  style={{
+                    fontFamily: "'Bona Nova SC', serif",
+                  }}
+                  >Your Progress</div>
+                  <div className="text-sm text-slate-600"
+                  style={{
+                    fontFamily: "'Bona Nova', serif",
+                  }}
+                  >{completedCount}/{total} completed</div>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
                   <div className="h-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full transition-all" style={{ width: `${progressPct}%` }} />
                 </div>
-                <div className="text-right text-sm font-semibold text-green-700 mt-1">{progressPct}%</div>
+                <div className="text-right text-sm font-semibold text-green-700 mt-1"
+                style={{
+                  fontFamily: "'Bona Nova SC', serif",
+                }}
+                >{progressPct}%</div>
               </div>
             </div>
           )}
@@ -687,6 +868,9 @@ function ResourcesContent({ freeCourses, resources, loading, selectedResource, s
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full p-3 lg:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm lg:text-base"
+                      style={{
+                        fontFamily: "'Bona Nova', serif",
+                      }}
                     />
                   </div>
                   
@@ -695,6 +879,9 @@ function ResourcesContent({ freeCourses, resources, loading, selectedResource, s
                       value={filter}
                       onChange={(e) => setFilter(e.target.value)}
                       className="w-full p-3 lg:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm lg:text-base"
+                      style={{
+                        fontFamily: "'Bona Nova', serif",
+                      }}
                     >
                       <option value="all">All Types</option>
                       <option value="video">Videos</option>
@@ -713,20 +900,39 @@ function ResourcesContent({ freeCourses, resources, loading, selectedResource, s
             {resources.length === 0 ? (
               <div className="bg-white rounded-xl lg:rounded-2xl p-8 lg:p-12 text-center border border-slate-200">
                 <div className="text-4xl lg:text-6xl mb-4">📚</div>
-                <h3 className="text-lg lg:text-xl font-semibold text-slate-900 mb-2">No Resources Available</h3>
-                <p className="text-slate-600 mb-6">This free course doesn't have any resources uploaded yet.</p>
+                <h3 className="text-lg lg:text-xl font-semibold text-slate-900 mb-2"
+                style={{
+                  fontFamily: "'Bona Nova SC', serif",
+                }}
+                >No Resources Available</h3>
+                <p className="text-slate-600 mb-6"
+                style={{
+                  fontFamily: "'Bona Nova', serif",
+                }}
+                >This free course doesn't have any resources uploaded yet.</p>
               </div>
             ) : filteredResources.length === 0 ? (
               <div className="bg-white rounded-xl lg:rounded-2xl p-8 lg:p-12 text-center border border-slate-200">
                 <div className="text-4xl lg:text-6xl mb-4">🔍</div>
-                <h3 className="text-lg lg:text-xl font-semibold text-slate-900 mb-2">No Resources Found</h3>
-                <p className="text-slate-600 mb-6">No resources match your search criteria.</p>
+                <h3 className="text-lg lg:text-xl font-semibold text-slate-900 mb-2"
+                style={{
+                  fontFamily: "'Bona Nova SC', serif",
+                }}
+                >No Resources Found</h3>
+                <p className="text-slate-600 mb-6"
+                style={{
+                  fontFamily: "'Bona Nova', serif",
+                }}
+                >No resources match your search criteria.</p>
                 <button
                   onClick={() => {
                     setSearchTerm('')
                     setFilter('all')
                   }}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                  style={{
+                    fontFamily: "'Bona Nova', serif",
+                  }}
                 >
                   Clear Search
                 </button>
@@ -939,7 +1145,11 @@ export default function StudentResources() {
           <SignedOut>
             <div className="p-6 text-center">
               <SignInButton>
-                <button className="px-6 py-3 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-colors">
+                <button className="px-6 py-3 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-colors"
+                style={{
+                  fontFamily: "'Bona Nova', serif",
+                }}
+                >
                   Sign in to access free resources
                 </button>
               </SignInButton>
