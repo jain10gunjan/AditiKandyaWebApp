@@ -278,6 +278,34 @@ export default function AdminStudentSchedules() {
     return true
   }
 
+  // Check for conflicts with existing schedules
+  const checkForConflicts = (startDateTime, endDateTime, excludeScheduleId = null) => {
+    if (!allSchedulesForDate || allSchedulesForDate.length === 0) return []
+    
+    const conflicts = []
+    const newStart = new Date(startDateTime)
+    const newEnd = new Date(endDateTime)
+    
+    allSchedulesForDate.forEach(schedule => {
+      // Skip the schedule being edited if any
+      if (excludeScheduleId && schedule._id === excludeScheduleId) return
+      
+      const scheduleStart = new Date(schedule.startTime)
+      const scheduleEnd = new Date(schedule.endTime)
+      
+      // Check if there's an overlap: newStart < scheduleEnd AND newEnd > scheduleStart
+      if (newStart < scheduleEnd && newEnd > scheduleStart) {
+        conflicts.push({
+          ...schedule,
+          conflictStart: scheduleStart,
+          conflictEnd: scheduleEnd
+        })
+      }
+    })
+    
+    return conflicts
+  }
+
   const createEvent = async (e) => {
     e.preventDefault()
     
@@ -294,6 +322,18 @@ export default function AdminStudentSchedules() {
     // Validate that end time is after start time
     if (newEvent.endTime <= newEvent.time) {
       toast.error('End time must be after start time')
+      return
+    }
+
+    // Calculate duration in minutes
+    const [startH, startM] = newEvent.time.split(':').map(Number)
+    const [endH, endM] = newEvent.endTime.split(':').map(Number)
+    const startMinutes = startH * 60 + startM
+    const endMinutes = endH * 60 + endM
+    const durationMinutes = endMinutes - startMinutes
+    
+    if (durationMinutes < 10) {
+      toast.error('Schedule duration must be at least 10 minutes')
       return
     }
 
@@ -328,6 +368,39 @@ export default function AdminStudentSchedules() {
       // causing a time shift. By converting to ISO string here, we preserve the user's intended time.
       const localStartDate = new Date(`${newEvent.date}T${newEvent.time}:00`)
       const localEndDate = new Date(`${newEvent.date}T${newEvent.endTime}:00`)
+      
+      // Check for conflicts on the main date before submitting
+      const mainDateConflicts = checkForConflicts(localStartDate.toISOString(), localEndDate.toISOString())
+      
+      if (mainDateConflicts.length > 0) {
+        const conflictDetails = mainDateConflicts.map((c, idx) => {
+          const startTime = new Date(c.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+          const endTime = new Date(c.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+          const studentName = c.student || 'Unknown Student'
+          const courseName = c.course || 'Unknown Course'
+          return `\n${idx + 1}. "${c.title}" - ${studentName} (${courseName})\n   Time: ${startTime} - ${endTime}`
+        }).join('')
+        
+        const conflictMessage = `⚠️ Time Slot Conflict Detected!\n\nThis time slot conflicts with existing schedule(s):${conflictDetails}\n\nPlease choose a different time slot.`
+        
+        toast.error(conflictMessage, { 
+          duration: 12000,
+          style: {
+            maxWidth: '500px',
+            whiteSpace: 'pre-line',
+            fontSize: '14px'
+          }
+        })
+        setSubmitting(false)
+        return
+      }
+      
+      // Check conflicts for duplicate dates if any
+      if (duplicateDatesToUse.length > 0) {
+        // Note: For duplicate dates, we'll rely on backend validation
+        // as we'd need to load schedules for each date which could be expensive
+        // The backend will catch any conflicts and return appropriate error messages
+      }
       
       // Validate dates were created successfully
       if (isNaN(localStartDate.getTime()) || isNaN(localEndDate.getTime())) {
@@ -675,13 +748,16 @@ export default function AdminStudentSchedules() {
                       onStartTimeChange={(time) => setNewEvent({...newEvent, time, endTime: ''})}
                       onEndTimeChange={(endTime) => setNewEvent({...newEvent, endTime})}
                       bookedSlots={allSchedulesForDate}
-                      intervalMinutes={30}
+                      intervalMinutes={15}
                       startHour={8}
                       endHour={22}
                     />
                     {loadingSchedules && (
                       <p className="text-xs text-slate-500 mt-1">Loading available slots...</p>
                     )}
+                    <p className="text-xs text-slate-500 mt-2">
+                      💡 Flexible timing: Select any start and end time. Schedule duration can be any length (10 minutes minimum). Perfect for short sessions (10-20 min) or longer classes. Conflicts will be detected automatically.
+                    </p>
                   </div>
 
                   <div>

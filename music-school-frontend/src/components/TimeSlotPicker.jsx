@@ -311,7 +311,7 @@ export default function TimeSlotPicker({
         </div>
       </div>
       
-      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 max-h-64 overflow-y-auto p-2 bg-slate-50 rounded-lg border border-slate-200">
+      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 max-h-80 overflow-y-auto p-2 bg-slate-50 rounded-lg border border-slate-200">
         {timeSlots.map((slotTime) => {
           const booked = isSlotBooked(slotTime)
           const isStart = isStartTime(slotTime)
@@ -391,9 +391,30 @@ export default function TimeSlotPicker({
             ? 'bg-red-50 border-red-200 text-red-700'
             : 'bg-sky-50 border-sky-200 text-slate-600'
         }`}>
-          <span className="font-medium">Selected:</span> {formatTime(startTime)}
-          {endTime && ` - ${formatTime(endTime)}`}
-          {!endTime && <span className="text-slate-500"> (select end time)</span>}
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <span className="font-medium">Selected:</span> {formatTime(startTime)}
+              {endTime && ` - ${formatTime(endTime)}`}
+              {!endTime && <span className="text-slate-500"> (select end time)</span>}
+            </div>
+            {endTime && (
+              <div className="text-xs font-semibold text-slate-700">
+                Duration: {(() => {
+                  const [startH, startM] = startTime.split(':').map(Number)
+                  const [endH, endM] = endTime.split(':').map(Number)
+                  const startMinutes = startH * 60 + startM
+                  const endMinutes = endH * 60 + endM
+                  const duration = endMinutes - startMinutes
+                  const hours = Math.floor(duration / 60)
+                  const minutes = duration % 60
+                  if (hours > 0) {
+                    return `${hours}h ${minutes}m`
+                  }
+                  return `${minutes} min`
+                })()}
+              </div>
+            )}
+          </div>
           {endTime && doesRangeConflict(startTime, endTime) && (
             <span className="block text-xs text-red-600 mt-1">⚠️ This time range conflicts with an existing booking!</span>
           )}

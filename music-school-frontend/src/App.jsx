@@ -6,7 +6,10 @@ import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import Navbar from './components/Navbar.jsx'
 import Footer from './components/Footer.jsx'
+import OptimizedVideo from './components/OptimizedVideo.jsx'
 import { motion } from 'framer-motion'
+import vid1 from './assets/vid1.mp4'
+import vid2 from './assets/vid2.mp4'
 
 function SectionTitle({ emoji, title, subtitle, spaceNumber }) {
   return (
@@ -318,7 +321,7 @@ function StatCard({ number, label, icon, color, index }) {
 function TestimonialCard({ name, role, content, avatar, index }) {
   return (
     <motion.div 
-      className="bg-white shadow-lg hover:shadow-2xl transition-all duration-300 p-6 md:p-8 border-l-4 border-black flex-shrink-0 h-full flex flex-col"
+      className="bg-white shadow-lg hover:shadow-2xl transition-all duration-300 p-6 md:p-8 border-l-4 border-black h-full flex flex-col rounded-sm"
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -338,27 +341,27 @@ function TestimonialCard({ name, role, content, avatar, index }) {
       </p>
 
       {/* Author Info */}
-      <div className="flex items-center justify-between pt-4 border-t border-black/10">
+      <div className="flex items-center justify-between pt-4 border-t border-black/10 flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <img 
             src={avatar} 
             alt={name} 
-            className="h-12 w-12 object-cover"
+            className="h-12 w-12 rounded-full object-cover flex-shrink-0"
             onError={(e) => {
               e.target.src = 'https://i.pravatar.cc/150'
             }}
           />
-          <div>
-            <div className="font-bold text-black text-sm md:text-base" style={{ fontFamily: "'Bona Nova SC', serif" }}>
+          <div className="min-w-0">
+            <div className="font-bold text-black text-sm md:text-base truncate" style={{ fontFamily: "'Bona Nova SC', serif" }}>
               {name}
             </div>
-            <div className="text-xs md:text-sm text-black/60" style={{ fontFamily: "'Bona Nova', serif" }}>
+            <div className="text-xs md:text-sm text-black/60 truncate" style={{ fontFamily: "'Bona Nova', serif" }}>
               {role}
             </div>
           </div>
         </div>
         {/* Stars */}
-        <div className="flex text-yellow-500 text-lg">
+        <div className="flex text-yellow-500 text-base md:text-lg flex-shrink-0">
           {'★'.repeat(5)}
         </div>
       </div>
@@ -367,57 +370,129 @@ function TestimonialCard({ name, role, content, avatar, index }) {
 }
 
 function TestimonialsSlider({ testimonials }) {
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [showAll, setShowAll] = useState(false)
+  const itemsPerView = 3 // Number of testimonials to show at once in carousel mode
+
   if (testimonials.length === 0) {
     return null
   }
 
-  // If 3 or fewer testimonials, show in grid
-  if (testimonials.length <= 3) {
-    return (
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-        {testimonials.map((testimonial, index) => (
-          <TestimonialCard
-            key={testimonial._id || index}
-            name={testimonial.name}
-            role={testimonial.role}
-            content={testimonial.content}
-            avatar={testimonial.avatar}
-            index={index}
-          />
-        ))}
-      </div>
-    )
+  const hasMore = testimonials.length > itemsPerView
+
+  // For carousel mode (when not showing all)
+  const maxIndex = Math.max(0, testimonials.length - itemsPerView)
+  
+  const goToPrevious = () => {
+    setCurrentIndex((prev) => (prev - 1 + (maxIndex + 1)) % (maxIndex + 1))
   }
 
-  // If more than 3, show as auto-sliding marquee
+  const goToNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % (maxIndex + 1))
+  }
+
+  // Get testimonials to display based on current index
+  const getDisplayedTestimonials = () => {
+    if (showAll) {
+      return testimonials
+    }
+    const endIndex = Math.min(currentIndex + itemsPerView, testimonials.length)
+    return testimonials.slice(currentIndex, endIndex)
+  }
+
+  const displayedTestimonials = getDisplayedTestimonials()
+  const showNavigation = !showAll && testimonials.length > itemsPerView
+
   return (
-    <div className="marquee-wrapper">
-      <div className="flex gap-6 md:gap-8 marquee-container">
-        {/* First set */}
-        {testimonials.map((testimonial, index) => (
-          <div key={`first-${testimonial._id || index}`} className="flex-shrink-0" style={{ width: '380px' }}>
+    <div className="w-full">
+      {/* Testimonials Grid/Carousel */}
+      <div className="relative px-8 md:px-12 lg:px-16">
+        {/* Navigation Buttons - Only show when not showing all and there are more than itemsPerView */}
+        {showNavigation && (
+          <>
+            <button
+              onClick={goToPrevious}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black hover:bg-black/80 text-white p-2 md:p-3 rounded-full transition-all duration-300 hover:scale-110 shadow-lg border-2 border-white"
+              aria-label="Previous reviews"
+            >
+              <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={goToNext}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black hover:bg-black/80 text-white p-2 md:p-3 rounded-full transition-all duration-300 hover:scale-110 shadow-lg border-2 border-white"
+              aria-label="Next reviews"
+            >
+              <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </>
+        )}
+
+        {/* Testimonials Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          {displayedTestimonials.map((testimonial, index) => (
             <TestimonialCard
+              key={testimonial._id || `${currentIndex}-${index}`}
               name={testimonial.name}
               role={testimonial.role}
               content={testimonial.content}
               avatar={testimonial.avatar}
               index={index}
             />
+          ))}
+        </div>
+
+        {/* Dots Indicator - Only show when not showing all and there are more than itemsPerView */}
+        {showNavigation && maxIndex > 0 && (
+          <div className="flex justify-center gap-2 mt-6">
+            {Array.from({ length: maxIndex + 1 }).map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentIndex(index)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  index === currentIndex
+                    ? 'bg-black w-8'
+                    : 'bg-black/30 hover:bg-black/50 w-2'
+                }`}
+                aria-label={`Go to review set ${index + 1}`}
+              />
+            ))}
           </div>
-        ))}
-        {/* Duplicate set for seamless loop */}
-        {testimonials.map((testimonial, index) => (
-          <div key={`second-${testimonial._id || index}`} className="flex-shrink-0" style={{ width: '380px' }}>
-            <TestimonialCard
-              name={testimonial.name}
-              role={testimonial.role}
-              content={testimonial.content}
-              avatar={testimonial.avatar}
-              index={index}
-            />
-          </div>
-        ))}
+        )}
       </div>
+
+      {/* Show More / Show Less Button */}
+      {hasMore && (
+        <div className="text-center mt-8">
+          <button
+            onClick={() => {
+              setShowAll(!showAll)
+              setCurrentIndex(0) // Reset to first when toggling
+            }}
+            className="px-6 md:px-8 py-3 md:py-4 bg-black text-white hover:bg-black/80 font-bold transition-all duration-300 shadow-lg hover:shadow-xl border-2 border-black uppercase tracking-wide text-sm md:text-base"
+            style={{ fontFamily: "'Bona Nova SC', serif" }}
+          >
+            {showAll ? (
+              <span className="flex items-center justify-center gap-2">
+                <span>Show Less</span>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                <span>Show More Reviews</span>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </span>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -1322,16 +1397,29 @@ function App() {
               <p className="text-black/70 mt-3 text-lg font-medium" style={{ fontFamily: "'Bona Nova', serif" }}>Moments from our classes and performances</p>
             </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="aspect-square rounded-2xl bg-white shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
-                <img
-                  className="h-full w-full object-cover"
-                  src={`https://picsum.photos/seed/music-${i}/400/400`}
-                  alt="gallery"
+            {[
+              { src: vid1, title: "Music Class Performance", delay: 0.1 },
+              { src: vid2, title: "Student Showcase", delay: 0.2 }
+            ].map((video, index) => (
+              <motion.div
+                key={index}
+                className="aspect-square rounded-2xl bg-white shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: video.delay }}
+              >
+                <OptimizedVideo
+                  src={video.src}
+                  title={video.title}
+                  className="w-full h-full"
                 />
-              </div>
+              </motion.div>
             ))}
           </div>
+          <p className="text-xs text-slate-500 mt-4 text-center">
+            💡 Videos autoplay when in view. Hover to pause or click to control.
+          </p>
           </div>
         </motion.section>
       </main>
