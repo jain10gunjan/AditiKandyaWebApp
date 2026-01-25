@@ -38,6 +38,9 @@ import AdminTokenManagement from './routes/AdminTokenManagement.jsx'
 import VideoPlayer from './routes/VideoPlayer.jsx'
 import AboutPage from './routes/AboutPage.jsx'
 import WorkshopsPage from './routes/WorkshopsPage.jsx'
+import DisclaimerPage from './routes/DisclaimerPage.jsx'
+import TermsAndConditionsPage from './routes/TermsAndConditionsPage.jsx'
+import PrivacyPolicyPage from './routes/PrivacyPolicyPage.jsx'
 import { Toaster } from 'react-hot-toast'
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
@@ -59,6 +62,9 @@ const router = createBrowserRouter([
   { path: '/contact', element: <ContactPage /> },
   { path: '/about', element: <AboutPage /> },
   { path: '/workshops', element: <WorkshopsPage /> },
+  { path: '/disclaimer', element: <DisclaimerPage /> },
+  { path: '/terms', element: <TermsAndConditionsPage /> },
+  { path: '/privacy', element: <PrivacyPolicyPage /> },
   { path: '/schedule', element: <SchedulePage /> },
   { path: '/checkout', element: <CheckoutPage /> },
   { path: '/admin', element: <AdminPage /> },

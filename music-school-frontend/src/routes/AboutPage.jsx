@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
 import aditiProfileImage01 from '../assets/profileImages/image1.jpg'
+import image1 from '../assets/profileImages/image1.jpeg'
+import image2 from '../assets/profileImages/image2.jpeg'
+import image3 from '../assets/profileImages/image3.jpeg'
 
 export default function AboutPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -138,7 +141,7 @@ export default function AboutPage() {
                   {/* Image - Left on Desktop */}
                   <div className="w-full md:w-1/2 md:pr-8 order-2 md:order-1">
                     <img
-                      src="https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&q=80"
+                      src={image1}
                       alt="Timeline event"
                       className="w-full aspect-square object-cover"
                     />
@@ -184,7 +187,7 @@ Through patient guidance, interactive lessons, and a balance of discipline and c
                   {/* Image - Right on Desktop */}
                   <div className="w-full md:w-1/2 md:pl-8 order-2">
                     <img
-                      src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&q=80"
+                      src={image2}
                       alt="Timeline event"
                       className="w-full aspect-square object-cover"
                     />
@@ -196,7 +199,7 @@ Through patient guidance, interactive lessons, and a balance of discipline and c
                   {/* Image - Left on Desktop */}
                   <div className="w-full md:w-1/2 md:pr-8 order-2 md:order-1">
                     <img
-                      src="https://images.unsplash.com/photo-1511735111819-9a3f7709049c?w=600&q=80"
+                      src={image3}
                       alt="Timeline event"
                       className="w-full aspect-square object-cover"
                     />

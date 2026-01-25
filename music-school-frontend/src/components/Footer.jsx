@@ -10,7 +10,7 @@ export default function Footer({ showAdminTools = false }) {
     <footer className="border-t border-[#F5E6E0]/30 mt-20 bg-black">
       <div className="max-w-6xl mx-auto p-8">
         {/* Desktop Footer */}
-        <div className="hidden md:grid md:grid-cols-4 gap-8">
+        <div className="hidden md:grid md:grid-cols-5 gap-8">
           <div>
           <a href="/" className="flex items-center gap-2">
           <div className="relative bg-black px-4 py-1.5 flex flex-col items-center justify-center">
@@ -69,6 +69,23 @@ export default function Footer({ showAdminTools = false }) {
               <li><a href="/contact" className="hover:text-[#F5E6E0] transition-colors font-medium"style={{
                 fontFamily: "'Bona Nova', serif"
               }}       >Contact Us</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="font-bold text-white mb-4"
+            style={{
+              fontFamily: "'Bona Nova SC', serif"
+            }}>Legal</h3>
+            <ul className="space-y-2 text-sm text-white/70">
+              <li><a href="/privacy" className="hover:text-[#F5E6E0] transition-colors font-medium"style={{
+                fontFamily: "'Bona Nova', serif"
+              }}       >Privacy Policy</a></li>
+              <li><a href="/terms" className="hover:text-[#F5E6E0] transition-colors font-medium"style={{
+                fontFamily: "'Bona Nova', serif"
+              }}       >Terms & Conditions</a></li>
+              <li><a href="/disclaimer" className="hover:text-[#F5E6E0] transition-colors font-medium"style={{
+                fontFamily: "'Bona Nova', serif"
+              }}       >Disclaimer</a></li>
             </ul>
           </div>
           <div>
@@ -234,6 +251,30 @@ export default function Footer({ showAdminTools = false }) {
                     fontFamily: "'Bona Nova', serif"
                   }}
                   >Contact Us</a></li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-bold text-white mb-2 text-sm"
+                style={{
+                  fontFamily: "'Dancing Script', cursive"
+                }}
+                >Legal</h3>
+                <ul className="space-y-1 text-sm text-white/70">
+                  <li><a href="/privacy" className="hover:text-[#F5E6E0] transition-colors font-medium"
+                  style={{
+                    fontFamily: "'Bona Nova', serif"
+                  }}
+                  >Privacy Policy</a></li>
+                  <li><a href="/terms" className="hover:text-[#F5E6E0] transition-colors font-medium"
+                  style={{
+                    fontFamily: "'Bona Nova', serif"
+                  }}
+                  >Terms & Conditions</a></li>
+                  <li><a href="/disclaimer" className="hover:text-[#F5E6E0] transition-colors font-medium"
+                  style={{
+                    fontFamily: "'Bona Nova', serif"
+                  }}
+                  >Disclaimer</a></li>
                 </ul>
               </div>
               <div>
