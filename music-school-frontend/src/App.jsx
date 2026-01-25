@@ -344,11 +344,11 @@ function TestimonialCard({ name, role, content, avatar, index }) {
       <div className="flex items-center justify-between pt-4 border-t border-black/10 flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <img 
-            src={avatar} 
+            src={`https://cdn-icons-png.flaticon.com/512/6596/6596121.png`} 
             alt={name} 
             className="h-12 w-12 rounded-full object-cover flex-shrink-0"
             onError={(e) => {
-              e.target.src = 'https://i.pravatar.cc/150'
+              e.target.src = 'https://cdn-icons-png.flaticon.com/512/6596/6596121.png'
             }}
           />
           <div className="min-w-0">

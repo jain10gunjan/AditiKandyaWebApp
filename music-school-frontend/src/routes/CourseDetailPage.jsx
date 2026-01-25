@@ -878,19 +878,19 @@ function InstructorCard({ course }) {
     <div className="bg-white rounded-xl p-6 border border-slate-200 hover:border-sky-300 hover:shadow-md transition-all duration-300">
       <div className="flex items-start space-x-4">
         <div className="relative group">
-          <img 
+          {/* <img 
             src={`https://media.licdn.com/dms/image/v2/C5603AQHC0WEfpZVHbQ/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1636461338314?e=1769040000&v=beta&t=9RTGGGOIOVnxjnvtIJLiiE4VI1bxCxLghjyDoASIAyw`} 
             alt={teacherName}
             className="w-16 h-16 rounded-full object-cover ring-2 ring-slate-200 group-hover:ring-sky-400 transition-all duration-300"
             onError={(e) => {
               e.target.src = 'https://i.pravatar.cc/150?img=12'
             }}
-          />
-          {hasTeacher && (
+          /> */}
+          {/* {hasTeacher && (
             <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center z-10">
               <span className="text-white text-xs">✓</span>
             </div>
-          )}
+          )} */}
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
@@ -905,13 +905,7 @@ function InstructorCard({ course }) {
             <span>🎵</span>
             <span>{teacherInstrument} Instructor</span>
           </p>
-          <div className="flex items-center space-x-2 mt-2">
-            <div className="flex text-yellow-400">
-              {'★'.repeat(Math.floor(rating))}
-              {rating % 1 >= 0.5 && <span className="text-yellow-400">½</span>}
-            </div>
-            <span className="text-sm text-slate-600">({rating.toFixed(1)}) • {studentDisplay} students</span>
-          </div>
+          
           <p className="text-slate-600 text-sm mt-3 leading-relaxed">
             {teacherDescription}
           </p>
@@ -1461,7 +1455,6 @@ export default function CourseDetailPage() {
                     'Lifetime access',
                     'Mobile & desktop',
                     'Certificate of completion',
-                    '30-day money-back guarantee'
                   ]).map((feature, index) => (
                     <div key={index} className="flex items-center text-sm text-slate-600">
                       <span className="mr-2">✓</span>
