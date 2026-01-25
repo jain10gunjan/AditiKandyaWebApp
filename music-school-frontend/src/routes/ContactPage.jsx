@@ -246,7 +246,9 @@ export default function ContactPage() {
                 Contact Us
               </h1>
               <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-white/80 leading-relaxed drop-shadow-lg mt-2" 
-                style={{ fontFamily: "'Dancing Script', cursive" }}>
+                style={{
+                  fontFamily: "'Bona Nova SC', serif"
+                }}>
                 Have a query? I am just a message away.
               </p>
               

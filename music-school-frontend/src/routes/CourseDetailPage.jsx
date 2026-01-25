@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
 import { getUserCountry, getRegionFromCountry, formatPrice } from '../lib/pricingUtils.js'
+import image2 from '../assets/profileImages/image2.jpg'
 
 function CourseLeadForm({ course, onSuccess }) {
   const { user, isLoaded } = useUser()
@@ -878,19 +879,19 @@ function InstructorCard({ course }) {
     <div className="bg-white rounded-xl p-6 border border-slate-200 hover:border-sky-300 hover:shadow-md transition-all duration-300">
       <div className="flex items-start space-x-4">
         <div className="relative group">
-          {/* <img 
-            src={`https://media.licdn.com/dms/image/v2/C5603AQHC0WEfpZVHbQ/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1636461338314?e=1769040000&v=beta&t=9RTGGGOIOVnxjnvtIJLiiE4VI1bxCxLghjyDoASIAyw`} 
+          <img 
+            src={image2} 
             alt={teacherName}
             className="w-16 h-16 rounded-full object-cover ring-2 ring-slate-200 group-hover:ring-sky-400 transition-all duration-300"
             onError={(e) => {
-              e.target.src = 'https://i.pravatar.cc/150?img=12'
+              e.target.src = 'https://themusinest.com/src/assets/profileImages/image2.jpg'
             }}
-          /> */}
-          {/* {hasTeacher && (
+          />
+          {hasTeacher && (
             <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center z-10">
               <span className="text-white text-xs">✓</span>
             </div>
-          )} */}
+          )}
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">

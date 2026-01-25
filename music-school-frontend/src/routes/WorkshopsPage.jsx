@@ -484,7 +484,9 @@ export default function WorkshopsPage() {
                 Workshops
               </h1>
               <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-white/80 leading-relaxed drop-shadow-lg mt-2" 
-                style={{ fontFamily: "'Dancing Script', cursive" }}>
+                style={{
+                  fontFamily: "'Bona Nova SC', serif"
+                }}>
                 Join our intensive workshops and master new skills with expert guidance
                 </p>
               

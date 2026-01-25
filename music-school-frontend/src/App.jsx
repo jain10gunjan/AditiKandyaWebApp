@@ -321,27 +321,15 @@ function StatCard({ number, label, icon, color, index }) {
 function TestimonialCard({ name, role, content, avatar, index }) {
   return (
     <motion.div 
-      className="bg-white shadow-lg hover:shadow-2xl transition-all duration-300 p-6 md:p-8 border-l-4 border-black h-full flex flex-col rounded-sm"
+      className="bg-white shadow-lg hover:shadow-2xl transition-all duration-300 p-6 md:p-8  h-full flex flex-col rounded-sm"
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: (index || 0) * 0.1 }}
       whileHover={{ y: -5 }}
     >
-      {/* Quote Icon */}
-      <div className="mb-4">
-        <svg className="w-8 h-8 text-black/20" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.996 2.151c-2.432.967-4.996 2.848-4.996 7.153 0 3.68 1.681 4.806 4.996 4.806v7h-9.979zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.967-5 2.848-5 7.153 0 3.68 1.76 4.806 5 4.806v7h-10z"/>
-        </svg>
-      </div>
-
-      {/* Content */}
-      <p className="text-black text-base md:text-lg leading-relaxed mb-6 flex-grow" style={{ fontFamily: "'Bona Nova', serif" }}>
-        "{content}"
-      </p>
-
-      {/* Author Info */}
-      <div className="flex items-center justify-between pt-4 border-t border-black/10 flex-wrap gap-3">
+       {/* Author Info */}
+       <div className="flex items-center justify-between pt-4 border-b mb-4 border-black/10 flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <img 
             src={`https://cdn-icons-png.flaticon.com/512/6596/6596121.png`} 
@@ -360,11 +348,23 @@ function TestimonialCard({ name, role, content, avatar, index }) {
             </div>
           </div>
         </div>
-        {/* Stars */}
-        <div className="flex text-yellow-500 text-base md:text-lg flex-shrink-0">
-          {'★'.repeat(5)}
-        </div>
+        
       </div>
+
+      {/* Quote Icon */}
+      <div className="mb-4">
+        <svg className="w-8 h-8 text-black/20" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.996 2.151c-2.432.967-4.996 2.848-4.996 7.153 0 3.68 1.681 4.806 4.996 4.806v7h-9.979zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.967-5 2.848-5 7.153 0 3.68 1.76 4.806 5 4.806v7h-10z"/>
+        </svg>
+      </div>
+
+
+      {/* Content */}
+      <p className="text-black text-base md:text-lg leading-relaxed mb-6 flex-grow" style={{ fontFamily: "'Bona Nova', serif" }}>
+        "{content}"
+      </p>
+
+     
     </motion.div>
   )
 }
