@@ -748,9 +748,7 @@ export default function AdminStudentSchedules() {
                       onStartTimeChange={(time) => setNewEvent({...newEvent, time, endTime: ''})}
                       onEndTimeChange={(endTime) => setNewEvent({...newEvent, endTime})}
                       bookedSlots={allSchedulesForDate}
-                      intervalMinutes={15}
-                      startHour={0}
-                      endHour={24}
+                      mode="continuous"
                     />
                     {loadingSchedules && (
                       <p className="text-xs text-slate-500 mt-1">Loading available slots...</p>

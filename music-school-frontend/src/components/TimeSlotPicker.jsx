@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 /**
  * TimeSlotPicker Component
  * Displays time slots in a grid and disables/grays out booked slots
+ * Also supports a continuous 24-hour time range mode without fixed intervals
  */
 export default function TimeSlotPicker({ 
   selectedDate, 
@@ -14,7 +15,8 @@ export default function TimeSlotPicker({
   bookedSlots = [],
   intervalMinutes = 30,
   startHour = 8,
-  endHour = 22
+  endHour = 22,
+  mode = 'grid' // 'grid' | 'continuous'
 }) {
   const [hoveredSlot, setHoveredSlot] = useState(null)
 
@@ -293,97 +295,146 @@ export default function TimeSlotPicker({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <label className="block text-sm font-medium text-slate-700">
-          Select Time Slot
+          {mode === 'continuous' ? 'Select Time Range (24 hours)' : 'Select Time Slot'}
         </label>
-        <div className="flex items-center gap-4 text-xs text-slate-600">
-          <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-green-100 border border-green-300 rounded"></div>
-            <span>Available</span>
+        {mode === 'grid' && (
+          <div className="flex items-center gap-4 text-xs text-slate-600">
+            <div className="flex items-center gap-1">
+              <div className="w-4 h-4 bg-green-100 border border-green-300 rounded"></div>
+              <span>Available</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-4 h-4 bg-slate-200 border border-slate-300 rounded"></div>
+              <span>Booked</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-4 h-4 bg-sky-200 border-2 border-sky-500 rounded"></div>
+              <span>Selected</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-slate-200 border border-slate-300 rounded"></div>
-            <span>Booked</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-sky-200 border-2 border-sky-500 rounded"></div>
-            <span>Selected</span>
-          </div>
-        </div>
+        )}
       </div>
       
-      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 max-h-80 overflow-y-auto p-2 bg-slate-50 rounded-lg border border-slate-200">
-        {timeSlots.map((slotTime) => {
-          const booked = isSlotBooked(slotTime)
-          const isStart = isStartTime(slotTime)
-          const isEnd = isEndTime(slotTime)
-          const inRange = isInSelectedRange(slotTime)
-          const selected = isStart || isEnd || inRange
-          const bookingInfo = getBookingInfo(slotTime)
-          const continuity = getBookingContinuity(slotTime)
-          const isHovered = hoveredSlot === slotTime
-          
-          // Determine border radius based on continuity
-          let borderRadiusClass = 'rounded-lg'
-          if (booked && continuity.isStart && !continuity.isEnd) {
-            borderRadiusClass = 'rounded-l-lg rounded-r-none'
-          } else if (booked && continuity.isEnd && !continuity.isStart) {
-            borderRadiusClass = 'rounded-r-lg rounded-l-none'
-          } else if (booked && continuity.isMiddle) {
-            borderRadiusClass = 'rounded-none'
-          }
-          
-          return (
-            <button
-              key={slotTime}
-              type="button"
-              onClick={() => handleSlotClick(slotTime)}
-              onMouseEnter={() => setHoveredSlot(slotTime)}
-              onMouseLeave={() => setHoveredSlot(null)}
-              disabled={booked}
-              className={`
-                relative px-3 py-2 text-xs font-medium transition-all ${borderRadiusClass}
-                ${booked 
-                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300' 
-                  : selected
-                  ? 'bg-sky-300 text-sky-900 border-2 border-sky-600 shadow-lg ring-2 ring-sky-400 font-bold scale-105'
-                  : 'bg-white text-slate-700 border border-slate-300 hover:bg-sky-50 hover:border-sky-300 hover:shadow-sm cursor-pointer active:scale-95'
+      {mode === 'continuous' ? (
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">
+                Start Time
+              </label>
+              <input
+                type="time"
+                value={startTime || ''}
+                onChange={(e) => {
+                  const value = e.target.value
+                  onStartTimeChange(value)
+                  if (endTime && doesRangeConflict(value, endTime)) {
+                    onEndTimeChange('')
+                  }
+                }}
+                min="00:00"
+                max="23:59"
+                step={60}
+                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">
+                End Time
+              </label>
+              <input
+                type="time"
+                value={endTime || ''}
+                onChange={(e) => {
+                  const value = e.target.value
+                  onEndTimeChange(value)
+                }}
+                min={startTime || '00:00'}
+                max="23:59"
+                step={60}
+                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm"
+              />
+            </div>
+          </div>
+          <p className="text-xs text-slate-500">
+            You can choose any start and end time across the full 24 hours. Conflicts with existing schedules will be detected automatically.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 max-h-80 overflow-y-auto p-2 bg-slate-50 rounded-lg border border-slate-200">
+          {timeSlots.map((slotTime) => {
+            const booked = isSlotBooked(slotTime)
+            const isStart = isStartTime(slotTime)
+            const isEnd = isEndTime(slotTime)
+            const inRange = isInSelectedRange(slotTime)
+            const selected = isStart || isEnd || inRange
+            const bookingInfo = getBookingInfo(slotTime)
+            const continuity = getBookingContinuity(slotTime)
+            const isHovered = hoveredSlot === slotTime
+            
+            // Determine border radius based on continuity
+            let borderRadiusClass = 'rounded-lg'
+            if (booked && continuity.isStart && !continuity.isEnd) {
+              borderRadiusClass = 'rounded-l-lg rounded-r-none'
+            } else if (booked && continuity.isEnd && !continuity.isStart) {
+              borderRadiusClass = 'rounded-r-lg rounded-l-none'
+            } else if (booked && continuity.isMiddle) {
+              borderRadiusClass = 'rounded-none'
+            }
+            
+            return (
+              <button
+                key={slotTime}
+                type="button"
+                onClick={() => handleSlotClick(slotTime)}
+                onMouseEnter={() => setHoveredSlot(slotTime)}
+                onMouseLeave={() => setHoveredSlot(null)}
+                disabled={booked}
+                className={`
+                  relative px-3 py-2 text-xs font-medium transition-all ${borderRadiusClass}
+                  ${booked 
+                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300' 
+                    : selected
+                    ? 'bg-sky-300 text-sky-900 border-2 border-sky-600 shadow-lg ring-2 ring-sky-400 font-bold scale-105'
+                    : 'bg-white text-slate-700 border border-slate-300 hover:bg-sky-50 hover:border-sky-300 hover:shadow-sm cursor-pointer active:scale-95'
+                  }
+                  ${isHovered && bookingInfo ? 'z-10' : ''}
+                  ${booked && continuity.isMiddle ? 'border-l-0' : ''}
+                `}
+                title={booked && bookingInfo 
+                  ? `Booked: ${bookingInfo.title} - ${bookingInfo.student || 'Unknown'} (${bookingInfo.course || 'Unknown'})\n${new Date(bookingInfo.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(bookingInfo.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` 
+                  : formatTime(slotTime)
                 }
-                ${isHovered && bookingInfo ? 'z-10' : ''}
-                ${booked && continuity.isMiddle ? 'border-l-0' : ''}
-              `}
-              title={booked && bookingInfo 
-                ? `Booked: ${bookingInfo.title} - ${bookingInfo.student || 'Unknown'} (${bookingInfo.course || 'Unknown'})\n${new Date(bookingInfo.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(bookingInfo.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` 
-                : formatTime(slotTime)
-              }
-            >
-              {formatTime(slotTime)}
-              {selected && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-sky-600 rounded-full border-2 border-white flex items-center justify-center">
-                  <span className="text-white text-[8px]">✓</span>
-                </span>
-              )}
-              {booked && continuity.isStart && !selected && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              )}
-              
-              {/* Tooltip for booked slots */}
-              {isHovered && bookingInfo && (
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded shadow-lg z-20 whitespace-nowrap">
-                  <div className="font-semibold">{bookingInfo.title}</div>
-                  <div className="text-slate-300">
-                    {bookingInfo.student || 'Unknown'} ({bookingInfo.course || 'Unknown'})
+              >
+                {formatTime(slotTime)}
+                {selected && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-sky-600 rounded-full border-2 border-white flex items-center justify-center">
+                    <span className="text-white text-[8px]">✓</span>
+                  </span>
+                )}
+                {booked && continuity.isStart && !selected && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                )}
+                
+                {/* Tooltip for booked slots */}
+                {isHovered && bookingInfo && (
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded shadow-lg z-20 whitespace-nowrap">
+                    <div className="font-semibold">{bookingInfo.title}</div>
+                    <div className="text-slate-300">
+                      {bookingInfo.student || 'Unknown'} ({bookingInfo.course || 'Unknown'})
+                    </div>
+                    <div className="text-slate-400 text-xs">
+                      {new Date(bookingInfo.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
+                      {new Date(bookingInfo.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-900"></div>
                   </div>
-                  <div className="text-slate-400 text-xs">
-                    {new Date(bookingInfo.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
-                    {new Date(bookingInfo.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-900"></div>
-                </div>
-              )}
-            </button>
-          )
-        })}
-      </div>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
       
       {startTime && (
         <div className={`text-sm p-2 rounded-lg border ${
