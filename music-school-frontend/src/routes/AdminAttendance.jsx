@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useAuth, SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
 import { apiGet, apiPost } from '../lib/api'
+import { toLocalDateString, toLocalMonthString, parseLocalDate } from '../lib/dateUtils'
 
-// Helper function to generate days for a month
+// Helper function to generate days for a month (uses local dates for consistency)
 const generateDaysForMonth = (year, month) => {
   const daysInMonth = new Date(year, month + 1, 0).getDate()
   const days = []
@@ -10,7 +11,7 @@ const generateDaysForMonth = (year, month) => {
     const date = new Date(year, month, day)
     days.push({
       day,
-      date: date.toISOString().split('T')[0],
+      date: toLocalDateString(date),
       dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
       isWeekend: date.getDay() === 0 || date.getDay() === 6
     })
@@ -18,21 +19,22 @@ const generateDaysForMonth = (year, month) => {
   return days
 }
 
-function AttendanceGrid({ students, attendance, onMarkAttendance, saving, selectedDate, selectedMonth, selectedCourse }) {
+function AttendanceGrid({
+  students,
+  attendance,
+  onMarkAttendance,
+  saving,
+  selectedDate,
+  selectedMonth,
+  selectedCourse,
+  allowedDates, // { openDates: Record<string, true>, byStudent: Record<string, Record<string, true>> }
+}) {
   const getAttendanceForStudent = (studentId, date) => {
-    console.log('getAttendanceForStudent called with:', { studentId, date, courseId: selectedCourse })
-    console.log('Available attendance records:', attendance)
-    
-    const record = attendance.find(a => {
-      const matches = a.studentId === studentId && 
-                     a.date === date &&
-                     a.courseId === selectedCourse
-      console.log('Checking record:', a, 'matches:', matches)
-      return matches
-    })
-    
-    console.log('Found record:', record)
-    return record
+    return attendance.find(a =>
+      a.studentId === studentId &&
+      a.date === date &&
+      a.courseId === selectedCourse
+    )
   }
 
   const getStatusColor = (status) => {
@@ -54,9 +56,14 @@ function AttendanceGrid({ students, attendance, onMarkAttendance, saving, select
   }
 
   const currentDate = new Date()
-  const currentYear = selectedMonth ? new Date(selectedMonth).getFullYear() : currentDate.getFullYear()
-  const currentMonth = selectedMonth ? new Date(selectedMonth).getMonth() : currentDate.getMonth()
-  const days = generateDaysForMonth(currentYear, currentMonth)
+  const firstOfMonth = selectedMonth ? parseLocalDate(selectedMonth + '-01') : currentDate
+  const currentYear = firstOfMonth.getFullYear()
+  const currentMonth = firstOfMonth.getMonth()
+  const allDays = generateDaysForMonth(currentYear, currentMonth)
+
+  // Only show "open" dates where at least one student has a schedule
+  const openDatesMap = allowedDates?.openDates || {}
+  const days = allDays.filter(d => openDatesMap[d.date])
 
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
@@ -95,6 +102,7 @@ function AttendanceGrid({ students, attendance, onMarkAttendance, saving, select
           {/* Student Rows */}
           {students.map((student, index) => {
             console.log('Processing student:', student)
+            const studentAllowed = allowedDates?.byStudent?.[student.userId] || {}
             return (
               <div key={student._id} className="flex border-b border-slate-200 hover:bg-slate-50">
               {/* Student Info */}
@@ -118,17 +126,18 @@ function AttendanceGrid({ students, attendance, onMarkAttendance, saving, select
               {days.map((day) => {
                 const studentAttendance = getAttendanceForStudent(student.userId, day.date)
                 const isToday = day.date === selectedDate
-                
-                console.log(`Checking attendance for student ${student.userId} on ${day.date}:`, studentAttendance)
+                const isAllowed = Boolean(studentAllowed[day.date])
                 
                 return (
                   <div 
                     key={`${student._id}-${day.day}`}
-                    className={`w-12 h-12 border-r border-slate-300 flex items-center justify-center cursor-pointer transition-colors ${
-                      day.isWeekend ? 'bg-slate-100' : 'bg-white'
+                    className={`w-12 h-12 border-r border-slate-300 flex items-center justify-center transition-colors ${
+                      !isAllowed
+                        ? 'bg-slate-100 text-slate-300 cursor-not-allowed'
+                        : day.isWeekend ? 'bg-slate-100 cursor-pointer' : 'bg-white cursor-pointer'
                     } ${isToday ? 'ring-2 ring-sky-500 ring-inset' : ''}`}
                     onClick={() => {
-                      if (!saving) {
+                      if (!saving && isAllowed) {
                         // Cycle through statuses: empty -> present -> waived -> absent -> empty
                         const currentStatus = studentAttendance?.status
                         let nextStatus = 'present'
@@ -140,6 +149,7 @@ function AttendanceGrid({ students, attendance, onMarkAttendance, saving, select
                         onMarkAttendance(student.userId, nextStatus, '', day.date)
                       }
                     }}
+                    title={!isAllowed ? 'No schedule for this student on this date' : 'Click to mark attendance'}
                   >
                     {studentAttendance && (
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 ${getStatusColor(studentAttendance.status)}`}>
@@ -154,6 +164,14 @@ function AttendanceGrid({ students, attendance, onMarkAttendance, saving, select
           })}
         </div>
       </div>
+
+      {days.length === 0 && (
+        <div className="text-center py-12">
+          <div className="text-4xl mb-4">📅</div>
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">No Scheduled Classes</h3>
+          <p className="text-slate-600">There are no student schedules for this course in the selected month.</p>
+        </div>
+      )}
       
       {students.length === 0 && (
         <div className="text-center py-12">
@@ -228,12 +246,14 @@ export default function AdminAttendance() {
   const [selectedCourse, setSelectedCourse] = useState('')
   const [students, setStudents] = useState([])
   const [attendance, setAttendance] = useState([])
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)) // YYYY-MM format
+  const [selectedDate, setSelectedDate] = useState(() => toLocalDateString(new Date()))
+  const [selectedMonth, setSelectedMonth] = useState(() => toLocalMonthString(new Date()))
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [selectedCourseData, setSelectedCourseData] = useState(null)
   const [viewMode, setViewMode] = useState('grid') // 'grid' or 'table'
+  const [allowedDates, setAllowedDates] = useState({ openDates: {}, byStudent: {} })
+  const [loadingScheduleDates, setLoadingScheduleDates] = useState(false)
 
   useEffect(() => {
     loadCourses()
@@ -243,11 +263,91 @@ export default function AdminAttendance() {
     if (selectedCourse) {
       loadStudents()
       loadAttendance()
-      // Find selected course data
       const courseData = courses.find(c => c._id === selectedCourse)
       setSelectedCourseData(courseData)
     }
   }, [selectedCourse, selectedMonth, courses])
+
+  useEffect(() => {
+    if (selectedCourse && selectedMonth) {
+      loadScheduleDatesForMonth()
+    } else {
+      setAllowedDates({ openDates: {}, byStudent: {} })
+    }
+  }, [selectedCourse, selectedMonth, students.length])
+
+  const loadScheduleDatesForMonth = async () => {
+    if (!selectedCourse || !selectedMonth) return
+
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+    const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
+
+    const first = parseLocalDate(selectedMonth + '-01')
+    const startDate = toLocalDateString(new Date(first.getFullYear(), first.getMonth(), 1))
+    const endDate = toLocalDateString(new Date(first.getFullYear(), first.getMonth() + 1, 0))
+
+    const studentIds = (students || [])
+      .map(s => String(s.userId || '').trim())
+      .filter(Boolean)
+
+    try {
+      setLoadingScheduleDates(true)
+      const token = await getToken()
+      const params = new URLSearchParams({
+        courseId: String(selectedCourse),
+        startDate,
+        endDate,
+      })
+      if (studentIds.length > 0) {
+        params.set('studentIds', studentIds.join(','))
+      }
+
+      const res = await fetch(`${baseUrl}/admin/student-schedules-range?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) {
+        setAllowedDates({ openDates: {}, byStudent: {} })
+        return
+      }
+
+      const schedules = await res.json()
+
+      // Build indexes:
+      // - openDates: dates where at least one student has a schedule
+      // - byStudent: for each studentId, dates where they have schedule
+      const openDates = {}
+      const byStudent = {}
+
+      for (const s of schedules || []) {
+        const sid = String(s.studentId || '').trim()
+        if (!sid) continue
+        const d = s.startTime ? toLocalDateString(new Date(s.startTime)) : ''
+        if (!d) continue
+
+        openDates[d] = true
+        if (!byStudent[sid]) byStudent[sid] = {}
+        byStudent[sid][d] = true
+      }
+
+      setAllowedDates({ openDates, byStudent })
+    } catch (e) {
+      console.error('Error loading schedule dates for month:', e)
+      setAllowedDates({ openDates: {}, byStudent: {} })
+    } finally {
+      setLoadingScheduleDates(false)
+    }
+  }
+
+  // Keep selectedDate inside selected month when month changes
+  useEffect(() => {
+    if (!selectedMonth || !selectedDate) return
+    const first = parseLocalDate(selectedMonth + '-01')
+    const last = new Date(first.getFullYear(), first.getMonth() + 1, 0)
+    const current = parseLocalDate(selectedDate)
+    if (current < first || current > last) {
+      setSelectedDate(toLocalDateString(first))
+    }
+  }, [selectedMonth])
 
   const loadCourses = async () => {
     try {
@@ -266,10 +366,13 @@ export default function AdminAttendance() {
 
   const loadStudents = async () => {
     if (!selectedCourse) return
-    
+
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+    const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
+
     try {
       const token = await getToken()
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/courses/${selectedCourse}/students`, {
+      const res = await fetch(`${baseUrl}/admin/courses/${selectedCourse}/students`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       if (res.ok) {
@@ -277,7 +380,7 @@ export default function AdminAttendance() {
         setStudents(data)
       } else {
         // Fallback: get students from enrollments
-        const enrollmentsRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/enrollments`, {
+        const enrollmentsRes = await fetch(`${baseUrl}/admin/enrollments`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         if (enrollmentsRes.ok) {
@@ -300,36 +403,31 @@ export default function AdminAttendance() {
 
   const loadAttendance = async () => {
     if (!selectedCourse || !selectedMonth) return
-    
+
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+    const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
+
     try {
       const token = await getToken()
-      // Load attendance for the entire month
-      const year = new Date(selectedMonth).getFullYear()
-      const month = new Date(selectedMonth).getMonth()
-      const startDate = new Date(year, month, 1).toISOString().split('T')[0]
-      const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0]
-      
-      console.log('Loading attendance for:', { courseId: selectedCourse, startDate, endDate })
-      
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/attendance/${selectedCourse}/${startDate}/${endDate}`, {
+      const year = parseLocalDate(selectedMonth + '-01').getFullYear()
+      const month = parseLocalDate(selectedMonth + '-01').getMonth()
+      const startDate = toLocalDateString(new Date(year, month, 1))
+      const endDate = toLocalDateString(new Date(year, month + 1, 0))
+
+      const res = await fetch(`${baseUrl}/admin/attendance/${selectedCourse}/${startDate}/${endDate}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      
+
       if (res.ok) {
         const data = await res.json()
-        console.log('Loaded attendance data:', data)
-        console.log('Setting attendance state with', data.length, 'records')
         setAttendance(data)
       } else {
-        console.error('Failed to load attendance:', res.status, res.statusText)
-        // Try fallback to single date endpoint
-        const today = new Date().toISOString().split('T')[0]
-        const fallbackRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/attendance/${selectedCourse}/${today}`, {
+        const today = toLocalDateString(new Date())
+        const fallbackRes = await fetch(`${baseUrl}/admin/attendance/${selectedCourse}/${today}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         if (fallbackRes.ok) {
           const fallbackData = await fallbackRes.json()
-          console.log('Loaded fallback attendance data:', fallbackData)
           setAttendance(fallbackData)
         } else {
           setAttendance([])
@@ -345,8 +443,6 @@ export default function AdminAttendance() {
     if (!selectedCourse) return
     
     const attendanceDate = date || selectedDate
-    console.log('Marking attendance:', { studentId, status, date: attendanceDate, courseId: selectedCourse })
-    
     setSaving(true)
     try {
       const token = await getToken()
@@ -358,8 +454,6 @@ export default function AdminAttendance() {
         notes
       }, token)
       
-      console.log('Attendance API response:', response)
-      
       // Update local state immediately for better UX
       setAttendance(prev => {
         const existingIndex = prev.findIndex(a => 
@@ -369,16 +463,11 @@ export default function AdminAttendance() {
         )
         
         if (existingIndex >= 0) {
-          // Update existing record
           const updated = [...prev]
           updated[existingIndex] = { ...updated[existingIndex], status, notes }
-          console.log('Updated existing attendance record:', updated[existingIndex])
           return updated
         } else {
-          // Add new record
-          const newRecord = { studentId, courseId: selectedCourse, status, notes, date: attendanceDate }
-          console.log('Added new attendance record:', newRecord)
-          return [...prev, newRecord]
+          return [...prev, { studentId, courseId: selectedCourse, status, notes, date: attendanceDate }]
         }
       })
       
@@ -397,16 +486,27 @@ export default function AdminAttendance() {
 
   const getAttendanceStats = () => {
     const total = students.length
-    const totalDays = generateDaysForMonth(
-      new Date(selectedMonth).getFullYear(), 
-      new Date(selectedMonth).getMonth()
-    ).length
-    const totalPossibleRecords = total * totalDays
+    const byStudent = allowedDates?.byStudent || {}
+    const openDates = allowedDates?.openDates || {}
+
+    // Only count sessions that have schedules (studentId + date)
+    let totalPossibleRecords = 0
+    for (const s of students) {
+      const sid = String(s.userId || '').trim()
+      const datesForStudent = byStudent[sid] || {}
+      totalPossibleRecords += Object.keys(datesForStudent).length
+    }
     
-    const present = attendance.filter(a => a.status === 'present').length
-    const absent = attendance.filter(a => a.status === 'absent').length
-    const waived = attendance.filter(a => a.status === 'waived').length
-    const marked = attendance.length
+    const eligibleAttendance = attendance.filter(a => {
+      const sid = String(a.studentId || '').trim()
+      const d = String(a.date || '').trim()
+      return Boolean(byStudent[sid]?.[d]) || Boolean(openDates[d])
+    })
+
+    const present = eligibleAttendance.filter(a => a.status === 'present').length
+    const absent = eligibleAttendance.filter(a => a.status === 'absent').length
+    const waived = eligibleAttendance.filter(a => a.status === 'waived').length
+    const marked = eligibleAttendance.length
     const unmarked = Math.max(0, totalPossibleRecords - marked)
     
     return { total, present, absent, waived, marked, unmarked }
@@ -540,6 +640,7 @@ export default function AdminAttendance() {
                         selectedDate={selectedDate}
                         selectedMonth={selectedMonth}
                         selectedCourse={selectedCourse}
+                        allowedDates={allowedDates}
                       />
                     ) : (
                       <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">

@@ -2961,6 +2961,48 @@ app.get('/api/admin/student-schedules', requireAdmin, async (req, res) => {
   res.json(schedules)
 })
 
+// Admin: Get student-specific schedules for a course within a date range (efficient month loading)
+// Query params:
+// - courseId (required)
+// - startDate YYYY-MM-DD (required)
+// - endDate YYYY-MM-DD (required)
+// - studentIds (optional, comma-separated)
+app.get('/api/admin/student-schedules-range', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.json([])
+  const { courseId, startDate, endDate, studentIds } = req.query || {}
+  if (!courseId || !startDate || !endDate) {
+    return res.status(400).json({ error: 'courseId, startDate, and endDate are required' })
+  }
+
+  const startDateStr = String(startDate).includes('T') ? String(startDate).split('T')[0] : String(startDate)
+  const endDateStr = String(endDate).includes('T') ? String(endDate).split('T')[0] : String(endDate)
+
+  const startOfRange = new Date(`${startDateStr}T00:00:00.000Z`)
+  const endOfRange = new Date(`${endDateStr}T23:59:59.999Z`)
+
+  const query = {
+    courseId: String(courseId),
+    studentId: { $exists: true, $ne: null, $ne: '' },
+    startTime: { $gte: startOfRange, $lte: endOfRange },
+  }
+
+  if (studentIds) {
+    const ids = String(studentIds)
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+    if (ids.length > 0) query.studentId = { $in: ids }
+  }
+
+  // Return minimal fields for performance; sort stable by time
+  const schedules = await Schedule.find(query)
+    .select('_id studentId courseId startTime endTime title type status')
+    .sort({ startTime: 1 })
+    .lean()
+
+  res.json(schedules)
+})
+
 // Admin: Get enrollments for a course (to show students)
 app.get('/api/admin/courses/:courseId/enrollments', requireAdmin, async (req, res) => {
   if (!dbConnected) return res.json([])

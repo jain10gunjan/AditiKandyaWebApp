@@ -4,6 +4,7 @@ import { apiGet } from '../lib/api'
 import toast from 'react-hot-toast'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
+import { toLocalDateString, parseLocalDate } from '../lib/dateUtils'
 
 export default function AdminTeacherCalendar() {
   const { getToken } = useAuth()
@@ -11,7 +12,7 @@ export default function AdminTeacherCalendar() {
   const [courses, setCourses] = useState([])
   const [enrollments, setEnrollments] = useState([])
   const [loading, setLoading] = useState(true)
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const [selectedDate, setSelectedDate] = useState(() => toLocalDateString(new Date()))
   const [viewMode, setViewMode] = useState('day') // 'day', 'week', 'month'
   const [allEnrollments, setAllEnrollments] = useState([]) // Cache all enrollments
 
@@ -94,7 +95,6 @@ export default function AdminTeacherCalendar() {
       let schedulesData = []
       
       if (viewMode === 'day') {
-        // Load schedules for selected date
         const params = new URLSearchParams({ date: selectedDate })
         const response = await fetch(`${baseUrl}/admin/student-schedules?${params}`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -103,18 +103,17 @@ export default function AdminTeacherCalendar() {
           schedulesData = await response.json()
         }
       } else if (viewMode === 'week') {
-        // Load schedules for the week
-        const startDate = new Date(selectedDate)
+        const startDate = parseLocalDate(selectedDate)
         const dayOfWeek = startDate.getDay()
         const weekStart = new Date(startDate)
         weekStart.setDate(startDate.getDate() - dayOfWeek)
-        
+
         const allWeekSchedules = []
         for (let i = 0; i < 7; i++) {
           const date = new Date(weekStart)
           date.setDate(weekStart.getDate() + i)
-          const dateStr = date.toISOString().split('T')[0]
-          
+          const dateStr = toLocalDateString(date)
+
           const params = new URLSearchParams({ date: dateStr })
           const response = await fetch(`${baseUrl}/admin/student-schedules?${params}`, {
             headers: { Authorization: `Bearer ${token}` }
@@ -126,16 +125,15 @@ export default function AdminTeacherCalendar() {
         }
         schedulesData = allWeekSchedules
       } else if (viewMode === 'month') {
-        // Load schedules for the month
-        const startDate = new Date(selectedDate)
+        const startDate = parseLocalDate(selectedDate)
         const year = startDate.getFullYear()
         const month = startDate.getMonth()
         const firstDay = new Date(year, month, 1)
         const lastDay = new Date(year, month + 1, 0)
-        
+
         const allMonthSchedules = []
         for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
-          const dateStr = d.toISOString().split('T')[0]
+          const dateStr = toLocalDateString(d)
           const params = new URLSearchParams({ date: dateStr })
           const response = await fetch(`${baseUrl}/admin/student-schedules?${params}`, {
             headers: { Authorization: `Bearer ${token}` }
@@ -298,7 +296,7 @@ export default function AdminTeacherCalendar() {
     if (viewMode === 'day') {
       return [selectedDate]
     } else if (viewMode === 'week') {
-      const startDate = new Date(selectedDate)
+      const startDate = parseLocalDate(selectedDate)
       const dayOfWeek = startDate.getDay()
       const weekStart = new Date(startDate)
       weekStart.setDate(startDate.getDate() - dayOfWeek)
@@ -306,18 +304,18 @@ export default function AdminTeacherCalendar() {
       for (let i = 0; i < 7; i++) {
         const date = new Date(weekStart)
         date.setDate(weekStart.getDate() + i)
-        dates.push(date.toISOString().split('T')[0])
+        dates.push(toLocalDateString(date))
       }
       return dates
     } else {
-      const startDate = new Date(selectedDate)
+      const startDate = parseLocalDate(selectedDate)
       const year = startDate.getFullYear()
       const month = startDate.getMonth()
       const firstDay = new Date(year, month, 1)
       const lastDay = new Date(year, month + 1, 0)
       const dates = []
       for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
-        dates.push(d.toISOString().split('T')[0])
+        dates.push(toLocalDateString(d))
       }
       return dates
     }
@@ -326,7 +324,7 @@ export default function AdminTeacherCalendar() {
   const getSchedulesForDate = (date) => {
     return schedules.filter(schedule => {
       if (!schedule.startTime) return false
-      const scheduleDate = schedule.startTime.toISOString().split('T')[0]
+      const scheduleDate = toLocalDateString(schedule.startTime instanceof Date ? schedule.startTime : new Date(schedule.startTime))
       return scheduleDate === date
     })
   }
@@ -413,7 +411,7 @@ export default function AdminTeacherCalendar() {
               <div className="flex gap-3 items-center">
                 <button
                   onClick={() => {
-                    const date = new Date(selectedDate)
+                    const date = parseLocalDate(selectedDate)
                     if (viewMode === 'day') {
                       date.setDate(date.getDate() - 1)
                     } else if (viewMode === 'week') {
@@ -421,7 +419,7 @@ export default function AdminTeacherCalendar() {
                     } else {
                       date.setMonth(date.getMonth() - 1)
                     }
-                    setSelectedDate(date.toISOString().split('T')[0])
+                    setSelectedDate(toLocalDateString(date))
                   }}
                   className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium transition-colors"
                 >
@@ -435,7 +433,7 @@ export default function AdminTeacherCalendar() {
                 />
                 <button
                   onClick={() => {
-                    const date = new Date(selectedDate)
+                    const date = parseLocalDate(selectedDate)
                     if (viewMode === 'day') {
                       date.setDate(date.getDate() + 1)
                     } else if (viewMode === 'week') {
@@ -443,14 +441,14 @@ export default function AdminTeacherCalendar() {
                     } else {
                       date.setMonth(date.getMonth() + 1)
                     }
-                    setSelectedDate(date.toISOString().split('T')[0])
+                    setSelectedDate(toLocalDateString(date))
                   }}
                   className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium transition-colors"
                 >
                   Next →
                 </button>
                 <button
-                  onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
+                  onClick={() => setSelectedDate(toLocalDateString(new Date()))}
                   className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 font-medium transition-colors"
                 >
                   Today
@@ -481,11 +479,11 @@ export default function AdminTeacherCalendar() {
 
 // Day View Component
 function DayView({ schedules, selectedDate, formatTime }) {
-  // Filter schedules for the selected date and sort by start time
   const daySchedules = schedules
     .filter(schedule => {
       if (!schedule.startTime) return false
-      const scheduleDate = schedule.startTime.toISOString().split('T')[0]
+      const d = schedule.startTime instanceof Date ? schedule.startTime : new Date(schedule.startTime)
+      const scheduleDate = toLocalDateString(d)
       return scheduleDate === selectedDate
     })
     .sort((a, b) => {
@@ -585,16 +583,16 @@ function DayView({ schedules, selectedDate, formatTime }) {
 
 // Week View Component
 function WeekView({ schedules, selectedDate, getSchedulesForDate, formatTime }) {
-  const startDate = new Date(selectedDate)
+  const startDate = parseLocalDate(selectedDate)
   const dayOfWeek = startDate.getDay()
   const weekStart = new Date(startDate)
   weekStart.setDate(startDate.getDate() - dayOfWeek)
-  
+
   const weekDays = []
   for (let i = 0; i < 7; i++) {
     const date = new Date(weekStart)
     date.setDate(weekStart.getDate() + i)
-    weekDays.push(date.toISOString().split('T')[0])
+    weekDays.push(toLocalDateString(date))
   }
 
   return (
@@ -609,7 +607,7 @@ function WeekView({ schedules, selectedDate, getSchedulesForDate, formatTime }) 
       <div className="grid grid-cols-7 gap-0">
         {weekDays.map((date) => {
           const daySchedules = getSchedulesForDate(date)
-          const isToday = date === new Date().toISOString().split('T')[0]
+          const isToday = date === toLocalDateString(new Date())
           
           return (
             <div
@@ -665,24 +663,20 @@ function WeekView({ schedules, selectedDate, getSchedulesForDate, formatTime }) 
 
 // Month View Component
 function MonthView({ schedules, selectedDate, getSchedulesForDate, formatTime }) {
-  const startDate = new Date(selectedDate)
+  const startDate = parseLocalDate(selectedDate)
   const year = startDate.getFullYear()
   const month = startDate.getMonth()
   const firstDay = new Date(year, month, 1)
   const lastDay = new Date(year, month + 1, 0)
   const startDayOfWeek = firstDay.getDay()
-  
+
   const calendarDays = []
-  
-  // Add empty cells for days before month starts
   for (let i = 0; i < startDayOfWeek; i++) {
     calendarDays.push(null)
   }
-  
-  // Add all days of the month
   for (let d = 1; d <= lastDay.getDate(); d++) {
     const date = new Date(year, month, d)
-    calendarDays.push(date.toISOString().split('T')[0])
+    calendarDays.push(toLocalDateString(date))
   }
 
   return (
@@ -711,7 +705,7 @@ function MonthView({ schedules, selectedDate, getSchedulesForDate, formatTime })
           }
           
           const daySchedules = getSchedulesForDate(date)
-          const isToday = date === new Date().toISOString().split('T')[0]
+          const isToday = date === toLocalDateString(new Date())
           
           return (
             <div
