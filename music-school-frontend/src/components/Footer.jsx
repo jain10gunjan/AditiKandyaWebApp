@@ -137,6 +137,7 @@ export default function Footer({ showAdminTools = false }) {
                   <li><a href="/admin/calendar" className="hover:text-[#F5E6E0] transition-colors font-medium">Calendar</a></li>
                   <li><a href="/admin/resources" className="hover:text-[#F5E6E0] transition-colors font-medium">Resources</a></li>
                   <li><a href="/admin/enrollment-leads" className="hover:text-[#F5E6E0] transition-colors font-medium">New Enrollment Leads</a></li>
+                  <li><a href="/admin/deleted-students" className="hover:text-[#F5E6E0] transition-colors font-medium">Deleted Students</a></li>
                 </ul>
               </>
             )}

@@ -254,7 +254,6 @@ function CourseDetailsEditForm({ course, onSave, onCancel, loading }) {
   const [formData, setFormData] = useState({
     title: course?.title || '',
     description: course?.description || '',
-    price: course?.price || 0,
     level: course?.level || 'Beginner',
     image: course?.image || '',
     studentCount: course?.studentCount || 0,
@@ -273,7 +272,6 @@ function CourseDetailsEditForm({ course, onSave, onCancel, loading }) {
       setFormData({
         title: course.title || '',
         description: course.description || '',
-        price: course.price || 0,
         level: course.level || 'Beginner',
         image: course.image || '',
         studentCount: course.studentCount || 0,
@@ -298,7 +296,7 @@ function CourseDetailsEditForm({ course, onSave, onCancel, loading }) {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'price' || name === 'studentCount' || name === 'rating' 
+      [name]: name === 'studentCount' || name === 'rating' 
         ? Number(value) || 0 
         : value
     }))
@@ -318,17 +316,6 @@ function CourseDetailsEditForm({ course, onSave, onCancel, loading }) {
               <input
                 name="title"
                 value={formData.title}
-                onChange={handleChange}
-                className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Price (₹)</label>
-              <input
-                name="price"
-                type="number"
-                value={formData.price}
                 onChange={handleChange}
                 className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                 required

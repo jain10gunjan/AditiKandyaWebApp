@@ -50,7 +50,6 @@ function CourseBasicInfoForm({ course, teachers, onSave, loading }) {
   const [formData, setFormData] = useState({
     title: course?.title || '',
     description: course?.description || '',
-    price: course?.price || 0,
     level: course?.level || 'Beginner',
     image: course?.image || '',
     teacherId: course?.teacherId || '',
@@ -85,7 +84,6 @@ function CourseBasicInfoForm({ course, teachers, onSave, loading }) {
       setFormData({
         title: course.title || '',
         description: course.description || '',
-        price: course.price || 0,
         level: course.level || 'Beginner',
         image: course.image || '',
         teacherId: course.teacherId || '',
@@ -177,21 +175,6 @@ function CourseBasicInfoForm({ course, teachers, onSave, loading }) {
                 placeholder="e.g., Guitar Basics for Beginners"
                 className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
                 required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Price (₹) <span className="text-red-500">*</span>
-              </label>
-              <input
-                name="price"
-                type="number"
-                value={formData.price}
-                onChange={handleChange}
-                placeholder="2999"
-                className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
-                required
-                min="0"
               />
             </div>
             <div>

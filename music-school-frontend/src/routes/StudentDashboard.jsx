@@ -9,6 +9,24 @@ import StudentFooter from '../components/StudentFooter.jsx'
 import Navbar from '../components/Navbar.jsx'
 
 function DashboardContent({ activeTab, items, pending, loading, onMenuClick, schedules, attendanceSummary, courseProgress, courseTokens }) {
+  const [nowTick, setNowTick] = useState(() => Date.now())
+
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 60 * 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  const canJoinClass = (startTime, endTime) => {
+    if (!startTime) return false
+    const now = new Date(nowTick)
+    const start = new Date(startTime)
+    const end = endTime ? new Date(endTime) : null
+
+    const windowStart = new Date(start.getTime() - 15 * 60 * 1000)
+    if (!end) return now >= windowStart
+    return now >= windowStart && now <= end
+  }
+
   const getGreeting = () => {
     const hour = new Date().getHours()
     if (hour < 12) return 'Good Morning'
@@ -818,27 +836,53 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
                                         <span>{s.instructor}</span>
                                       </span>
                                     )}
-                                    {s.status && (
-                                      <span className={`px-2 py-1 rounded-full text-xs ${
-                                        s.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
-                                        s.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                        'bg-red-100 text-red-700'
-                                      }`}>
-                                        {s.status}
-                                      </span>
-                                    )}
+                                    {(() => {
+                                      const end = s.endTime ? new Date(s.endTime) : new Date(new Date(s.startTime).getTime() + 60 * 60 * 1000)
+                                      const hasEnded = end.getTime() <= nowTick
+                                      if (!hasEnded) {
+                                        return s.status ? (
+                                          <span className={`px-2 py-1 rounded-full text-xs ${
+                                            s.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
+                                            s.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                            'bg-red-100 text-red-700'
+                                          }`}>
+                                            {s.status}
+                                          </span>
+                                        ) : null
+                                      }
+
+                                      const completed = String(s.status || '').toLowerCase() === 'completed'
+                                      return (
+                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                          completed
+                                            ? 'bg-green-100 text-green-700'
+                                            : 'bg-slate-200 text-slate-700'
+                                        }`}>
+                                          {completed ? 'Completed' : 'Not Completed'}
+                                        </span>
+                                      )
+                                    })()}
                                   </div>
-                                  {s.meetingLink && (
-                                    <button 
-                                      onClick={() => window.open(s.meetingLink, '_blank')} 
-                                      className="px-4 py-2 bg-gradient-to-r from-sky-600 to-blue-600 text-white rounded-lg text-sm font-medium hover:from-sky-700 hover:to-blue-700 transition-all shadow-sm hover:shadow-md"
-                                      style={{
-                                        fontFamily: 'Bona Nova , serif',
-                                      }}
-                                    >
-                                      Join Class
-                                    </button>
-                                  )}
+                                  {s.meetingLink && (() => {
+                                    const enabled = canJoinClass(s.startTime, s.endTime)
+                                    return (
+                                      <button
+                                        onClick={() => enabled && window.open(s.meetingLink, '_blank')}
+                                        disabled={!enabled}
+                                        title={!enabled ? 'Available 15 minutes before class starts' : 'Join class'}
+                                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md ${
+                                          enabled
+                                            ? 'bg-gradient-to-r from-sky-600 to-blue-600 text-white hover:from-sky-700 hover:to-blue-700'
+                                            : 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                                        }`}
+                                        style={{
+                                          fontFamily: 'Bona Nova , serif',
+                                        }}
+                                      >
+                                        Join Class
+                                      </button>
+                                    )
+                                  })()}
                                 </div>
                               </div>
                             )
@@ -1683,7 +1727,7 @@ export default function StudentDashboard() {
           const week = individualSchedules
             .filter(s => {
               const d = new Date(s.startTime)
-              return d >= now && d <= end && s.status === 'scheduled'
+              return d >= now && d <= end
             })
             .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
             .slice(0, 6)

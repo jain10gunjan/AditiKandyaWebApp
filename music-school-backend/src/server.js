@@ -131,6 +131,7 @@ const Course = mongoose.model(
       image: String,
       level: String,
       thumbnailPath: String, // local file path served via /uploads
+      displayOrder: { type: Number, default: 0 },
       // Course metrics
       studentCount: { type: Number, default: 0 },
       rating: { type: Number, default: 4.8 },
@@ -211,7 +212,17 @@ const Teacher = mongoose.model(
 const Enrollment = mongoose.model(
   'Enrollment',
   new mongoose.Schema(
-    { name: String, email: String, instrument: String, userId: String, courseId: String, paymentId: String, approved: { type: Boolean, default: false } },
+    {
+      name: String,
+      email: String,
+      instrument: String,
+      userId: String,
+      courseId: String,
+      paymentId: String,
+      approved: { type: Boolean, default: false },
+      status: { type: String, enum: ['pending', 'approved', 'deleted'], default: 'pending' },
+      deletedAt: Date,
+    },
     { timestamps: true }
   )
 );
@@ -240,7 +251,7 @@ const Attendance = mongoose.model(
       studentId: String,
       courseId: String,
       date: String, // Changed to String to match frontend format
-      status: { type: String, enum: ['present', 'absent', 'waived'], default: 'present' }, // Added 'waived', removed 'late'
+      status: { type: String, enum: ['present', 'absent', 'late', 'waived'], default: 'present' }, // Keep waived for backward compatibility; add late
       markedBy: String, // admin userId who marked attendance
       notes: String,
     },
@@ -295,6 +306,7 @@ const Schedule = mongoose.model(
     {
       courseId: String,
       studentId: String, // Optional: if set, this is a student-specific schedule; if null, it's a course-level schedule
+      parentScheduleId: String, // For generated repeats/duplicates: points to the "parent" schedule in the series
       title: String,
       description: String,
       startTime: Date,
@@ -743,7 +755,7 @@ app.post('/api/demo/enroll', async (req, res) => {
 
 app.get('/api/courses', async (req, res) => {
   if (!dbConnected) return res.json([])
-  const items = await Course.find().sort({ createdAt: -1 })
+  const items = await Course.find().sort({ displayOrder: 1, createdAt: -1 })
   res.json(items)
 })
 
@@ -776,6 +788,11 @@ app.post('/api/courses', requireAdmin, async (req, res) => {
   if (!title || !description) return res.status(400).json({ error: 'Missing fields' })
   
   const courseData = { title, description, price, image, level }
+
+  // Assign displayOrder at the end by default
+  const max = await Course.findOne().sort({ displayOrder: -1, createdAt: -1 }).select('displayOrder').lean()
+  const nextOrder = (max?.displayOrder ?? 0) + 1
+  courseData.displayOrder = nextOrder
   
   // If teacherId is provided, fetch teacher data and populate course fields
   if (teacherId) {
@@ -846,6 +863,8 @@ app.put('/api/courses/:id', requireAdmin, async (req, res) => {
   if (videoPlayerText !== undefined) updateData.videoPlayerText = videoPlayerText
   if (videoPlayerSubtext !== undefined) updateData.videoPlayerSubtext = videoPlayerSubtext
   if (videoPlayerFeatures !== undefined) updateData.videoPlayerFeatures = videoPlayerFeatures
+
+  if (req.body.displayOrder !== undefined) updateData.displayOrder = Number(req.body.displayOrder) || 0
   
   const doc = await Course.findByIdAndUpdate(
     req.params.id,
@@ -854,6 +873,34 @@ app.put('/api/courses/:id', requireAdmin, async (req, res) => {
   )
   if (!doc) return res.status(404).json({ error: 'Not found' })
   res.json(doc)
+})
+
+// Admin: batch update course displayOrder after drag-and-drop reorder
+app.patch('/api/admin/courses/display-order', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const { updates } = req.body || {}
+  if (!Array.isArray(updates) || updates.length === 0) {
+    return res.status(400).json({ error: 'updates array is required' })
+  }
+
+  const ops = updates
+    .map(u => ({
+      id: String(u?._id || u?.id || '').trim(),
+      displayOrder: Number(u?.displayOrder),
+    }))
+    .filter(u => u.id && Number.isFinite(u.displayOrder))
+
+  if (ops.length === 0) return res.status(400).json({ error: 'No valid updates' })
+
+  const bulk = ops.map(u => ({
+    updateOne: {
+      filter: { _id: u.id },
+      update: { $set: { displayOrder: u.displayOrder } },
+    }
+  }))
+
+  await Course.bulkWrite(bulk, { ordered: false })
+  res.json({ ok: true, updated: ops.length })
 })
 
 app.delete('/api/courses/:id', requireAdmin, async (req, res) => {
@@ -1232,7 +1279,7 @@ function getLessonFromCourse(course, mIdx, lIdx, cIdx = null) {
 // Helper: check if user is enrolled
 async function isUserEnrolled(userId, courseId) {
   if (!dbConnected) return false
-  const existing = await Enrollment.findOne({ userId, courseId, approved: true })
+  const existing = await Enrollment.findOne({ userId, courseId, approved: true, status: { $ne: 'deleted' } })
   return Boolean(existing)
 }
 
@@ -1627,7 +1674,8 @@ app.get('/api/me/enrollments', async (req, res) => {
   }
   
   // Find enrollments by userId OR by email (if email matches)
-  const query = { approved: true }
+  // Exclude soft-deleted enrollments.
+  const query = { approved: true, status: { $ne: 'deleted' } }
   if (userEmail) {
     query.$or = [
       { userId },
@@ -1655,7 +1703,7 @@ app.get('/api/me/enrollments/pending', async (req, res) => {
   if (!dbConnected) return res.json([])
   const userId = (req.auth && req.auth.userId) || req.query.userHint
   if (!userId) return res.json([])
-  const list = await Enrollment.find({ userId, approved: false }).sort({ createdAt: -1 })
+  const list = await Enrollment.find({ userId, approved: false, status: { $ne: 'deleted' } }).sort({ createdAt: -1 })
   const courseIds = list.map((e) => e.courseId)
   const courses = await Course.find({ _id: { $in: courseIds } })
   const idToCourse = new Map(courses.map((c) => [String(c._id), c]))
@@ -1693,13 +1741,17 @@ app.delete('/api/teachers/:id', requireAuthGuarded, async (req, res) => {
 // Admin: list pending and approve enrollments
 app.get('/api/admin/enrollments', requireAdmin, async (req, res) => {
   if (!dbConnected) return res.json([])
-  const items = await Enrollment.find().sort({ createdAt: -1 })
+  const items = await Enrollment.find({ status: { $ne: 'deleted' } }).sort({ createdAt: -1 })
   res.json(items)
 })
 
 app.post('/api/admin/enrollments/:id/approve', requireAdmin, async (req, res) => {
   if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
-  const doc = await Enrollment.findByIdAndUpdate(req.params.id, { approved: true }, { new: true })
+  const doc = await Enrollment.findByIdAndUpdate(
+    req.params.id,
+    { approved: true, status: 'approved', deletedAt: null },
+    { new: true }
+  )
   if (!doc) return res.status(404).json({ error: 'Not found' })
   res.json(doc)
 })
@@ -1707,7 +1759,7 @@ app.post('/api/admin/enrollments/:id/approve', requireAdmin, async (req, res) =>
 // Admin: Update an enrollment
 app.put('/api/admin/enrollments/:id', requireAdmin, async (req, res) => {
   if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
-  const { name, email, courseId, approved, instrument } = req.body || {}
+  const { name, email, courseId, approved, instrument, status } = req.body || {}
   
   const updateData = {}
   if (name !== undefined) updateData.name = name
@@ -1715,6 +1767,7 @@ app.put('/api/admin/enrollments/:id', requireAdmin, async (req, res) => {
   if (courseId !== undefined) updateData.courseId = courseId
   if (approved !== undefined) updateData.approved = Boolean(approved)
   if (instrument !== undefined) updateData.instrument = instrument
+  if (status !== undefined) updateData.status = status
   
   // Validate email if provided
   if (email !== undefined) {
@@ -1740,9 +1793,42 @@ app.put('/api/admin/enrollments/:id', requireAdmin, async (req, res) => {
 // Admin: Delete an enrollment
 app.delete('/api/admin/enrollments/:id', requireAdmin, async (req, res) => {
   if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
-  const doc = await Enrollment.findByIdAndDelete(req.params.id)
+  const doc = await Enrollment.findByIdAndUpdate(
+    req.params.id,
+    { status: 'deleted', deletedAt: new Date(), approved: false },
+    { new: true }
+  )
   if (!doc) return res.status(404).json({ error: 'Not found' })
   res.json({ message: 'Enrollment deleted successfully', id: doc._id })
+})
+
+// Admin: List soft-deleted enrollments ("Deleted Students")
+app.get('/api/admin/enrollments/deleted', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.json([])
+  const items = await Enrollment.find({ status: 'deleted' }).sort({ deletedAt: -1, createdAt: -1 }).lean()
+
+  const courseIds = items.map(e => e.courseId).filter(Boolean)
+  const courses = await Course.find({ _id: { $in: courseIds } }).select('_id title').lean()
+  const idToCourse = new Map((courses || []).map(c => [String(c._id), c]))
+
+  const result = (items || []).map(e => ({
+    ...e,
+    course: idToCourse.get(String(e.courseId)) || null,
+  }))
+
+  res.json(result)
+})
+
+// Admin: Restore a soft-deleted enrollment
+app.post('/api/admin/enrollments/:id/restore', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
+  const doc = await Enrollment.findByIdAndUpdate(
+    req.params.id,
+    { status: 'approved', approved: true, deletedAt: null },
+    { new: true }
+  )
+  if (!doc) return res.status(404).json({ error: 'Not found' })
+  res.json(doc)
 })
 
 // Admin: Get enrollments filtered by manual enrollment (paymentId = 'manual-enrollment')
@@ -2048,7 +2134,7 @@ async function updateTokensForAttendance(studentId, courseId, date, status, prev
     // If there was a previous status, we need to reverse its effect first
     if (previousStatus && previousStatus !== status) {
       console.log('Reversing previous status:', previousStatus)
-      if (previousStatus === 'present' || previousStatus === 'absent') {
+      if (previousStatus === 'present' || previousStatus === 'absent' || previousStatus === 'late') {
         // Reverse: add back a token
         tokenRecord.remainingTokens = Math.min(tokenRecord.remainingTokens + 1, tokenRecord.totalTokens)
         console.log('Reversed present/absent. Remaining tokens:', tokenRecord.remainingTokens)
@@ -2061,11 +2147,11 @@ async function updateTokensForAttendance(studentId, courseId, date, status, prev
     }
     
     // Apply new status effect
-    if (status === 'present' || status === 'absent') {
-      // Reduce remaining tokens (both present and absent use a token)
+    if (status === 'present' || status === 'absent' || status === 'late') {
+      // Reduce remaining tokens (present/absent/late use a token)
       if (tokenRecord.remainingTokens > 0) {
         tokenRecord.remainingTokens = Math.max(tokenRecord.remainingTokens - 1, 0)
-        console.log('Reduced token for present/absent. New remaining:', tokenRecord.remainingTokens, 'Status:', status)
+        console.log('Reduced token for present/absent/late. New remaining:', tokenRecord.remainingTokens, 'Status:', status)
       } else {
         console.log('Warning: Cannot reduce token - remainingTokens is already 0')
       }
@@ -2199,6 +2285,113 @@ app.get('/api/admin/attendance/:courseId/:date', requireAdmin, async (req, res) 
   
   console.log('Found attendance records:', attendance.length)
   res.json(attendance)
+})
+
+// Admin: Daily attendance view across ALL courses (scheduled student-specific classes)
+// Returns one row per (studentId, courseId) that has a scheduled class on the day.
+app.get('/api/admin/attendance-day/:date', requireAdmin, async (req, res) => {
+  if (!dbConnected) return res.json([])
+  const { date } = req.params
+  const dateStr = String(date || '').includes('T') ? String(date).split('T')[0] : String(date || '')
+  if (!dateStr) return res.status(400).json({ error: 'Missing date' })
+
+  const startOfDay = new Date(`${dateStr}T00:00:00.000Z`)
+  const endOfDay = new Date(`${dateStr}T23:59:59.999Z`)
+
+  // Find all student-specific class schedules on this day
+  const schedules = await Schedule.find({
+    studentId: { $exists: true, $ne: null, $ne: '' },
+    startTime: { $gte: startOfDay, $lte: endOfDay },
+    $or: [
+      { status: 'scheduled' },
+      { status: { $exists: false } },
+      { status: null },
+    ],
+    $or: [
+      { type: 'class' },
+      { type: { $exists: false } },
+      { type: null },
+    ],
+  })
+    .select('_id studentId courseId startTime endTime title type status')
+    .sort({ courseId: 1, startTime: 1 })
+    .lean()
+
+  // De-dupe to one row per (studentId, courseId) for the day
+  const byKey = new Map()
+  for (const s of schedules || []) {
+    const sid = String(s.studentId || '').trim()
+    const cid = String(s.courseId || '').trim()
+    if (!sid || !cid) continue
+    const key = `${cid}::${sid}`
+    if (!byKey.has(key)) byKey.set(key, s)
+  }
+
+  const unique = Array.from(byKey.values())
+  const courseIds = Array.from(new Set(unique.map(s => String(s.courseId)).filter(Boolean)))
+  const studentIds = Array.from(new Set(unique.map(s => String(s.studentId)).filter(Boolean)))
+
+  const [courses, enrollments, attendance] = await Promise.all([
+    Course.find({ _id: { $in: courseIds } }).select('_id title').lean(),
+    Enrollment.find({ userId: { $in: studentIds }, approved: true, status: { $ne: 'deleted' } }).select('userId name email instrument courseId').lean(),
+    Attendance.find({ date: dateStr, courseId: { $in: courseIds }, studentId: { $in: studentIds } }).lean(),
+  ])
+
+  const courseTitleById = new Map((courses || []).map(c => [String(c._id), c.title]))
+  const studentById = new Map()
+  for (const e of enrollments || []) {
+    const sid = String(e.userId || '').trim()
+    if (!sid) continue
+    // Prefer the most informative record we see
+    if (!studentById.has(sid) || (e.name && !studentById.get(sid)?.name)) {
+      studentById.set(sid, {
+        userId: sid,
+        name: e.name,
+        email: e.email,
+        instrument: e.instrument,
+      })
+    }
+  }
+
+  const attendanceByKey = new Map()
+  for (const a of attendance || []) {
+    const sid = String(a.studentId || '').trim()
+    const cid = String(a.courseId || '').trim()
+    const d = String(a.date || '').trim()
+    if (!sid || !cid || !d) continue
+    attendanceByKey.set(`${cid}::${sid}::${d}`, a)
+  }
+
+  const rows = unique.map(s => {
+    const studentId = String(s.studentId || '').trim()
+    const courseId = String(s.courseId || '').trim()
+    const a = attendanceByKey.get(`${courseId}::${studentId}::${dateStr}`)
+    const student = studentById.get(studentId) || { userId: studentId, name: null, email: null, instrument: null }
+    return {
+      studentId,
+      studentName: student.name || student.email || 'Unknown Student',
+      studentEmail: student.email || null,
+      instrument: student.instrument || null,
+      courseId,
+      courseTitle: courseTitleById.get(courseId) || 'Unknown Course',
+      date: dateStr,
+      status: a?.status || null,
+      notes: a?.notes || null,
+      scheduleStartTime: s.startTime || null,
+      scheduleEndTime: s.endTime || null,
+    }
+  })
+
+  rows.sort((a, b) => {
+    const byCourse = String(a.courseTitle).localeCompare(String(b.courseTitle))
+    if (byCourse !== 0) return byCourse
+    const at = a.scheduleStartTime ? new Date(a.scheduleStartTime).getTime() : 0
+    const bt = b.scheduleStartTime ? new Date(b.scheduleStartTime).getTime() : 0
+    if (at !== bt) return at - bt
+    return String(a.studentName).localeCompare(String(b.studentName))
+  })
+
+  res.json(rows)
 })
 
 // Admin: Get all students enrolled in a course
@@ -2561,7 +2754,7 @@ app.post('/api/admin/schedules', requireAdmin, async (req, res) => {
   console.log('Request body:', JSON.stringify(req.body, null, 2))
   try {
     if (!dbConnected) return res.status(503).json({ error: 'Database unavailable' })
-    const { courseId, studentId, title, description, startTime, endTime, dateTime, date, time, meetingLink, instructor, location, isRecurring, recurringPattern, type, duplicateDates } = req.body || {}
+    const { courseId, studentId, title, description, startTime, endTime, dateTime, date, time, meetingLink, instructor, location, isRecurring, recurringPattern, type, duplicateDates, repeatWeeks } = req.body || {}
     
     console.log('Parsed studentId:', studentId, 'Type:', typeof studentId)
   
@@ -2592,6 +2785,10 @@ app.post('/api/admin/schedules', requireAdmin, async (req, res) => {
   }
   
   if (!title) return res.status(400).json({ error: 'Title is required' })
+
+  const repeatWeeksInt = repeatWeeks !== undefined && repeatWeeks !== null
+    ? Math.max(1, parseInt(repeatWeeks, 10) || 1)
+    : 1
   
   // Check for time slot conflicts with existing schedules
   // Since it's a single teacher, check all scheduled events regardless of student/course
@@ -2648,8 +2845,10 @@ app.post('/api/admin/schedules', requireAdmin, async (req, res) => {
     return null
   }
   
-  // If duplicateDates is provided, check all conflicts first before creating any schedules
-  if (duplicateDates && Array.isArray(duplicateDates) && duplicateDates.length > 0) {
+  // If duplicateDates or repeatWeeks is provided, check all conflicts first before creating any schedules
+  const hasDuplicateDates = Boolean(duplicateDates && Array.isArray(duplicateDates) && duplicateDates.length > 0)
+  const hasRepeatWeeks = repeatWeeksInt > 1
+  if (hasDuplicateDates || hasRepeatWeeks) {
     // Check conflict for the main schedule
     const mainConflicts = await checkConflict(finalStartTime, finalEndTime)
     if (mainConflicts && mainConflicts.length > 0) {
@@ -2674,27 +2873,49 @@ app.post('/api/admin/schedules', requireAdmin, async (req, res) => {
       })
     }
     
-    // Check conflicts for all duplicate dates before creating any schedules
+    // Build all additional occurrences (duplicates or weekly repeats) and check conflicts
     const allConflicts = []
-    for (const dupDate of duplicateDates) {
-      // Skip if duplicate date is the same as original date
-      const dupDateStr = new Date(dupDate).toISOString().split('T')[0]
-      const originalDateStr = finalStartTime.toISOString().split('T')[0]
-      if (dupDateStr === originalDateStr) continue
-      
-      // Preserve the time and duration from the original event
-      const dupStartTime = new Date(dupDate)
-      dupStartTime.setHours(finalStartTime.getHours(), finalStartTime.getMinutes(), finalStartTime.getSeconds(), 0)
-      // Calculate duration and apply to duplicate date
-      const duration = finalEndTime.getTime() - finalStartTime.getTime()
-      const dupEndTime = new Date(dupStartTime.getTime() + duration)
-      
-      // Check for conflicts on duplicate dates
-      const dupConflicts = await checkConflict(dupStartTime, dupEndTime)
-      if (dupConflicts && dupConflicts.length > 0) {
+    const additionalOccurrences = []
+
+    const duration = finalEndTime.getTime() - finalStartTime.getTime()
+
+    if (hasDuplicateDates) {
+      for (const dupDate of duplicateDates) {
+        const dupDateStr = new Date(dupDate).toISOString().split('T')[0]
+        const originalDateStr = finalStartTime.toISOString().split('T')[0]
+        if (dupDateStr === originalDateStr) continue
+
+        // Construct the duplicate start time in UTC, preserving the original start time-of-day.
+        // Using setHours/getHours mixes in server local timezone and causes day/time shifts in production.
+        const [y, m, d] = dupDateStr.split('-').map(n => parseInt(n, 10))
+        const dupStartTime = new Date(Date.UTC(
+          y,
+          (m || 1) - 1,
+          d || 1,
+          finalStartTime.getUTCHours(),
+          finalStartTime.getUTCMinutes(),
+          finalStartTime.getUTCSeconds(),
+          0
+        ))
+        const dupEndTime = new Date(dupStartTime.getTime() + duration)
+        additionalOccurrences.push({ startTime: dupStartTime, endTime: dupEndTime, label: dupDateStr })
+      }
+    } else if (hasRepeatWeeks) {
+      // Repeat weekly for N weeks based on the start date's weekday, keeping the same time/duration
+      // Creates (repeatWeeksInt - 1) additional sessions after the first one.
+      for (let i = 1; i < repeatWeeksInt; i++) {
+        const dupStartTime = new Date(finalStartTime.getTime() + i * 7 * 24 * 60 * 60 * 1000)
+        const dupEndTime = new Date(dupStartTime.getTime() + duration)
+        additionalOccurrences.push({ startTime: dupStartTime, endTime: dupEndTime, label: dupStartTime.toISOString() })
+      }
+    }
+
+    for (const occ of additionalOccurrences) {
+      const occConflicts = await checkConflict(occ.startTime, occ.endTime)
+      if (occConflicts && occConflicts.length > 0) {
         allConflicts.push({
-          date: dupDate,
-          conflicts: dupConflicts
+          date: occ.label,
+          conflicts: occConflicts
         })
       }
     }
@@ -2724,78 +2945,45 @@ app.post('/api/admin/schedules', requireAdmin, async (req, res) => {
       })
     }
     
-    // All checks passed, now create all schedules
+    // All checks passed, now create schedules with parent-child linkage
     const schedules = []
-    // Create event on original date first
-      const scheduleData = {
-        courseId: courseId || '',
-        title,
-        description,
-        startTime: finalStartTime,
-        endTime: finalEndTime,
-        meetingLink,
-        instructor,
-        location,
-        isRecurring: Boolean(isRecurring),
-        recurringPattern,
-        type: type || 'class',
-        status: 'scheduled'
-      }
-      
-      // Only set studentId if it's provided and not empty
-      if (studentId && String(studentId).trim() !== '') {
-        scheduleData.studentId = String(studentId).trim()
-        console.log('Setting studentId for schedule:', scheduleData.studentId)
-      } else {
-        console.log('No studentId provided, creating course-level schedule')
-      }
-      
-      const originalSchedule = await Schedule.create(scheduleData)
-      console.log('Created schedule:', {
-        id: originalSchedule._id,
-        title: originalSchedule.title,
-        studentId: originalSchedule.studentId,
-        courseId: originalSchedule.courseId
-      })
-    schedules.push(originalSchedule)
-    
-    // Create events on duplicate dates
-    for (const dupDate of duplicateDates) {
-      // Skip if duplicate date is the same as original date
-      const dupDateStr = new Date(dupDate).toISOString().split('T')[0]
-      const originalDateStr = finalStartTime.toISOString().split('T')[0]
-      if (dupDateStr === originalDateStr) continue
-      
-      // Preserve the time and duration from the original event
-      const dupStartTime = new Date(dupDate)
-      dupStartTime.setHours(finalStartTime.getHours(), finalStartTime.getMinutes(), finalStartTime.getSeconds(), 0)
-      // Calculate duration and apply to duplicate date
-      const duration = finalEndTime.getTime() - finalStartTime.getTime()
-      const dupEndTime = new Date(dupStartTime.getTime() + duration)
-      
-      const dupScheduleData = {
-        courseId: courseId || '',
-        title,
-        description,
-        startTime: dupStartTime,
-        endTime: dupEndTime,
-        meetingLink,
-        instructor,
-        location,
-        isRecurring: Boolean(isRecurring),
-        recurringPattern,
-        type: type || 'class',
-        status: 'scheduled'
-      }
-      
-      // Only set studentId if it's provided and not empty
-      if (studentId && String(studentId).trim() !== '') {
-        dupScheduleData.studentId = String(studentId).trim()
-      }
-      
-      const schedule = await Schedule.create(dupScheduleData)
-      schedules.push(schedule)
+
+    const baseScheduleData = {
+      courseId: courseId || '',
+      title,
+      description,
+      startTime: finalStartTime,
+      endTime: finalEndTime,
+      meetingLink,
+      instructor,
+      location,
+      isRecurring: Boolean(isRecurring),
+      recurringPattern,
+      type: type || 'class',
+      status: 'scheduled'
     }
+
+    if (studentId && String(studentId).trim() !== '') {
+      baseScheduleData.studentId = String(studentId).trim()
+      console.log('Setting studentId for schedule:', baseScheduleData.studentId)
+    } else {
+      console.log('No studentId provided, creating course-level schedule')
+    }
+
+    const parentSchedule = await Schedule.create(baseScheduleData)
+    schedules.push(parentSchedule)
+
+    for (const occ of additionalOccurrences) {
+      const childData = {
+        ...baseScheduleData,
+        startTime: occ.startTime,
+        endTime: occ.endTime,
+        parentScheduleId: String(parentSchedule._id),
+      }
+      const child = await Schedule.create(childData)
+      schedules.push(child)
+    }
+
     return res.status(201).json(schedules)
   }
   
@@ -3006,7 +3194,7 @@ app.get('/api/admin/student-schedules-range', requireAdmin, async (req, res) => 
 // Admin: Get enrollments for a course (to show students)
 app.get('/api/admin/courses/:courseId/enrollments', requireAdmin, async (req, res) => {
   if (!dbConnected) return res.json([])
-  const enrollments = await Enrollment.find({ courseId: req.params.courseId, approved: true }).sort({ createdAt: -1 })
+  const enrollments = await Enrollment.find({ courseId: req.params.courseId, approved: true, status: { $ne: 'deleted' } }).sort({ createdAt: -1 })
   res.json(enrollments)
 })
 
@@ -3023,7 +3211,7 @@ app.get('/api/me/schedules', requireAuthGuarded, async (req, res) => {
   }
   
   // Get enrolled courses - try both userId and email matching
-  let enrollments = await Enrollment.find({ userId: userId, approved: true })
+  let enrollments = await Enrollment.find({ userId: userId, approved: true, status: { $ne: 'deleted' } })
   console.log('Found enrollments by userId:', enrollments.length)
   
   // If no enrollments found by userId, try by email
@@ -3032,7 +3220,7 @@ app.get('/api/me/schedules', requireAuthGuarded, async (req, res) => {
       const user = await clerkClient.users.getUser(req.auth.userId)
       const userEmail = user.emailAddresses?.[0]?.emailAddress?.toLowerCase()
       if (userEmail) {
-        enrollments = await Enrollment.find({ email: userEmail, approved: true })
+        enrollments = await Enrollment.find({ email: userEmail, approved: true, status: { $ne: 'deleted' } })
         console.log('Found enrollments by email:', enrollments.length)
       }
     } catch (err) {

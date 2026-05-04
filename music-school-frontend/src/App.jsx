@@ -56,7 +56,7 @@ function SectionTitle({ emoji, title, subtitle, spaceNumber }) {
   )
 }
 
-function CourseCard({ title, level, price, image, _id, isEnrolled = false, course, index }) {
+function CourseCard({ title, level, image, _id, isEnrolled = false, course, index }) {
   // Check if teacher is assigned - check both teacherId and teacherName
   const hasTeacher = course && (
     (course.teacherId && course.teacherId.trim() !== '') || 
@@ -133,9 +133,7 @@ function CourseCard({ title, level, price, image, _id, isEnrolled = false, cours
           </p>
         )}
         <div className="mt-3 flex items-center justify-between">
-          {!isEnrolled && (
-            <span className="text-black font-bold text-lg">₹{price}</span>
-          )}
+          {/* Price intentionally not displayed */}
           {isEnrolled && (
             <span className="text-[#F5E6E0] font-bold text-sm flex items-center gap-1">
               <span>✓</span>
@@ -151,7 +149,7 @@ function CourseCard({ title, level, price, image, _id, isEnrolled = false, cours
   )
 }
 
-function HomepageCourseCard({ title, level, price, image, _id, isEnrolled = false, course, index }) {
+function HomepageCourseCard({ title, level, image, _id, isEnrolled = false, course, index }) {
   // Build image URL - handle both full URLs and relative paths
   const getImageUrl = () => {
     if (!image && !course?.thumbnailPath) {
@@ -238,9 +236,7 @@ function HomepageCourseCard({ title, level, price, image, _id, isEnrolled = fals
 
         {/* Bottom Section - Price and Button */}
         <div className="flex items-center justify-between pt-3 md:pt-4 border-t border-white/20">
-          {!isEnrolled && (
-            <span className="text-white font-bold text-lg md:text-xl">₹{price}</span>
-          )}
+          {/* Price intentionally not displayed */}
           {isEnrolled && (
             <span className="text-white/80 font-medium text-xs md:text-sm flex items-center gap-1">
               <span>✓</span>
@@ -256,9 +252,7 @@ function HomepageCourseCard({ title, level, price, image, _id, isEnrolled = fals
       {/* Default visible content - hidden on hover */}
       <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6 bg-gradient-to-t from-black/60 to-transparent group-hover:opacity-0 transition-opacity duration-500">
         <h3 className="text-white text-lg md:text-xl font-bold mb-2">{title}</h3>
-        {!isEnrolled && (
-          <span className="text-white font-semibold text-base md:text-lg">₹{price}</span>
-        )}
+        {/* Price intentionally not displayed */}
       </div>
     </motion.a>
   )
@@ -1276,7 +1270,6 @@ function App() {
                     key={course._id}
                     title={course.title} 
                     level={course.level} 
-                    price={course.price} 
                     image={course.image || course.thumbnailPath}
                     _id={course._id}
                     isEnrolled={isEnrolled}

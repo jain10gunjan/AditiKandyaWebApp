@@ -26,6 +26,7 @@ export default function AdminStudentSchedules() {
   const [duplicateStartDate, setDuplicateStartDate] = useState('')
   const [duplicateEndDate, setDuplicateEndDate] = useState('')
   const [duplicateWeeks, setDuplicateWeeks] = useState(4) // Number of weeks to generate
+  const [repeatWeeks, setRepeatWeeks] = useState(1) // Repeat weekly starting from the selected date
   const [newEvent, setNewEvent] = useState({
     title: '',
     description: '',
@@ -235,7 +236,9 @@ export default function AdminStudentSchedules() {
     const dates = []
     const start = new Date(startDate)
     const end = new Date(start)
-    end.setDate(end.getDate() + (weeks * 7))
+    // weeks=1 should include only the start week (up to 6 days after start).
+    // Using weeks*7 made the range inclusive of the first day of week (weeks+1).
+    end.setDate(end.getDate() + (weeks * 7) - 1)
     
     // Day of week mapping: 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     const dayMapping = {
@@ -361,6 +364,13 @@ export default function AdminStudentSchedules() {
         }
       }
 
+      const repeatWeeksInt = Math.max(1, parseInt(repeatWeeks, 10) || 1)
+
+      // The UI's generated/selected date lists often include the original date already.
+      // Backend creates the original schedule separately, so never send the original date as a "duplicate".
+      const uniqueDupes = Array.from(new Set((duplicateDatesToUse || []).filter(Boolean)))
+      const duplicateDatesForPayload = uniqueDupes.filter(d => d !== newEvent.date)
+
       // Construct proper ISO datetime strings with timezone handling
       // Create Date objects in user's local timezone, then convert to UTC ISO strings
       // This ensures the time is interpreted correctly regardless of server timezone
@@ -421,7 +431,8 @@ export default function AdminStudentSchedules() {
         studentId: selectedStudent,
         type: newEvent.type,
         meetingLink: newEvent.meetingLink || '',
-        duplicateDates: duplicateDatesToUse.length > 0 ? duplicateDatesToUse : undefined
+        repeatWeeks: repeatWeeksInt > 1 ? repeatWeeksInt : undefined,
+        duplicateDates: repeatWeeksInt > 1 ? undefined : (duplicateDatesForPayload.length > 0 ? duplicateDatesForPayload : undefined),
       }
 
       const result = await apiPost('/admin/schedules', payload, token)
@@ -437,6 +448,7 @@ export default function AdminStudentSchedules() {
       setDuplicateStartDate('')
       setDuplicateEndDate('')
       setDuplicateWeeks(4)
+      setRepeatWeeks(1)
       setNewEvent({
         title: '',
         description: '',
@@ -804,6 +816,41 @@ export default function AdminStudentSchedules() {
                   />
                 </div>
 
+                {/* Repeat Schedule Section */}
+                <div className="border-t border-slate-200 pt-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Repeat Schedule
+                      </label>
+                      <p className="text-xs text-slate-500">
+                        Auto-create weekly sessions on the same weekday as the selected start date.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-2">Repeat for how many weeks?</label>
+                      <input
+                        type="number"
+                        value={repeatWeeks}
+                        onChange={(e) => setRepeatWeeks(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                        min="1"
+                        max="52"
+                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Set to 1 to create only this session.</p>
+                    </div>
+                    <div className="flex items-end">
+                      <div className="w-full p-3 bg-white rounded-lg border border-slate-200 text-sm text-slate-700">
+                        Total sessions to create:{' '}
+                        <span className="font-semibold">{Math.max(1, parseInt(repeatWeeks, 10) || 1)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Duplicate Event Section */}
                 <div className="border-t border-slate-200 pt-4">
                   <div className="flex items-center justify-between mb-4">
@@ -1019,11 +1066,13 @@ export default function AdminStudentSchedules() {
                       <>
                         <span>✓</span>
                         <span>Create Schedule{
-                          showDuplicateDates ? (
+                          (Math.max(1, parseInt(repeatWeeks, 10) || 1) > 1) ? (
+                            `s (${Math.max(1, parseInt(repeatWeeks, 10) || 1)})`
+                          ) : showDuplicateDates ? (
                             duplicateMode === 'dateRange' && selectedDuplicateDates.length > 0 
-                              ? `s (${selectedDuplicateDates.length + 1})`
+                              ? `s (${new Set(selectedDuplicateDates).size})`
                               : duplicateMode === 'daysOfWeek' && selectedDaysOfWeek.length > 0 && duplicateStartDate
-                                ? `s (${generateDatesFromDaysOfWeek(duplicateStartDate, selectedDaysOfWeek, duplicateWeeks).length + 1})`
+                                ? `s (${new Set(generateDatesFromDaysOfWeek(duplicateStartDate, selectedDaysOfWeek, duplicateWeeks)).size})`
                                 : ''
                           ) : ''
                         }</span>
@@ -1041,6 +1090,7 @@ export default function AdminStudentSchedules() {
                       setDuplicateStartDate('')
                       setDuplicateEndDate('')
                       setDuplicateWeeks(4)
+                      setRepeatWeeks(1)
                     }}
                     className="px-5 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium transition-colors"
                   >

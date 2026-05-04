@@ -246,6 +246,7 @@ export default function AdminAttendance() {
   const [selectedCourse, setSelectedCourse] = useState('')
   const [students, setStudents] = useState([])
   const [attendance, setAttendance] = useState([])
+  const [dayRows, setDayRows] = useState([]) // daily roster across all courses for selectedDate
   const [selectedDate, setSelectedDate] = useState(() => toLocalDateString(new Date()))
   const [selectedMonth, setSelectedMonth] = useState(() => toLocalMonthString(new Date()))
   const [loading, setLoading] = useState(true)
@@ -267,6 +268,13 @@ export default function AdminAttendance() {
       setSelectedCourseData(courseData)
     }
   }, [selectedCourse, selectedMonth, courses])
+
+  // Load daily roster for selectedDate across all courses (Daily Table View)
+  useEffect(() => {
+    if (viewMode !== 'table') return
+    if (!selectedDate) return
+    loadAttendanceDay()
+  }, [viewMode, selectedDate])
 
   useEffect(() => {
     if (selectedCourse && selectedMonth) {
@@ -439,8 +447,30 @@ export default function AdminAttendance() {
     }
   }
 
-  const markAttendance = async (studentId, status, notes = '', date = null) => {
-    if (!selectedCourse) return
+  const loadAttendanceDay = async () => {
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+    const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
+
+    try {
+      const token = await getToken()
+      const res = await fetch(`${baseUrl}/admin/attendance-day/${selectedDate}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!res.ok) {
+        setDayRows([])
+        return
+      }
+      const data = await res.json()
+      setDayRows(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Error loading attendance day:', error)
+      setDayRows([])
+    }
+  }
+
+  const markAttendance = async (studentId, status, notes = '', date = null, courseIdOverride = null) => {
+    const courseIdToUse = courseIdOverride || selectedCourse
+    if (!courseIdToUse) return
     
     const attendanceDate = date || selectedDate
     setSaving(true)
@@ -448,7 +478,7 @@ export default function AdminAttendance() {
       const token = await getToken()
       const response = await apiPost('/admin/attendance', {
         studentId,
-        courseId: selectedCourse,
+        courseId: courseIdToUse,
         date: attendanceDate,
         status,
         notes
@@ -459,7 +489,7 @@ export default function AdminAttendance() {
         const existingIndex = prev.findIndex(a => 
           a.studentId === studentId && 
           a.date === attendanceDate &&
-          a.courseId === selectedCourse
+          a.courseId === courseIdToUse
         )
         
         if (existingIndex >= 0) {
@@ -467,9 +497,19 @@ export default function AdminAttendance() {
           updated[existingIndex] = { ...updated[existingIndex], status, notes }
           return updated
         } else {
-          return [...prev, { studentId, courseId: selectedCourse, status, notes, date: attendanceDate }]
+          return [...prev, { studentId, courseId: courseIdToUse, status, notes, date: attendanceDate }]
         }
       })
+
+      // If we're in daily mode, update dayRows too
+      if (viewMode === 'table') {
+        setDayRows(prev => prev.map(r => {
+          if (String(r.studentId) === String(studentId) && String(r.courseId) === String(courseIdToUse) && String(r.date) === String(attendanceDate)) {
+            return { ...r, status, notes }
+          }
+          return r
+        }))
+      }
       
       // Don't auto-reload immediately to prevent reset
       // setTimeout(() => {
@@ -619,6 +659,26 @@ export default function AdminAttendance() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Date selector for daily view */}
+                  <div className="mt-6 grid md:grid-cols-4 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Date</label>
+                      <input
+                        type="date"
+                        value={selectedDate}
+                        onChange={(e) => setSelectedDate(e.target.value)}
+                        className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                      />
+                    </div>
+                    <div className="md:col-span-3 flex items-end">
+                      {viewMode === 'table' && (
+                        <div className="w-full p-3 bg-slate-50 rounded-lg border border-slate-200 text-sm text-slate-700">
+                          Showing all students who have a scheduled class on this date (grouped by course).
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                  
@@ -645,90 +705,106 @@ export default function AdminAttendance() {
                     ) : (
                       <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
                         <h3 className="text-lg font-semibold text-slate-900 mb-4">Daily Attendance - {selectedDate}</h3>
-                        <div className="space-y-3">
-                          {students.map((student) => {
-                            const studentAttendance = attendance.find(a => 
-                              a.studentId === student.userId && 
-                              a.date === selectedDate &&
-                              a.courseId === selectedCourse
-                            )
-                            return (
-                              <div key={student._id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                                <div className="flex items-center gap-4">
-                                  <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                                    {student.name?.charAt(0)?.toUpperCase() || 'U'}
-                                  </div>
-                                  <div>
-                                    <div className="font-medium text-slate-900">
-                                      {student.name || 'Unknown Student'}
-                                    </div>
-                                    <div className="text-sm text-slate-600">
-                                      {student.email || 'No email provided'}
-                                    </div>
-                                  </div>
+
+                        {dayRows.length === 0 ? (
+                          <div className="text-center py-10 text-slate-600">
+                            No scheduled classes found for this date.
+                          </div>
+                        ) : (
+                          <div className="space-y-6">
+                            {Object.entries(
+                              dayRows.reduce((acc, row) => {
+                                const key = row.courseTitle || 'Unknown Course'
+                                if (!acc[key]) acc[key] = []
+                                acc[key].push(row)
+                                return acc
+                              }, {})
+                            ).map(([courseTitle, rows]) => (
+                              <div key={courseTitle} className="border border-slate-200 rounded-xl overflow-hidden">
+                                <div className="px-4 py-3 bg-slate-50 border-b border-slate-200">
+                                  <div className="font-semibold text-slate-900">{courseTitle}</div>
+                                  <div className="text-xs text-slate-600">{rows.length} student(s)</div>
                                 </div>
-                                
-                                <div className="flex items-center gap-2">
-                                  {studentAttendance ? (
-                                    <div className="flex items-center gap-3">
-                                      <span className="text-xl">
-                                        {studentAttendance.status === 'present' ? '✅' : 
-                                         studentAttendance.status === 'absent' ? '❌' : '📋'}
-                                      </span>
-                                      <span className={`px-3 py-1 rounded-full text-sm font-medium border ${
-                                        studentAttendance.status === 'present' ? 'bg-green-100 text-green-800 border-green-200' :
-                                        studentAttendance.status === 'absent' ? 'bg-red-100 text-red-800 border-red-200' :
-                                        'bg-blue-100 text-blue-800 border-blue-200'
-                                      }`}>
-                                        {studentAttendance.status.charAt(0).toUpperCase() + studentAttendance.status.slice(1)}
-                                      </span>
-                                    </div>
-                                  ) : (
-                                    <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-medium border border-gray-200">
-                                      Not Marked
-                                    </span>
-                                  )}
-                                  
-                                  <div className="flex gap-1">
-                                    <button
-                                      onClick={() => markAttendance(student.userId, 'present')}
-                                      disabled={saving}
-                                      className={`px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
-                                        studentAttendance?.status === 'present'
-                                          ? 'bg-green-600 text-white'
-                                          : 'bg-green-100 text-green-700 hover:bg-green-200'
-                                      } disabled:opacity-50`}
-                                    >
-                                      Present
-                                    </button>
-                                    <button
-                                      onClick={() => markAttendance(student.userId, 'waived')}
-                                      disabled={saving}
-                                      className={`px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
-                                        studentAttendance?.status === 'waived'
-                                          ? 'bg-blue-600 text-white'
-                                          : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                                      } disabled:opacity-50`}
-                                    >
-                                      Waived
-                                    </button>
-                                    <button
-                                      onClick={() => markAttendance(student.userId, 'absent')}
-                                      disabled={saving}
-                                      className={`px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
-                                        studentAttendance?.status === 'absent'
-                                          ? 'bg-red-600 text-white'
-                                          : 'bg-red-100 text-red-700 hover:bg-red-200'
-                                      } disabled:opacity-50`}
-                                    >
-                                      Absent
-                                    </button>
-                                  </div>
+
+                                <div className="divide-y divide-slate-200">
+                                  {rows.map((row) => {
+                                    const status = row.status
+                                    const statusLabel = status
+                                      ? status.charAt(0).toUpperCase() + status.slice(1)
+                                      : 'Not Marked'
+                                    const badgeClass = !status
+                                      ? 'bg-gray-100 text-gray-800 border-gray-200'
+                                      : status === 'present'
+                                        ? 'bg-green-100 text-green-800 border-green-200'
+                                        : status === 'absent'
+                                          ? 'bg-red-100 text-red-800 border-red-200'
+                                          : status === 'late'
+                                            ? 'bg-amber-100 text-amber-900 border-amber-200'
+                                            : 'bg-blue-100 text-blue-800 border-blue-200'
+
+                                    return (
+                                      <div key={`${row.courseId}-${row.studentId}`} className="flex items-center justify-between p-4">
+                                        <div className="flex items-center gap-4 min-w-0">
+                                          <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                                            {row.studentName?.charAt(0)?.toUpperCase() || 'U'}
+                                          </div>
+                                          <div className="min-w-0">
+                                            <div className="font-medium text-slate-900 truncate">{row.studentName}</div>
+                                            <div className="text-sm text-slate-600 truncate">
+                                              {row.studentEmail || row.instrument || ''}
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                          <span className={`px-3 py-1 rounded-full text-sm font-medium border ${badgeClass}`}>
+                                            {statusLabel}
+                                          </span>
+
+                                          <div className="flex gap-1">
+                                            <button
+                                              onClick={() => markAttendance(row.studentId, 'present', '', selectedDate, row.courseId)}
+                                              disabled={saving}
+                                              className={`px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
+                                                status === 'present'
+                                                  ? 'bg-green-600 text-white'
+                                                  : 'bg-green-100 text-green-700 hover:bg-green-200'
+                                              } disabled:opacity-50`}
+                                            >
+                                              Present
+                                            </button>
+                                            <button
+                                              onClick={() => markAttendance(row.studentId, 'late', '', selectedDate, row.courseId)}
+                                              disabled={saving}
+                                              className={`px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
+                                                status === 'late'
+                                                  ? 'bg-amber-600 text-white'
+                                                  : 'bg-amber-100 text-amber-900 hover:bg-amber-200'
+                                              } disabled:opacity-50`}
+                                            >
+                                              Late
+                                            </button>
+                                            <button
+                                              onClick={() => markAttendance(row.studentId, 'absent', '', selectedDate, row.courseId)}
+                                              disabled={saving}
+                                              className={`px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
+                                                status === 'absent'
+                                                  ? 'bg-red-600 text-white'
+                                                  : 'bg-red-100 text-red-700 hover:bg-red-200'
+                                              } disabled:opacity-50`}
+                                            >
+                                              Absent
+                                            </button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )
+                                  })}
                                 </div>
                               </div>
-                            )
-                          })}
-                        </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </>

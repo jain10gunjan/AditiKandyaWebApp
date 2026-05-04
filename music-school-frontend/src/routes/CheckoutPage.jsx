@@ -96,7 +96,7 @@ export default function CheckoutPage() {
               <div className="font-bold text-lg">{course.title}</div>
               <div className="text-slate-600">{course.level}</div>
             </div>
-            <div className="text-2xl text-sky-700 font-extrabold">₹{course.price}</div>
+            {/* Price intentionally not displayed */}
           </div>
           <div className="mt-6 flex gap-3">
             <button onClick={handlePay} className="px-5 py-3 rounded-full bg-sky-600 text-white hover:bg-sky-700">Pay with Razorpay</button>

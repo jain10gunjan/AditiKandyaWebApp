@@ -4,6 +4,20 @@ import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api'
 import toast from 'react-hot-toast'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  useSortable,
+  arrayMove,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import StudentNavbar from '../components/StudentNavbar.jsx'
 
 function AdminGuard({ children }) {
@@ -64,7 +78,6 @@ function CourseForm({ course, onSave, onCancel, loading, teachers = [] }) {
   const [formData, setFormData] = useState({
     title: course?.title || '',
     description: course?.description || '',
-    price: course?.price || 0,
     level: course?.level || 'Beginner',
     image: course?.image || '',
     thumbnail: null,
@@ -84,7 +97,6 @@ function CourseForm({ course, onSave, onCancel, loading, teachers = [] }) {
         ...prev,
         title: course.title || '',
         description: course.description || '',
-        price: course.price || 0,
         level: course.level || 'Beginner',
         image: imageUrl,
         teacherId: course.teacherId || ''
@@ -128,26 +140,6 @@ function CourseForm({ course, onSave, onCancel, loading, teachers = [] }) {
               value={formData.title}
               onChange={handleChange}
               placeholder="e.g., Guitar Basics for Beginners"
-              className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
-              required
-              style={{
-                fontFamily: "'Bona Nova', serif",
-              }}
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2"
-            style={{
-              fontFamily: "'Bona Nova', serif",
-            }}
-            >Price (₹)</label>
-            <input
-              name="price"
-              type="number"
-              value={formData.price}
-              onChange={handleChange}
-              placeholder="2999"
               className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
               required
               style={{
@@ -382,7 +374,7 @@ function CourseCard({ course, onEdit, onDelete, onView, teachers = [] }) {
           }}
           >
             <span className="px-2 py-1 bg-sky-100 text-sky-700 rounded-full">{course.level}</span>
-            <span className="font-semibold text-slate-800">₹{course.price?.toLocaleString()}</span>
+            {/* Price intentionally not displayed */}
           </div>
           {assignedTeacher && (
             <div className="flex items-center gap-2 text-xs text-slate-600 bg-green-50 px-2 py-1 rounded-lg w-fit">
@@ -446,6 +438,36 @@ function CourseCard({ course, onEdit, onDelete, onView, teachers = [] }) {
           }}
         >
           Delete
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function SortableCourseCard({ course, onEdit, onDelete, onView, teachers = [] }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: String(course._id),
+  })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className="relative">
+      <div className="relative">
+        <CourseCard course={course} teachers={teachers} onEdit={onEdit} onDelete={onDelete} onView={onView} />
+        <button
+          type="button"
+          className="absolute top-4 right-4 z-10 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 cursor-grab active:cursor-grabbing shadow-sm hover:shadow transition"
+          title="Drag to reorder"
+          {...attributes}
+          {...listeners}
+        >
+          <span className="text-base leading-none">⠿</span>
+          <span className="text-xs font-semibold">Drag</span>
         </button>
       </div>
     </div>
@@ -605,7 +627,7 @@ function CoursesDetailModal({ isOpen, onClose, courses, onView, onEdit, onDelete
                     fontFamily: "'Bona Nova', serif",
                   }}
                   >
-                    <span className="font-semibold text-slate-800">₹{course.price?.toLocaleString() || 0}</span>
+                    {/* Price intentionally not displayed */}
                     <span className="text-slate-500">{course.modules?.length || 0} modules</span>
                     <span className="text-slate-500">
                       {course.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0} lessons
@@ -1471,7 +1493,7 @@ function ManualEnrollmentForm({ courses, onEnroll, onCancel, loading }) {
             <option value="">-- Select a course --</option>
             {courses.map((course) => (
               <option key={course._id} value={course._id}>
-                {course.title} {course.price > 0 ? `(₹${course.price})` : '(Free)'}
+                {course.title}
               </option>
             ))}
           </select>
@@ -1623,6 +1645,10 @@ export default function AdminPage() {
   const [enrollmentFilter, setEnrollmentFilter] = useState('all') // 'all', 'approved', 'pending'
   const [activeModal, setActiveModal] = useState(null) // 'courses', 'teachers', 'enrollments', 'students', 'tokens'
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
+  )
+
   const reload = async () => {
     try {
       setLoading(true)
@@ -1669,6 +1695,52 @@ export default function AdminPage() {
   }
 
   useEffect(() => { reload() }, [])
+
+  const persistCourseOrder = async (nextCourses) => {
+    const token = await getToken().catch(() => undefined)
+    if (!token) return
+
+    const updates = nextCourses.map((c, idx) => ({
+      id: c._id,
+      displayOrder: idx + 1,
+    }))
+
+    await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/courses/display-order`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ updates }),
+    }).then(async (res) => {
+      if (!res.ok) {
+        const msg = await res.text().catch(() => '')
+        throw new Error(msg || 'Failed to save course order')
+      }
+    })
+  }
+
+  const handleCoursesDragEnd = async (event) => {
+    const { active, over } = event || {}
+    if (!active?.id || !over?.id) return
+    if (String(active.id) === String(over.id)) return
+
+    const oldIndex = courses.findIndex(c => String(c._id) === String(active.id))
+    const newIndex = courses.findIndex(c => String(c._id) === String(over.id))
+    if (oldIndex === -1 || newIndex === -1) return
+
+    const next = arrayMove(courses, oldIndex, newIndex)
+    setCourses(next)
+
+    try {
+      await persistCourseOrder(next)
+      toast.success('Course order saved')
+    } catch (e) {
+      console.error(e)
+      toast.error('Failed to save order, reloading…')
+      await reload()
+    }
+  }
 
   const handleSaveCourse = async (formData) => {
     try {
@@ -2051,6 +2123,11 @@ export default function AdminPage() {
                   <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">✏️</div>
                   <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-emerald-700 transition-colors">Manual Enrollments</h3>
                 </a>
+                <a href="/admin/deleted-students" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-red-300 active:scale-95">
+                  <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">🗑️</div>
+                  <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-red-700 transition-colors">Deleted Students</h3>
+                  <p className="text-sm text-slate-600">View and restore soft-deleted students</p>
+                </a>
                 <a href="/admin/dynamic-pricing" className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 group hover:border-amber-300 active:scale-95">
                   <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">💰</div>
                   <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-amber-700 transition-colors">Dynamic Pricing</h3>
@@ -2121,18 +2198,22 @@ export default function AdminPage() {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
                 </div>
               ) : (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {courses.map((course) => (
-                    <CourseCard
-                      key={course._id}
-                      course={course}
-                      teachers={teachers}
-                      onEdit={handleEditCourse}
-                      onDelete={handleDeleteCourse}
-                      onView={handleViewCourse}
-                    />
-                  ))}
-                </div>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleCoursesDragEnd}>
+                  <SortableContext items={courses.map(c => String(c._id))} strategy={rectSortingStrategy}>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {courses.map((course) => (
+                        <SortableCourseCard
+                          key={course._id}
+                          course={course}
+                          teachers={teachers}
+                          onEdit={handleEditCourse}
+                          onDelete={handleDeleteCourse}
+                          onView={handleViewCourse}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
               )}
             </div>
 

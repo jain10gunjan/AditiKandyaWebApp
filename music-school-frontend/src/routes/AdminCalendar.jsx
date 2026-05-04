@@ -15,6 +15,7 @@ export default function AdminCalendar() {
   const [showEventForm, setShowEventForm] = useState(false)
   const [showDuplicateDates, setShowDuplicateDates] = useState(false)
   const [selectedDuplicateDates, setSelectedDuplicateDates] = useState([])
+  const [repeatWeeks, setRepeatWeeks] = useState(1)
   const [newEvent, setNewEvent] = useState({
     title: '',
     description: '',
@@ -124,9 +125,10 @@ export default function AdminCalendar() {
         courseId: newEvent.courseId || '',
         type: newEvent.type,
         meetingLink: newEvent.meetingLink || '',
-        duplicateDates: showDuplicateDates && selectedDuplicateDates.length > 0 
-          ? selectedDuplicateDates 
-          : undefined
+        repeatWeeks: Math.max(1, parseInt(repeatWeeks, 10) || 1) > 1 ? Math.max(1, parseInt(repeatWeeks, 10) || 1) : undefined,
+        duplicateDates: Math.max(1, parseInt(repeatWeeks, 10) || 1) > 1
+          ? undefined
+          : (showDuplicateDates && selectedDuplicateDates.length > 0 ? selectedDuplicateDates : undefined)
       }
 
       const result = await apiPost('/admin/schedules', payload, token)
@@ -137,6 +139,7 @@ export default function AdminCalendar() {
       setShowEventForm(false)
       setShowDuplicateDates(false)
       setSelectedDuplicateDates([])
+      setRepeatWeeks(1)
       setNewEvent({
         title: '',
         description: '',
@@ -480,6 +483,40 @@ export default function AdminCalendar() {
                       />
                     </div>
 
+                    {/* Repeat Schedule Section */}
+                    <div className="border-t border-slate-200 pt-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-1">
+                            Repeat Schedule
+                          </label>
+                          <p className="text-xs text-slate-500">
+                            Auto-create weekly sessions on the same weekday as the selected start date.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-medium text-slate-700 mb-2">Repeat for how many weeks?</label>
+                          <input
+                            type="number"
+                            value={repeatWeeks}
+                            onChange={(e) => setRepeatWeeks(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                            min="1"
+                            max="52"
+                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm"
+                          />
+                          <p className="text-xs text-slate-500 mt-1">Set to 1 to create only this event.</p>
+                        </div>
+                        <div className="flex items-end">
+                          <div className="w-full p-3 bg-white rounded-lg border border-slate-200 text-sm text-slate-700">
+                            Total events to create:{' '}
+                            <span className="font-semibold">{Math.max(1, parseInt(repeatWeeks, 10) || 1)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Duplicate Event Section */}
                     <div className="border-t border-slate-200 pt-4">
                       <div className="flex items-center justify-between mb-4">
@@ -581,7 +618,11 @@ export default function AdminCalendar() {
                         ) : (
                           <>
                             <span>✓</span>
-                            <span>Create Event{showDuplicateDates && selectedDuplicateDates.length > 0 ? `s (${selectedDuplicateDates.length + 1})` : ''}</span>
+                            <span>Create Event{
+                              (Math.max(1, parseInt(repeatWeeks, 10) || 1) > 1)
+                                ? `s (${Math.max(1, parseInt(repeatWeeks, 10) || 1)})`
+                                : (showDuplicateDates && selectedDuplicateDates.length > 0 ? `s (${selectedDuplicateDates.length + 1})` : '')
+                            }</span>
                           </>
                         )}
                       </button>
@@ -591,6 +632,7 @@ export default function AdminCalendar() {
                           setShowEventForm(false)
                           setShowDuplicateDates(false)
                           setSelectedDuplicateDates([])
+                          setRepeatWeeks(1)
                         }}
                         className="px-5 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium transition-colors"
                       >

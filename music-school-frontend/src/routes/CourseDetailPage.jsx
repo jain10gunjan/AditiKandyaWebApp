@@ -1,11 +1,11 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { apiGet, apiPost, apiPut, API_BASE_URL } from '../lib/api.js'
+import { apiGet, apiPost, apiPut } from '../lib/api.js'
 import { SignedIn, SignedOut, SignInButton, useAuth, useUser } from '@clerk/clerk-react'
 import toast from 'react-hot-toast'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
-import { getUserCountry, getRegionFromCountry, formatPrice } from '../lib/pricingUtils.js'
+// Price is intentionally not displayed in the UI
 import image2 from '../assets/profileImages/image2.jpg'
 
 function CourseLeadForm({ course, onSuccess }) {
@@ -962,8 +962,6 @@ export default function CourseDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [course, setCourse] = useState(null)
-  const [displayPrice, setDisplayPrice] = useState(null)
-  const [displayCurrency, setDisplayCurrency] = useState('INR')
   const [enrolled, setEnrolled] = useState(false)
   const [loading, setLoading] = useState(true)
   const [currentVideo, setCurrentVideo] = useState(null)
@@ -986,59 +984,7 @@ export default function CourseDetailPage() {
           teacherDescription: courseData?.teacherDescription
         })
         setCourse(courseData)
-        
-        // Fetch dynamic pricing
-        try {
-          const country = getUserCountry()
-          const region = getRegionFromCountry(country)
-          
-          // API_BASE_URL already includes /api, so use it directly with /courses path
-          const pricingUrl = `${API_BASE_URL}/courses/${id}/pricing/${region}`
-          
-          console.log('[CourseDetail] Fetching pricing:', {
-            courseId: id,
-            country,
-            region,
-            apiBaseUrl: API_BASE_URL,
-            finalUrl: pricingUrl
-          })
-          
-          // Try region first, then country as fallback
-          let pricing = null
-          let pricingResponse = await fetch(pricingUrl)
-          if (pricingResponse.ok) {
-            pricing = await pricingResponse.json()
-            console.log('[CourseDetail] Pricing response (by region):', pricing)
-          } else {
-            console.warn('[CourseDetail] Pricing API error (region):', pricingResponse.status, pricingResponse.statusText)
-          }
-          
-          // If not found by region, try by country code
-          if (!pricing || pricing.isDefault) {
-            console.log('[CourseDetail] Trying country code:', country)
-            pricingResponse = await fetch(`${API_BASE_URL}/courses/${id}/pricing/${country}`)
-            if (pricingResponse.ok) {
-              pricing = await pricingResponse.json()
-              console.log('[CourseDetail] Pricing response (by country):', pricing)
-            } else {
-              console.warn('[CourseDetail] Pricing API error (country):', pricingResponse.status, pricingResponse.statusText)
-            }
-          }
-          
-          if (pricing && !pricing.isDefault) {
-            console.log('[CourseDetail] Using dynamic pricing:', pricing.price, pricing.currency)
-            setDisplayPrice(pricing.price)
-            setDisplayCurrency(pricing.currency || 'USD')
-          } else {
-            console.log('[CourseDetail] Using default pricing')
-            setDisplayPrice(courseData.price)
-            setDisplayCurrency('INR')
-          }
-        } catch (error) {
-          console.error('[CourseDetail] Error fetching dynamic pricing:', error)
-          setDisplayPrice(courseData.price)
-          setDisplayCurrency('INR')
-        }
+        // Price intentionally not displayed
         
         // Check enrollment status
       try {
@@ -1442,13 +1388,11 @@ export default function CourseDetailPage() {
 
             {/* Sidebar */}
             <div className="space-y-6">
-              {/* Pricing Card */}
+              {/* Info Card (price hidden) */}
               <div className="bg-white rounded-2xl p-6 border border-slate-200 sticky top-24 z-20">
                 <div className="text-center mb-6">
-                  <div className="text-3xl font-bold text-slate-900 mb-2">
-                    {displayPrice === 0 || displayPrice === null ? 'Free' : formatPrice(displayPrice || course.price, displayCurrency)}
-                  </div>
-                  <div className="text-sm text-slate-600">One-time payment</div>
+                  <div className="text-xl font-bold text-slate-900 mb-2">Enrollment</div>
+                  <div className="text-sm text-slate-600">Pricing details are shared after inquiry</div>
                 </div>
                 
                 <div className="space-y-3 mb-6">

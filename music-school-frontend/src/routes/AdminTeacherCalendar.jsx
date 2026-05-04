@@ -479,6 +479,23 @@ export default function AdminTeacherCalendar() {
 
 // Day View Component
 function DayView({ schedules, selectedDate, formatTime }) {
+  const [nowTick, setNowTick] = useState(() => Date.now())
+
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 60 * 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  const canJoinClass = (startTime, endTime) => {
+    if (!startTime) return false
+    const now = new Date(nowTick)
+    const start = startTime instanceof Date ? startTime : new Date(startTime)
+    const end = endTime ? (endTime instanceof Date ? endTime : new Date(endTime)) : null
+    const windowStart = new Date(start.getTime() - 15 * 60 * 1000)
+    if (!end) return now >= windowStart
+    return now >= windowStart && now <= end
+  }
+
   const daySchedules = schedules
     .filter(schedule => {
       if (!schedule.startTime) return false
@@ -552,14 +569,23 @@ function DayView({ schedules, selectedDate, formatTime }) {
                           {schedule.meetingLink && (
                             <div className="flex items-center gap-2">
                               <span className="font-semibold">🔗 Meeting:</span>
-                              <a
-                                href={schedule.meetingLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sky-600 hover:text-sky-700 hover:underline"
-                              >
-                                Join Meeting
-                              </a>
+                              {(() => {
+                                const enabled = canJoinClass(schedule.startTime, schedule.endTime)
+                                return (
+                                  <button
+                                    onClick={() => enabled && window.open(schedule.meetingLink, '_blank')}
+                                    disabled={!enabled}
+                                    title={!enabled ? 'Available 15 minutes before class starts' : 'Join meeting'}
+                                    className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                                      enabled
+                                        ? 'bg-sky-600 text-white hover:bg-sky-700'
+                                        : 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                                    }`}
+                                  >
+                                    Join Now
+                                  </button>
+                                )
+                              })()}
                             </div>
                           )}
                           {schedule.description && (

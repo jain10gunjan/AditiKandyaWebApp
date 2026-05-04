@@ -191,6 +191,13 @@ function CalendarGrid({ schedules, selectedDate, onDateSelect, view }) {
 }
 
 function EventDetail({ selectedDate, schedules, onClose, isMobile = false }) {
+  const [nowTick, setNowTick] = useState(() => Date.now())
+
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 60 * 1000)
+    return () => clearInterval(id)
+  }, [])
+
   // Filter to show only individual schedules
   const individualSchedules = schedules.filter(schedule => {
     return schedule.studentId && schedule.studentId !== null && schedule.studentId !== ''
@@ -231,7 +238,7 @@ function EventDetail({ selectedDate, schedules, onClose, isMobile = false }) {
   // Check if join button should be enabled (15 minutes before start time)
   const canJoinClass = (startTime, endTime) => {
     if (!startTime) return false
-    const now = new Date()
+    const now = new Date(nowTick)
     const start = new Date(startTime)
     const end = endTime ? new Date(endTime) : null
     
@@ -239,9 +246,9 @@ function EventDetail({ selectedDate, schedules, onClose, isMobile = false }) {
     const fifteenMinutesBefore = new Date(start.getTime() - 15 * 60 * 1000)
     
     // Enable if current time is 15 minutes before start or later
-    // And if current time is before or within the class duration (allow 30 minutes after end for late joiners)
+    // And if current time is before or within the class duration
     const isAfterFifteenMinBefore = now >= fifteenMinutesBefore
-    const isBeforeOrDuringClass = !end || now <= new Date(end.getTime() + 30 * 60 * 1000)
+    const isBeforeOrDuringClass = !end || now <= end
     
     return isAfterFifteenMinBefore && isBeforeOrDuringClass
   }

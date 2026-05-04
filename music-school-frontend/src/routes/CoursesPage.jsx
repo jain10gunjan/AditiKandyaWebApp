@@ -1,83 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { apiGet, API_BASE_URL } from '../lib/api.js'
+import { apiGet } from '../lib/api.js'
 import { useAuth } from '@clerk/clerk-react'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
-import { getUserCountry, getRegionFromCountry, formatPrice } from '../lib/pricingUtils.js'
+// Price is intentionally not displayed in the UI
 import coursepageBannerImage from '../assets/coursepageBannerImage.jpg'
 
 function CourseCard({ course, isEnrolled = false }) {
-  const [displayPrice, setDisplayPrice] = useState(null)
-  const [displayCurrency, setDisplayCurrency] = useState('INR')
-  
-
-  useEffect(() => {
-    // Fetch dynamic pricing for this course
-    const fetchPricing = async () => {
-      try {
-        const country = getUserCountry()
-        const region = getRegionFromCountry(country)
-        
-        // API_BASE_URL already includes /api, so use it directly with /courses path
-        const pricingUrl = `${API_BASE_URL}/courses/${course._id}/pricing/${region}`
-        
-        console.log('[CourseCard] Fetching pricing for:', {
-          courseId: course._id,
-          country,
-          region,
-          apiBaseUrl: API_BASE_URL,
-          finalUrl: pricingUrl
-        })
-        
-        // Try region first, then country as fallback
-        let pricing = null
-        let response = await fetch(pricingUrl)
-        if (response.ok) {
-          pricing = await response.json()
-          console.log('[CourseCard] Pricing response (by region):', pricing)
-        } else {
-          console.warn('[CourseCard] Pricing API error (region):', response.status, response.statusText)
-        }
-        
-        // If not found by region, try by country code
-        if (!pricing || pricing.isDefault) {
-          console.log('[CourseCard] Trying country code:', country)
-          response = await fetch(`${API_BASE_URL}/courses/${course._id}/pricing/${country}`)
-          if (response.ok) {
-            pricing = await response.json()
-            console.log('[CourseCard] Pricing response (by country):', pricing)
-          } else {
-            console.warn('[CourseCard] Pricing API error (country):', response.status, response.statusText)
-          }
-        }
-        
-        if (pricing && !pricing.isDefault) {
-          console.log('[CourseCard] Using dynamic pricing:', pricing.price, pricing.currency)
-          setDisplayPrice(pricing.price)
-          setDisplayCurrency(pricing.currency || 'USD')
-          return
-        } else {
-          console.log('[CourseCard] Using default pricing (isDefault or not found)')
-        }
-        // Fallback to default price
-        setDisplayPrice(course.price)
-        setDisplayCurrency('INR')
-      } catch (error) {
-        console.error('[CourseCard] Error fetching pricing:', error)
-        // Fallback to default price
-        setDisplayPrice(course.price)
-        setDisplayCurrency('INR')
-      }
-    }
-    
-    if (!isEnrolled && course._id) {
-      fetchPricing()
-    } else {
-      setDisplayPrice(course.price)
-      setDisplayCurrency('INR')
-    }
-  }, [course._id, course.price, isEnrolled])
+  // Price intentionally hidden
   // Calculate actual metrics from course data
   const totalLessons = course.modules?.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) || 0
   const totalDurationSec = course.modules?.reduce((acc, m) => 
@@ -127,11 +58,7 @@ function CourseCard({ course, isEnrolled = false }) {
         <div className="absolute top-3 right-3 bg-black text-[#F5E6E0] px-3 py-1 rounded-full text-xs font-bold z-10">
           {course.level || 'All Levels'}
         </div>
-        {!isEnrolled && (
-          <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-black px-2 py-1 rounded-full text-xs font-bold shadow-md z-10">
-            {displayPrice === 0 || displayPrice === null ? 'Free' : formatPrice(displayPrice || course.price, displayCurrency)}
-          </div>
-        )}
+        {/* Price intentionally not displayed */}
         {isEnrolled && (
           <div className="absolute bottom-3 right-3 bg-[#F5E6E0] text-gray-700 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 z-10 animate-fade-in shadow-lg">
             <span className="text-sm">✓</span>

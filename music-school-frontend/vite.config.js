@@ -19,10 +19,10 @@ export default defineConfig({
       }
     }
   },
-  // Optimize video loading
+  // Dev server must not be aggressively cached (breaks HMR / dependency updates)
   server: {
     headers: {
-      'Cache-Control': 'public, max-age=31536000, immutable'
+      'Cache-Control': 'no-store'
     }
-  }
+  },
 })

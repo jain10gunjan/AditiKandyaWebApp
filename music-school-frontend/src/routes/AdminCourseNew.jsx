@@ -53,7 +53,6 @@ export default function AdminCourseNew() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    price: 0,
     image: '',
     level: 'Beginner'
   })
@@ -62,7 +61,7 @@ export default function AdminCourseNew() {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'price' ? (value === '' ? 0 : Number(value)) : value
+      [name]: value
     }))
   }
 
@@ -152,21 +151,6 @@ export default function AdminCourseNew() {
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Price (₹) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    name="price"
-                    type="number"
-                    value={formData.price}
-                    onChange={handleChange}
-                    placeholder="2999"
-                    className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
-                    required
-                    min="0"
-                  />
-                </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Level <span className="text-red-500">*</span>
