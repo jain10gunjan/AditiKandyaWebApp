@@ -175,7 +175,7 @@ export default function StudentFooter() {
                 fontFamily: "'Bona Nova', serif"
               }}
               >
-                <li>📧 aditikandya@gmail.com</li>
+                <li>📧 themusinest@gmail.com</li>
                 <li>📞 +91 7024403520</li>
                 <li>📍 Virtual Studio, Based in MP India</li>
               </ul>
