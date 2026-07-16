@@ -1,38 +1,47 @@
-## Youth Music Academy — Backend (Node.js + Express + MongoDB)
+# Music School Backend
 
-### Scripts
+Node.js + Express + MongoDB API for The MusiNest.
+
+## Scripts
 
 - `npm run dev` — start with Nodemon
 - `npm start` — start production
 - `npm run lint` — ESLint
 - `npm run format` — Prettier
 
-### Environment
+## Environment
 
-Create a `.env` file in this folder:
+Copy `.env.example` to `.env` and fill values:
 
 ```
 PORT=4000
 MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>/<db>?retryWrites=true&w=majority
-CLIENT_ORIGIN=http://localhost:5173
 CLERK_SECRET_KEY=sk_test_xxx
 CLERK_PUBLISHABLE_KEY=pk_test_xxx
+ADMIN_EMAILS=admin@example.com
 RAZORPAY_KEY_ID=rzp_test_xxx
 RAZORPAY_KEY_SECRET=xxx
 ```
 
-### Endpoints
+## Project structure
 
-- `GET /api/health`
-- `GET /api/courses`
-- `GET /api/teachers`
-- `POST /api/enroll`
-- `POST /api/dev/seed` (dev only)
+```
+src/
+  server.js              # process entry (DB connect + listen)
+  app.js                 # Express app (middleware + routes)
+  config/                # env, cors, db, paths, constants
+  models/                # Mongoose models
+  middleware/            # auth, upload, errors, cors helpers
+  utils/                 # shared helpers (enrollment, tokens, media)
+  seeds/                 # demo seed data
+  routes/                # HTTP route registration by domain
+    admin/               # admin-only route modules
+    deps.js              # shared route dependencies
+    index.js             # mounts all route modules
+```
 
-### Development
+## Development
 
-1. Install deps: `npm install`
-2. Start dev: `npm run dev`
-3. Seed sample data: `POST http://localhost:4000/api/dev/seed`
-
-
+1. `npm install`
+2. `npm run dev`
+3. Health check: `GET http://localhost:4000/api/health`

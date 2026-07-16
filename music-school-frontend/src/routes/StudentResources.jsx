@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAuth, SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
 import { apiGet } from '../lib/api'
 import toast from 'react-hot-toast'
@@ -15,56 +15,69 @@ function VideoPlayer({ resource, onView, onComplete }) {
   const [startTime, setStartTime] = useState(null)
 
   useEffect(() => {
-    loadVideo()
-    return () => {
-      // Track time spent when component unmounts
-      if (startTime && resource) {
-        const timeSpent = Math.floor((Date.now() - startTime) / 1000)
-        if (timeSpent > 5) { // Only track if watched for more than 5 seconds
-          onComplete(timeSpent)
+    let cancelled = false
+    let objectUrl = null
+    const startedAt = Date.now()
+    setStartTime(startedAt)
+
+    const loadVideo = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        const token = await getToken().catch(() => undefined)
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+        const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
+        const url = new URL(`${baseUrl}/resources/${resource._id}/file`)
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+        if (resource.isPublic) {
+          const head = await fetch(url.toString(), { method: 'HEAD', headers })
+          if (!head.ok) {
+            if (head.status === 401) throw new Error('You are not authorized to access this video.')
+            if (head.status === 404) throw new Error('Video file not found.')
+            throw new Error(`Failed to load video (${head.status})`)
+          }
+          if (cancelled) return
+          setVideoUrl(url.toString())
+        } else {
+          if (!token) throw new Error('You are not authorized to access this video.')
+          const response = await fetch(url.toString(), { headers })
+          if (!response.ok) {
+            if (response.status === 401) throw new Error('You are not authorized to access this video.')
+            if (response.status === 404) throw new Error('Video file not found.')
+            throw new Error(`Failed to load video (${response.status})`)
+          }
+          const blob = await response.blob()
+          objectUrl = URL.createObjectURL(blob)
+          if (cancelled) {
+            URL.revokeObjectURL(objectUrl)
+            return
+          }
+          setVideoUrl(objectUrl)
         }
+
+        setVideoKey(prev => prev + 1)
+        onView()
+      } catch (err) {
+        if (!cancelled) {
+          console.error('Error loading video:', err)
+          setError(err.message)
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
       }
+    }
+
+    loadVideo()
+
+    return () => {
+      cancelled = true
+      const timeSpent = Math.floor((Date.now() - startedAt) / 1000)
+      if (timeSpent > 5) onComplete(timeSpent)
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
   }, [resource._id])
-
-  const loadVideo = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      setStartTime(Date.now())
-      
-      const token = await getToken().catch(() => undefined)
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
-      const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
-      
-      const url = new URL(`${baseUrl}/resources/${resource._id}/file`)
-      const headers = token ? { Authorization: `Bearer ${token}` } : {}
-      
-      const response = await fetch(url.toString(), { 
-        method: 'HEAD',
-        headers 
-      })
-      
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('You are not authorized to access this video.')
-        } else if (response.status === 404) {
-          throw new Error('Video file not found.')
-        } else {
-          throw new Error(`Failed to load video (${response.status})`)
-        }
-      }
-      
-      setVideoUrl(url.toString())
-      setVideoKey(prev => prev + 1)
-      onView()
-    } catch (err) {
-      console.error('Error loading video:', err)
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleVideoError = (e) => {
     console.error('Video playback error:', e)
@@ -173,48 +186,58 @@ function AudioPlayer({ resource, onView, onComplete }) {
   const [startTime, setStartTime] = useState(null)
 
   useEffect(() => {
+    let cancelled = false
+    let objectUrl = null
+    const startedAt = Date.now()
+    setStartTime(startedAt)
+
+    const loadAudio = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        const token = await getToken().catch(() => undefined)
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+        const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
+        const url = new URL(`${baseUrl}/resources/${resource._id}/file`)
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+        if (resource.isPublic) {
+          const response = await fetch(url.toString(), { method: 'HEAD', headers })
+          if (!response.ok) throw new Error('Failed to load audio')
+          if (cancelled) return
+          setAudioUrl(url.toString())
+        } else {
+          if (!token) throw new Error('Failed to load audio')
+          const response = await fetch(url.toString(), { headers })
+          if (!response.ok) throw new Error('Failed to load audio')
+          const blob = await response.blob()
+          objectUrl = URL.createObjectURL(blob)
+          if (cancelled) {
+            URL.revokeObjectURL(objectUrl)
+            return
+          }
+          setAudioUrl(objectUrl)
+        }
+        onView()
+      } catch (err) {
+        if (!cancelled) {
+          console.error('Error loading audio:', err)
+          setError(err.message)
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
     loadAudio()
     return () => {
-      if (startTime && resource) {
-        const timeSpent = Math.floor((Date.now() - startTime) / 1000)
-        if (timeSpent > 5) {
-          onComplete(timeSpent)
-        }
-      }
+      cancelled = true
+      const timeSpent = Math.floor((Date.now() - startedAt) / 1000)
+      if (timeSpent > 5) onComplete(timeSpent)
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
   }, [resource._id])
-
-  const loadAudio = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      setStartTime(Date.now())
-      
-      const token = await getToken().catch(() => undefined)
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
-      const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
-      
-      const url = new URL(`${baseUrl}/resources/${resource._id}/file`)
-      const headers = token ? { Authorization: `Bearer ${token}` } : {}
-      
-      const response = await fetch(url.toString(), { 
-        method: 'HEAD',
-        headers 
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to load audio')
-      }
-      
-      setAudioUrl(url.toString())
-      onView()
-    } catch (err) {
-      console.error('Error loading audio:', err)
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleAudioEnd = () => {
     if (startTime && resource) {
@@ -308,7 +331,7 @@ function AudioPlayer({ resource, onView, onComplete }) {
 }
 
 
-function ResourceCard({ resource, onClick, tracking, onToggleComplete }) {
+function ResourceCard({ resource, onClick, tracking, onToggleComplete, showCourseBadge = false }) {
   const getResourceIcon = (type) => {
     switch (type) {
       case 'video': return '🎥'
@@ -396,6 +419,23 @@ function ResourceCard({ resource, onClick, tracking, onToggleComplete }) {
             }}
             >
               {resource.description}
+            </p>
+          )}
+
+          {showCourseBadge && resource.courseTitle && (
+            <p
+              className="text-xs text-slate-500 mb-2"
+              style={{ fontFamily: "'Bona Nova', serif" }}
+            >
+              From: {resource.courseTitle}
+            </p>
+          )}
+          {showCourseBadge && resource.access === 'public' && !resource.courseTitle && (
+            <p
+              className="text-xs text-sky-600 mb-2"
+              style={{ fontFamily: "'Bona Nova', serif" }}
+            >
+              Shared resource
             </p>
           )}
           
@@ -569,16 +609,25 @@ function ResourceModal({ resource, isOpen, onClose, onView, onComplete }) {
   )
 }
 
-function ResourcesContent({ freeCourses, resources, loading, selectedResource, setSelectedResource, showModal, setShowModal, onMenuClick, trackingData, onTrackView, onTrackComplete }) {
-  const [selectedCourse, setSelectedCourse] = useState('')
+function ResourcesContent({
+  sources,
+  resources,
+  loading,
+  selectedSourceId,
+  setSelectedSourceId,
+  selectedResource,
+  setSelectedResource,
+  showModal,
+  setShowModal,
+  onMenuClick,
+  trackingData,
+  onTrackView,
+  onTrackComplete,
+}) {
   const [filter, setFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
 
-  useEffect(() => {
-    if (freeCourses.length > 0) {
-      setSelectedCourse(freeCourses[0]._id)
-    }
-  }, [freeCourses])
+  const selectedSource = sources.find(s => s.id === selectedSourceId) || null
 
   const getGreeting = () => {
     const hour = new Date().getHours()
@@ -589,13 +638,15 @@ function ResourcesContent({ freeCourses, resources, loading, selectedResource, s
 
   const filteredResources = resources.filter(resource => {
     const matchesFilter = filter === 'all' || resource.type === filter
-    const matchesSearch = resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (resource.description && resource.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    const matchesSearch =
+      resource.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (resource.description && resource.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (resource.courseTitle && resource.courseTitle.toLowerCase().includes(searchTerm.toLowerCase()))
     return matchesFilter && matchesSearch
   })
 
   const getResourceStats = () => {
-    const stats = {
+    return {
       total: resources.length,
       video: resources.filter(r => r.type === 'video').length,
       pdf: resources.filter(r => r.type === 'pdf').length,
@@ -603,7 +654,6 @@ function ResourcesContent({ freeCourses, resources, loading, selectedResource, s
       audio: resources.filter(r => r.type === 'audio').length,
       image: resources.filter(r => r.type === 'image').length,
     }
-    return stats
   }
 
   const stats = getResourceStats()
@@ -613,19 +663,48 @@ function ResourcesContent({ freeCourses, resources, loading, selectedResource, s
   const progressPct = total > 0 ? Math.round((completedCount / total) * 100) : 0
 
   const handleToggleComplete = async (resourceId, checked) => {
-    if (checked && selectedCourse) {
-      await onTrackComplete(resourceId, selectedCourse)
-      toast.success('Resource marked as complete! 🎉')
-    }
+    if (!checked || !selectedSourceId) return
+    const resource = resources.find(r => String(r._id) === String(resourceId))
+    const courseIdForTrack =
+      selectedSourceId === 'shared' ? (resource?.courseId || 'shared') : selectedSourceId
+    await onTrackComplete(resourceId, courseIdForTrack)
+    toast.success('Resource marked as complete! 🎉')
   }
 
   const handleResourceView = (resource) => {
     setSelectedResource(resource)
     setShowModal(true)
-    if (selectedCourse) {
-      onTrackView(resource._id, selectedCourse)
+    if (selectedSourceId) {
+      const courseIdForTrack =
+        selectedSourceId === 'shared' ? (resource?.courseId || 'shared') : selectedSourceId
+      onTrackView(resource._id, courseIdForTrack)
     }
   }
+
+  const sourceHint = () => {
+    if (!selectedSource) return null
+    if (selectedSource.type === 'shared') {
+      return {
+        className: 'bg-sky-50 border-sky-200 text-sky-800',
+        title: 'Shared Library',
+        body: 'Resources marked as shared by admins. Available to every signed-in student.',
+      }
+    }
+    if (selectedSource.type === 'free') {
+      return {
+        className: 'bg-green-50 border-green-200 text-green-800',
+        title: 'Free Course',
+        body: 'All resources in this free course are available at no cost.',
+      }
+    }
+    return {
+      className: 'bg-indigo-50 border-indigo-200 text-indigo-800',
+      title: 'Enrolled Course',
+      body: 'Resources for a course you are enrolled in.',
+    }
+  }
+
+  const hint = sourceHint()
 
   if (loading) {
     return (
@@ -647,99 +726,101 @@ function ResourcesContent({ freeCourses, resources, loading, selectedResource, s
             <span className="text-xl">☰</span>
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">🎁</span>
+            <div className="w-8 h-8 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">📚</span>
             </div>
-            <span className="font-bold text-slate-900"
-            style={{
-              fontFamily: "'Bona Nova SC', serif",
-            }}
-            >Free Resources</span>
+            <span
+              className="font-bold text-slate-900"
+              style={{ fontFamily: "'Bona Nova SC', serif" }}
+            >
+              Resources
+            </span>
           </div>
           <div className="w-8"></div>
         </div>
       </div>
 
       <div className="mb-6 lg:mb-8">
-        <h1 className="text-2xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-2"
-        style={{
-          fontFamily: "'Bona Nova SC', serif",
-        }}
+        <h1
+          className="text-2xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-2"
+          style={{ fontFamily: "'Bona Nova SC', serif" }}
         >
-          {getGreeting()}, Explore Free Resources 🎁
+          {getGreeting()}, Explore Resources
         </h1>
-        <p className="text-slate-600 text-sm lg:text-base"
-        style={{
-          fontFamily: "'Bona Nova', serif",
-        }}
+        <p
+          className="text-slate-600 text-sm lg:text-base"
+          style={{ fontFamily: "'Bona Nova', serif" }}
         >
-          Access free educational resources, videos, documents, and study materials.
+          Shared library for all signed-in students, plus free and enrolled course materials.
         </p>
       </div>
 
-      {freeCourses.length === 0 && !loading && (
+      {sources.length === 0 && (
         <div className="mb-8 p-6 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl">
           <div className="flex items-start gap-4">
-            <div className="text-2xl">🎁</div>
+            <div className="text-2xl">📚</div>
             <div className="flex-1">
-              <h3 className="font-semibold text-amber-800 mb-2"
-              style={{
-                fontFamily: "'Bona Nova SC', serif",
-              }}
-              >No Free Courses Available</h3>
-              <p className="text-amber-700 text-sm mb-4"
-              style={{
-                fontFamily: "'Bona Nova', serif",
-              }}
+              <h3
+                className="font-semibold text-amber-800 mb-2"
+                style={{ fontFamily: "'Bona Nova SC', serif" }}
               >
-                There are no free courses available at the moment. Check back later!
+                No Resources Available Yet
+              </h3>
+              <p
+                className="text-amber-700 text-sm mb-4"
+                style={{ fontFamily: "'Bona Nova', serif" }}
+              >
+                There are no shared, free, or enrolled course resources for your account right now.
               </p>
-              <a 
-                href="/courses" 
+              <a
+                href="/courses"
                 className="inline-block px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium"
-                style={{
-                  fontFamily: "'Bona Nova', serif",
-                }}
+                style={{ fontFamily: "'Bona Nova', serif" }}
               >
-                Browse All Courses
+                Browse Courses
               </a>
             </div>
           </div>
         </div>
       )}
 
-      {freeCourses.length > 0 && (
+      {sources.length > 0 && (
         <>
           <div className="mb-6 lg:mb-8">
             <div className="bg-white rounded-xl lg:rounded-2xl shadow-sm border border-slate-200 p-4 lg:p-6">
-              <h2 className="font-bold text-lg lg:text-xl text-slate-900 mb-4"
-              style={{
-                fontFamily: "'Bona Nova SC', serif",
-              }}
-              >Select Free Course</h2>
-              <select 
-                value={selectedCourse} 
-                onChange={(e) => setSelectedCourse(e.target.value)}
-                className="w-full p-3 lg:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm lg:text-base"
-                style={{
-                  fontFamily: "'Bona Nova', serif",
-                }}
+              <h2
+                className="font-bold text-lg lg:text-xl text-slate-900 mb-4"
+                style={{ fontFamily: "'Bona Nova SC', serif" }}
               >
-                {freeCourses.map((course) => (
-                  <option key={course._id} value={course._id}>
-                    🎁 {course.title} (Free)
+                Select Library
+              </h2>
+              <select
+                value={selectedSourceId}
+                onChange={(e) => setSelectedSourceId(e.target.value)}
+                className="w-full p-3 lg:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm lg:text-base"
+                style={{ fontFamily: "'Bona Nova', serif" }}
+              >
+                {sources.map((source) => (
+                  <option key={source.id} value={source.id}>
+                    {source.type === 'shared'
+                      ? `🌐 ${source.title}`
+                      : source.type === 'free'
+                        ? `🎁 ${source.title} (Free)`
+                        : `🎓 ${source.title} (Enrolled)`}
+                    {typeof source.count === 'number' ? ` — ${source.count}` : ''}
                   </option>
                 ))}
               </select>
-              <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-700"
-                style={{
-                  fontFamily: "'Bona Nova', serif",
-                }}
-                >
-                  <span className="font-semibold">🎁 Free Course:</span> All resources in this course are available to you at no cost.
-                </p>
-              </div>
+              {hint && (
+                <div className={`mt-3 p-3 border rounded-lg ${hint.className}`}>
+                  <p
+                    className="text-sm"
+                    style={{ fontFamily: "'Bona Nova', serif" }}
+                  >
+                    <span className="font-semibold">{hint.title}:</span> {hint.body}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -748,111 +829,129 @@ function ResourcesContent({ freeCourses, resources, loading, selectedResource, s
               <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 lg:gap-4 mb-4">
                 <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
                   <div className="text-center">
-                    <div className="text-lg lg:text-2xl font-bold text-slate-900"
-                    style={{
-                      fontFamily: "'Bona Nova SC', serif",
-                    }}
-                    >{stats.total}</div>
-                    <div className="text-xs lg:text-sm text-slate-600"
-                    style={{
-                      fontFamily: "'Bona Nova', serif",
-                    }}
-                    >Total</div>
+                    <div
+                      className="text-lg lg:text-2xl font-bold text-slate-900"
+                      style={{ fontFamily: "'Bona Nova SC', serif" }}
+                    >
+                      {stats.total}
+                    </div>
+                    <div
+                      className="text-xs lg:text-sm text-slate-600"
+                      style={{ fontFamily: "'Bona Nova', serif" }}
+                    >
+                      Total
+                    </div>
                   </div>
                 </div>
                 <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
                   <div className="text-center">
-                    <div className="text-lg lg:text-2xl font-bold text-green-600"
-                    style={{
-                      fontFamily: "'Bona Nova SC', serif",
-                    }}
-                    >{completedCount}</div>
-                    <div className="text-xs lg:text-sm text-slate-600"
-                    style={{
-                      fontFamily: "'Bona Nova', serif",
-                    }}
-                    >Completed</div>
+                    <div
+                      className="text-lg lg:text-2xl font-bold text-green-600"
+                      style={{ fontFamily: "'Bona Nova SC', serif" }}
+                    >
+                      {completedCount}
+                    </div>
+                    <div
+                      className="text-xs lg:text-sm text-slate-600"
+                      style={{ fontFamily: "'Bona Nova', serif" }}
+                    >
+                      Completed
+                    </div>
                   </div>
                 </div>
                 <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
                   <div className="text-center">
-                    <div className="text-lg lg:text-2xl font-bold text-sky-600"
-                    style={{
-                      fontFamily: "'Bona Nova SC', serif",
-                    }}
-                    >{viewedCount}</div>
-                    <div className="text-xs lg:text-sm text-slate-600"
-                    style={{
-                      fontFamily: "'Bona Nova', serif",
-                    }}
-                    >Viewed</div>
+                    <div
+                      className="text-lg lg:text-2xl font-bold text-sky-600"
+                      style={{ fontFamily: "'Bona Nova SC', serif" }}
+                    >
+                      {viewedCount}
+                    </div>
+                    <div
+                      className="text-xs lg:text-sm text-slate-600"
+                      style={{ fontFamily: "'Bona Nova', serif" }}
+                    >
+                      Viewed
+                    </div>
                   </div>
                 </div>
                 <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
                   <div className="text-center">
-                    <div className="text-lg lg:text-2xl font-bold text-red-600"
-                    style={{
-                      fontFamily: "'Bona Nova SC', serif",
-                    }}
-                    >{stats.video}</div>
-                    <div className="text-xs lg:text-sm text-slate-600"
-                    style={{
-                      fontFamily: "'Bona Nova', serif",
-                    }}
-                    >Videos</div>
+                    <div
+                      className="text-lg lg:text-2xl font-bold text-red-600"
+                      style={{ fontFamily: "'Bona Nova SC', serif" }}
+                    >
+                      {stats.video}
+                    </div>
+                    <div
+                      className="text-xs lg:text-sm text-slate-600"
+                      style={{ fontFamily: "'Bona Nova', serif" }}
+                    >
+                      Videos
+                    </div>
                   </div>
                 </div>
                 <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
                   <div className="text-center">
-                    <div className="text-lg lg:text-2xl font-bold text-blue-600"
-                    style={{
-                      fontFamily: "'Bona Nova SC', serif",
-                    }}
-                    >{stats.pdf}</div>
-                    <div className="text-xs lg:text-sm text-slate-600"
-                    style={{
-                      fontFamily: "'Bona Nova', serif",
-                    }}
-                    >PDFs</div>
+                    <div
+                      className="text-lg lg:text-2xl font-bold text-blue-600"
+                      style={{ fontFamily: "'Bona Nova SC', serif" }}
+                    >
+                      {stats.pdf}
+                    </div>
+                    <div
+                      className="text-xs lg:text-sm text-slate-600"
+                      style={{ fontFamily: "'Bona Nova', serif" }}
+                    >
+                      PDFs
+                    </div>
                   </div>
                 </div>
                 <div className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-slate-200">
                   <div className="text-center">
-                    <div className="text-lg lg:text-2xl font-bold text-purple-600"
-                    style={{
-                      fontFamily: "'Bona Nova SC', serif",
-                    }}
-                    >{stats.audio}</div>
-                    <div className="text-xs lg:text-sm text-slate-600"
-                    style={{
-                      fontFamily: "'Bona Nova', serif",
-                    }}
-                    >Audio</div>
+                    <div
+                      className="text-lg lg:text-2xl font-bold text-purple-600"
+                      style={{ fontFamily: "'Bona Nova SC', serif" }}
+                    >
+                      {stats.audio}
+                    </div>
+                    <div
+                      className="text-xs lg:text-sm text-slate-600"
+                      style={{ fontFamily: "'Bona Nova', serif" }}
+                    >
+                      Audio
+                    </div>
                   </div>
                 </div>
               </div>
-              
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
+
+              <div className="bg-gradient-to-r from-sky-50 to-blue-50 rounded-xl p-4 border border-sky-200">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="font-semibold text-slate-900"
-                  style={{
-                    fontFamily: "'Bona Nova SC', serif",
-                  }}
-                  >Your Progress</div>
-                  <div className="text-sm text-slate-600"
-                  style={{
-                    fontFamily: "'Bona Nova', serif",
-                  }}
-                  >{completedCount}/{total} completed</div>
+                  <div
+                    className="font-semibold text-slate-900"
+                    style={{ fontFamily: "'Bona Nova SC', serif" }}
+                  >
+                    Your Progress
+                  </div>
+                  <div
+                    className="text-sm text-slate-600"
+                    style={{ fontFamily: "'Bona Nova', serif" }}
+                  >
+                    {completedCount}/{total} completed
+                  </div>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
-                  <div className="h-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full transition-all" style={{ width: `${progressPct}%` }} />
+                  <div
+                    className="h-3 bg-gradient-to-r from-sky-500 to-blue-600 rounded-full transition-all"
+                    style={{ width: `${progressPct}%` }}
+                  />
                 </div>
-                <div className="text-right text-sm font-semibold text-green-700 mt-1"
-                style={{
-                  fontFamily: "'Bona Nova SC', serif",
-                }}
-                >{progressPct}%</div>
+                <div
+                  className="text-right text-sm font-semibold text-sky-700 mt-1"
+                  style={{ fontFamily: "'Bona Nova SC', serif" }}
+                >
+                  {progressPct}%
+                </div>
               </div>
             </div>
           )}
@@ -867,21 +966,17 @@ function ResourcesContent({ freeCourses, resources, loading, selectedResource, s
                       placeholder="Search resources..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full p-3 lg:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm lg:text-base"
-                      style={{
-                        fontFamily: "'Bona Nova', serif",
-                      }}
+                      className="w-full p-3 lg:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm lg:text-base"
+                      style={{ fontFamily: "'Bona Nova', serif" }}
                     />
                   </div>
-                  
+
                   <div className="lg:w-48">
                     <select
                       value={filter}
                       onChange={(e) => setFilter(e.target.value)}
-                      className="w-full p-3 lg:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm lg:text-base"
-                      style={{
-                        fontFamily: "'Bona Nova', serif",
-                      }}
+                      className="w-full p-3 lg:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm lg:text-base"
+                      style={{ fontFamily: "'Bona Nova', serif" }}
                     >
                       <option value="all">All Types</option>
                       <option value="video">Videos</option>
@@ -900,39 +995,43 @@ function ResourcesContent({ freeCourses, resources, loading, selectedResource, s
             {resources.length === 0 ? (
               <div className="bg-white rounded-xl lg:rounded-2xl p-8 lg:p-12 text-center border border-slate-200">
                 <div className="text-4xl lg:text-6xl mb-4">📚</div>
-                <h3 className="text-lg lg:text-xl font-semibold text-slate-900 mb-2"
-                style={{
-                  fontFamily: "'Bona Nova SC', serif",
-                }}
-                >No Resources Available</h3>
-                <p className="text-slate-600 mb-6"
-                style={{
-                  fontFamily: "'Bona Nova', serif",
-                }}
-                >This free course doesn't have any resources uploaded yet.</p>
+                <h3
+                  className="text-lg lg:text-xl font-semibold text-slate-900 mb-2"
+                  style={{ fontFamily: "'Bona Nova SC', serif" }}
+                >
+                  No Resources Available
+                </h3>
+                <p
+                  className="text-slate-600 mb-6"
+                  style={{ fontFamily: "'Bona Nova', serif" }}
+                >
+                  {selectedSource?.type === 'shared'
+                    ? 'No shared resources have been published yet.'
+                    : 'This library doesn’t have any resources uploaded yet.'}
+                </p>
               </div>
             ) : filteredResources.length === 0 ? (
               <div className="bg-white rounded-xl lg:rounded-2xl p-8 lg:p-12 text-center border border-slate-200">
                 <div className="text-4xl lg:text-6xl mb-4">🔍</div>
-                <h3 className="text-lg lg:text-xl font-semibold text-slate-900 mb-2"
-                style={{
-                  fontFamily: "'Bona Nova SC', serif",
-                }}
-                >No Resources Found</h3>
-                <p className="text-slate-600 mb-6"
-                style={{
-                  fontFamily: "'Bona Nova', serif",
-                }}
-                >No resources match your search criteria.</p>
+                <h3
+                  className="text-lg lg:text-xl font-semibold text-slate-900 mb-2"
+                  style={{ fontFamily: "'Bona Nova SC', serif" }}
+                >
+                  No Resources Found
+                </h3>
+                <p
+                  className="text-slate-600 mb-6"
+                  style={{ fontFamily: "'Bona Nova', serif" }}
+                >
+                  No resources match your search criteria.
+                </p>
                 <button
                   onClick={() => {
                     setSearchTerm('')
                     setFilter('all')
                   }}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-                  style={{
-                    fontFamily: "'Bona Nova', serif",
-                  }}
+                  className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm font-medium"
+                  style={{ fontFamily: "'Bona Nova', serif" }}
                 >
                   Clear Search
                 </button>
@@ -946,6 +1045,7 @@ function ResourcesContent({ freeCourses, resources, loading, selectedResource, s
                     tracking={trackingData[resource._id]}
                     onToggleComplete={handleToggleComplete}
                     onClick={() => handleResourceView(resource)}
+                    showCourseBadge={selectedSourceId === 'shared'}
                   />
                 ))}
               </div>
@@ -959,8 +1059,22 @@ function ResourcesContent({ freeCourses, resources, loading, selectedResource, s
               setShowModal(false)
               setSelectedResource(null)
             }}
-            onView={() => selectedResource && selectedCourse && onTrackView(selectedResource._id, selectedCourse)}
-            onComplete={(timeSpent) => selectedResource && selectedCourse && onTrackComplete(selectedResource._id, selectedCourse, timeSpent)}
+            onView={() => {
+              if (!selectedResource || !selectedSourceId) return
+              const courseIdForTrack =
+                selectedSourceId === 'shared'
+                  ? (selectedResource.courseId || 'shared')
+                  : selectedSourceId
+              onTrackView(selectedResource._id, courseIdForTrack)
+            }}
+            onComplete={(timeSpent) => {
+              if (!selectedResource || !selectedSourceId) return
+              const courseIdForTrack =
+                selectedSourceId === 'shared'
+                  ? (selectedResource.courseId || 'shared')
+                  : selectedSourceId
+              onTrackComplete(selectedResource._id, courseIdForTrack, timeSpent)
+            }}
           />
         </>
       )}
@@ -969,102 +1083,107 @@ function ResourcesContent({ freeCourses, resources, loading, selectedResource, s
 }
 
 export default function StudentResources() {
-  const { getToken } = useAuth()
-  const [freeCourses, setFreeCourses] = useState([])
-  const [resources, setResources] = useState([])
+  const { getToken, isSignedIn } = useAuth()
+  const [sources, setSources] = useState([])
+  const [shared, setShared] = useState([])
+  const [byCourse, setByCourse] = useState({})
+  const [selectedSourceId, setSelectedSourceId] = useState('shared')
   const [trackingData, setTrackingData] = useState({})
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('resources')
   const [selectedResource, setSelectedResource] = useState(null)
   const [showModal, setShowModal] = useState(false)
-  const [selectedCourse, setSelectedCourse] = useState('')
+
+  const resources = useMemo(() => {
+    if (!selectedSourceId) return []
+    if (selectedSourceId === 'shared') return shared || []
+    return byCourse[selectedSourceId] || []
+  }, [selectedSourceId, shared, byCourse])
 
   useEffect(() => {
-    loadFreeCourses()
-  }, [])
-
-  useEffect(() => {
-    if (selectedCourse) {
-      loadResources()
-      loadTracking()
+    if (!isSignedIn) {
+      setLoading(false)
+      return
     }
-  }, [selectedCourse])
+    loadLibrary()
+  }, [isSignedIn])
 
-  const loadFreeCourses = async () => {
+  useEffect(() => {
+    if (!isSignedIn || !selectedSourceId) return
+    loadTracking()
+  }, [isSignedIn, selectedSourceId, resources.length])
+
+  const loadLibrary = async () => {
     try {
+      setLoading(true)
       const token = await getToken().catch(() => undefined)
       if (!token) {
-        setLoading(false)
+        setSources([])
+        setShared([])
+        setByCourse({})
         return
       }
-      
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
-      const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
-      const response = await fetch(`${baseUrl}/free-courses`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setFreeCourses(data || [])
-        if (data.length > 0) {
-          setSelectedCourse(data[0]._id)
-        }
-      }
+
+      const data = await apiGet('/me/resource-library', token)
+      const nextSources = Array.isArray(data?.sources) ? data.sources : []
+      const nextShared = Array.isArray(data?.shared) ? data.shared : []
+      const nextByCourse = data?.byCourse && typeof data.byCourse === 'object' ? data.byCourse : {}
+
+      setSources(nextSources)
+      setShared(nextShared)
+      setByCourse(nextByCourse)
+
+      // Prefer Shared Library when it has items; otherwise first non-empty source; else first source
+      const preferred =
+        nextSources.find(s => s.id === 'shared' && (s.count > 0 || nextShared.length > 0)) ||
+        nextSources.find(s => (s.count || 0) > 0) ||
+        nextSources[0]
+
+      setSelectedSourceId(preferred?.id || 'shared')
     } catch (error) {
-      console.error('Error loading free courses:', error)
+      console.error('Error loading resource library:', error)
+      toast.error(error.message || 'Failed to load resources')
+      setSources([])
+      setShared([])
+      setByCourse({})
     } finally {
       setLoading(false)
     }
   }
 
-  const loadResources = async () => {
-    if (!selectedCourse) return
-    
-    try {
-      const token = await getToken().catch(() => undefined)
-      if (!token) return
-      
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
-      const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
-      const url = new URL(`${baseUrl}/me/resources/${selectedCourse}`)
-      const headers = { Authorization: `Bearer ${token}` }
-      
-      const res = await fetch(url.toString(), { headers })
-      
-      if (res.ok) {
-        const data = await res.json()
-        setResources(data || [])
-      } else {
-        setResources([])
-      }
-    } catch (error) {
-      console.error('Error loading resources:', error)
-      setResources([])
-    }
-  }
-
   const loadTracking = async () => {
-    if (!selectedCourse) return
-    
     try {
       const token = await getToken().catch(() => undefined)
       if (!token) return
-      
+
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
       const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
-      const response = await fetch(`${baseUrl}/free-resources/tracking?courseId=${selectedCourse}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        const trackingMap = {}
-        data.forEach(t => {
-          trackingMap[t.resourceId] = t
-        })
-        setTrackingData(trackingMap)
+      const params = new URLSearchParams()
+      // For a course source, filter by courseId; for shared, load all tracking and filter client-side
+      if (selectedSourceId && selectedSourceId !== 'shared') {
+        params.set('courseId', selectedSourceId)
       }
+
+      const response = await fetch(
+        `${baseUrl}/free-resources/tracking${params.toString() ? `?${params}` : ''}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+
+      if (!response.ok) return
+      const data = await response.json()
+      const trackingMap = {}
+      const resourceIdSet = new Set((resources || []).map(r => String(r._id)))
+
+      for (const t of data || []) {
+        const rid = String(t.resourceId || '')
+        if (!rid) continue
+        if (selectedSourceId === 'shared' && resourceIdSet.size > 0 && !resourceIdSet.has(rid)) {
+          continue
+        }
+        trackingMap[rid] = t
+      }
+      setTrackingData(trackingMap)
     } catch (error) {
       console.error('Error loading tracking:', error)
     }
@@ -1074,25 +1193,25 @@ export default function StudentResources() {
     try {
       const token = await getToken().catch(() => undefined)
       if (!token) return
-      
+
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
       const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
       await fetch(`${baseUrl}/free-resources/track/view`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ resourceId, courseId })
+        body: JSON.stringify({ resourceId, courseId: courseId || 'shared' }),
       })
-      
+
       setTrackingData(prev => ({
         ...prev,
         [resourceId]: {
           ...prev[resourceId],
           viewed: true,
-          viewedAt: new Date()
-        }
+          viewedAt: new Date(),
+        },
       }))
     } catch (error) {
       console.error('Error tracking view:', error)
@@ -1103,26 +1222,26 @@ export default function StudentResources() {
     try {
       const token = await getToken().catch(() => undefined)
       if (!token) return
-      
+
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
       const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`
       await fetch(`${baseUrl}/free-resources/track/complete`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ resourceId, courseId, timeSpent })
+        body: JSON.stringify({ resourceId, courseId: courseId || 'shared', timeSpent }),
       })
-      
+
       setTrackingData(prev => ({
         ...prev,
         [resourceId]: {
           ...prev[resourceId],
           completed: true,
           completedAt: new Date(),
-          timeSpent: (prev[resourceId]?.timeSpent || 0) + timeSpent
-        }
+          timeSpent: (prev[resourceId]?.timeSpent || 0) + timeSpent,
+        },
       }))
     } catch (error) {
       console.error('Error tracking completion:', error)
@@ -1132,35 +1251,36 @@ export default function StudentResources() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-pink-50">
       <StudentNavbar />
-      
+
       <div className="flex min-h-screen pt-20">
-        <StudentSidebar 
+        <StudentSidebar
           activeTab={activeTab}
           onTabChange={setActiveTab}
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
         />
-        
+
         <div className="flex-1 overflow-y-auto pb-16 md:pb-0 md:ml-64">
           <SignedOut>
             <div className="p-6 text-center">
               <SignInButton>
-                <button className="px-6 py-3 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-colors"
-                style={{
-                  fontFamily: "'Bona Nova', serif",
-                }}
+                <button
+                  className="px-6 py-3 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-colors"
+                  style={{ fontFamily: "'Bona Nova', serif" }}
                 >
-                  Sign in to access free resources
+                  Sign in to access resources
                 </button>
               </SignInButton>
             </div>
           </SignedOut>
-          
+
           <SignedIn>
             <ResourcesContent
-              freeCourses={freeCourses}
+              sources={sources}
               resources={resources}
               loading={loading}
+              selectedSourceId={selectedSourceId}
+              setSelectedSourceId={setSelectedSourceId}
               selectedResource={selectedResource}
               setSelectedResource={setSelectedResource}
               showModal={showModal}
@@ -1173,7 +1293,7 @@ export default function StudentResources() {
           </SignedIn>
         </div>
       </div>
-      
+
       <StudentFooter />
     </div>
   )

@@ -1,55 +1,76 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAuth, SignedIn, SignedOut, SignInButton } from '@clerk/clerk-react'
 import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api'
 import toast from 'react-hot-toast'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
 
+const EMPTY_FORM = {
+  name: '',
+  email: '',
+  courseId: '',
+  approved: true,
+  instrument: '',
+}
+
 export default function AdminManualEnrollments() {
-  const { getToken } = useAuth()
+  const { getToken, isSignedIn } = useAuth()
   const [enrollments, setEnrollments] = useState([])
   const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
   const [editingId, setEditingId] = useState(null)
   const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    courseId: '',
-    approved: true,
-    instrument: ''
-  })
+  const [formData, setFormData] = useState({ ...EMPTY_FORM })
+
+  const courseTitleById = useMemo(() => {
+    const map = {}
+    for (const c of courses || []) {
+      const id = String(c?._id || c?.id || '')
+      if (id) map[id] = c.title || 'Untitled Course'
+    }
+    return map
+  }, [courses])
 
   const loadData = async () => {
     try {
       setLoading(true)
       const token = await getToken()
-      const headers = { Authorization: `Bearer ${token}` }
-
-      // Load manual enrollments
-      const resEnrollments = await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/enrollments/manual`, { headers })
-      if (resEnrollments.ok) {
-        const data = await resEnrollments.json()
-        setEnrollments(data)
+      if (!token) {
+        toast.error('Please sign in to manage enrollments')
+        setEnrollments([])
+        return
       }
 
-      // Load courses
-      const resCourses = await fetch(`${import.meta.env.VITE_API_BASE_URL}/courses`, { headers })
-      if (resCourses.ok) {
-        const coursesData = await resCourses.json()
-        setCourses(coursesData)
-      }
+      const [enrollmentsData, coursesData] = await Promise.all([
+        apiGet('/admin/enrollments/manual', token),
+        apiGet('/courses', token),
+      ])
+
+      setEnrollments(Array.isArray(enrollmentsData) ? enrollmentsData : [])
+      setCourses(Array.isArray(coursesData) ? coursesData : [])
     } catch (e) {
       console.error('Failed to load data', e)
-      toast.error('Failed to load enrollments')
+      toast.error(e.message || 'Failed to load enrollments')
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
+    if (!isSignedIn) {
+      setLoading(false)
+      return
+    }
     loadData()
-  }, [])
+  }, [isSignedIn])
+
+  const resetForm = () => {
+    setShowForm(false)
+    setEditingId(null)
+    setFormData({ ...EMPTY_FORM })
+  }
 
   const handleEdit = (enrollment) => {
     setFormData({
@@ -57,97 +78,137 @@ export default function AdminManualEnrollments() {
       email: enrollment.email || '',
       courseId: enrollment.courseId || '',
       approved: enrollment.approved !== undefined ? enrollment.approved : true,
-      instrument: enrollment.instrument || ''
+      instrument: enrollment.instrument || '',
     })
     setEditingId(enrollment._id)
     setShowForm(true)
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this enrollment? This action cannot be undone.')) {
+    if (
+      !confirm(
+        'Delete this enrollment? It will be moved to Deleted Students and can be restored later.'
+      )
+    ) {
       return
     }
 
     try {
+      setDeletingId(id)
       const token = await getToken()
       await apiDelete(`/admin/enrollments/${id}`, token)
-      toast.success('Enrollment deleted successfully')
-      loadData()
+      toast.success('Enrollment moved to Deleted Students')
+      await loadData()
     } catch (error) {
       console.error('Failed to delete enrollment:', error)
-      toast.error('Failed to delete enrollment')
+      toast.error(error.message || 'Failed to delete enrollment')
+    } finally {
+      setDeletingId(null)
     }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (saving) return
+
     try {
+      setSaving(true)
       const token = await getToken()
-      
+
       if (editingId) {
-        // Update existing enrollment
-        await apiPut(`/admin/enrollments/${editingId}`, formData, token)
+        await apiPut(
+          `/admin/enrollments/${editingId}`,
+          {
+            name: formData.name,
+            email: formData.email,
+            courseId: formData.courseId,
+            instrument: formData.instrument,
+            approved: formData.approved,
+          },
+          token
+        )
         toast.success('Enrollment updated successfully')
       } else {
-        // Create new manual enrollment
-        await apiPost('/admin/enrollments/manual', {
-          email: formData.email,
-          courseId: formData.courseId,
-          name: formData.name
-        }, token)
-        toast.success('Enrollment created successfully')
+        const result = await apiPost(
+          '/admin/enrollments/manual',
+          {
+            email: formData.email,
+            courseId: formData.courseId,
+            name: formData.name,
+            instrument: formData.instrument,
+          },
+          token
+        )
+        toast.success(result?.message || 'Enrollment created successfully')
       }
-      
-      setShowForm(false)
-      setEditingId(null)
-      setFormData({ name: '', email: '', courseId: '', approved: true, instrument: '' })
-      loadData()
+
+      resetForm()
+      await loadData()
     } catch (error) {
       console.error('Failed to save enrollment:', error)
       toast.error(error.message || 'Failed to save enrollment')
+    } finally {
+      setSaving(false)
     }
-  }
-
-  const handleCancel = () => {
-    setShowForm(false)
-    setEditingId(null)
-    setFormData({ name: '', email: '', courseId: '', approved: true, instrument: '' })
   }
 
   const getCourseName = (courseId) => {
     if (!courseId) return 'N/A'
-    const course = courses.find(c => c._id === courseId)
-    return course ? course.title : 'Unknown Course'
+    return courseTitleById[String(courseId)] || 'Unknown Course'
+  }
+
+  const statusLabel = (enrollment) => {
+    if (enrollment.status === 'deleted') return 'Deleted'
+    if (enrollment.approved || enrollment.status === 'approved') return 'Approved'
+    return 'Pending'
+  }
+
+  const statusClass = (enrollment) => {
+    const label = statusLabel(enrollment)
+    if (label === 'Approved') return 'bg-green-100 text-green-800'
+    if (label === 'Deleted') return 'bg-red-100 text-red-800'
+    return 'bg-yellow-100 text-yellow-800'
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-pink-50">
       <Navbar />
-      
+
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
           <div>
             <h1 className="text-3xl font-extrabold text-slate-900">Manual Enrollments</h1>
             <p className="text-slate-600 mt-1">Manage manually created student enrollments</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <button
               onClick={() => {
                 setEditingId(null)
-                setFormData({ name: '', email: '', courseId: '', approved: true, instrument: '' })
+                setFormData({ ...EMPTY_FORM })
                 setShowForm(true)
               }}
-              className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm font-medium"
+              disabled={saving}
+              className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm font-medium disabled:opacity-50"
             >
               + Add Enrollment
             </button>
             <button
               onClick={loadData}
-              className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-sm font-medium"
+              disabled={loading || saving}
+              className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-sm font-medium disabled:opacity-50"
             >
               Refresh
             </button>
-            <a href="/admin" className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-sm font-medium">
+            <a
+              href="/admin/deleted-students"
+              className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-sm font-medium"
+            >
+              Deleted Students
+            </a>
+            <a
+              href="/admin"
+              className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-sm font-medium"
+            >
               Admin Panel
             </a>
           </div>
@@ -162,7 +223,6 @@ export default function AdminManualEnrollments() {
         </SignedOut>
 
         <SignedIn>
-          {/* Add/Edit Form */}
           {showForm && (
             <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 mb-6">
               <h2 className="text-xl font-bold text-slate-900 mb-4">
@@ -180,7 +240,13 @@ export default function AdminManualEnrollments() {
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                       required
+                      disabled={saving}
                     />
+                    {!editingId && (
+                      <p className="text-xs text-slate-500 mt-1">
+                        If this email already has a Clerk account, the Clerk name may be used.
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -192,6 +258,7 @@ export default function AdminManualEnrollments() {
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                       required
+                      disabled={saving}
                     />
                   </div>
                   <div>
@@ -203,10 +270,11 @@ export default function AdminManualEnrollments() {
                       onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
                       className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                       required
+                      disabled={saving}
                     >
                       <option value="">Select a course</option>
-                      {courses.map(course => (
-                        <option key={course._id} value={course._id}>
+                      {courses.map((course) => (
+                        <option key={course._id} value={String(course._id)}>
                           {course.title}
                         </option>
                       ))}
@@ -222,6 +290,7 @@ export default function AdminManualEnrollments() {
                       onChange={(e) => setFormData({ ...formData, instrument: e.target.value })}
                       className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                       placeholder="e.g., Guitar, Piano"
+                      disabled={saving}
                     />
                   </div>
                   {editingId && (
@@ -232,6 +301,7 @@ export default function AdminManualEnrollments() {
                         checked={formData.approved}
                         onChange={(e) => setFormData({ ...formData, approved: e.target.checked })}
                         className="w-4 h-4 text-sky-600 border-slate-300 rounded focus:ring-sky-500"
+                        disabled={saving}
                       />
                       <label htmlFor="approved" className="ml-2 text-sm font-medium text-slate-700">
                         Approved
@@ -242,14 +312,22 @@ export default function AdminManualEnrollments() {
                 <div className="flex gap-3">
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors font-medium"
+                    disabled={saving}
+                    className="px-6 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors font-medium disabled:opacity-50"
                   >
-                    {editingId ? 'Update' : 'Create'} Enrollment
+                    {saving
+                      ? editingId
+                        ? 'Updating…'
+                        : 'Creating…'
+                      : editingId
+                        ? 'Update Enrollment'
+                        : 'Create Enrollment'}
                   </button>
                   <button
                     type="button"
-                    onClick={handleCancel}
-                    className="px-6 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors font-medium"
+                    onClick={resetForm}
+                    disabled={saving}
+                    className="px-6 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors font-medium disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -258,7 +336,6 @@ export default function AdminManualEnrollments() {
             </div>
           )}
 
-          {/* Enrollments Table */}
           <div className="bg-white rounded-2xl shadow border border-slate-200 overflow-hidden">
             <div className="p-6 border-b border-slate-200">
               <h2 className="font-bold text-lg text-slate-900">Manual Enrollments</h2>
@@ -271,7 +348,7 @@ export default function AdminManualEnrollments() {
               </div>
             ) : enrollments.length === 0 ? (
               <div className="p-8 text-center text-slate-600">
-                No manual enrollments found. Click "Add Enrollment" to create one.
+                No manual enrollments found. Click &quot;Add Enrollment&quot; to create one.
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -334,31 +411,31 @@ export default function AdminManualEnrollments() {
                         </td>
                         <td className="px-6 py-3">
                           <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              enrollment.approved
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-yellow-100 text-yellow-800'
-                            }`}
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass(enrollment)}`}
                           >
-                            {enrollment.approved ? 'Approved' : 'Pending'}
+                            {statusLabel(enrollment)}
                           </span>
                         </td>
                         <td className="px-6 py-3 text-slate-600 text-sm">
-                          {new Date(enrollment.createdAt).toLocaleDateString()}
+                          {enrollment.createdAt
+                            ? new Date(enrollment.createdAt).toLocaleDateString()
+                            : '-'}
                         </td>
                         <td className="px-6 py-3">
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleEdit(enrollment)}
-                              className="px-3 py-1 bg-sky-100 text-sky-700 rounded hover:bg-sky-200 transition-colors text-sm font-medium"
+                              disabled={saving || deletingId === enrollment._id}
+                              className="px-3 py-1 bg-sky-100 text-sky-700 rounded hover:bg-sky-200 transition-colors text-sm font-medium disabled:opacity-50"
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => handleDelete(enrollment._id)}
-                              className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm font-medium"
+                              disabled={saving || deletingId === enrollment._id}
+                              className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm font-medium disabled:opacity-50"
                             >
-                              Delete
+                              {deletingId === enrollment._id ? 'Deleting…' : 'Delete'}
                             </button>
                           </div>
                         </td>
@@ -376,4 +453,3 @@ export default function AdminManualEnrollments() {
     </div>
   )
 }
-

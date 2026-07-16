@@ -8,6 +8,18 @@ import StudentNavbar from '../components/StudentNavbar.jsx'
 import StudentFooter from '../components/StudentFooter.jsx'
 import Navbar from '../components/Navbar.jsx'
 
+function courseIdOf(it) {
+  return String(it?.courseId || it?.course?._id || '').trim()
+}
+
+function enrollmentKey(it) {
+  return String(it?.enrollmentId || it?._id || courseIdOf(it))
+}
+
+function isCourseUnavailable(it) {
+  return Boolean(it?.courseMissing || it?.course?.unavailable)
+}
+
 function DashboardContent({ activeTab, items, pending, loading, onMenuClick, schedules, attendanceSummary, courseProgress, courseTokens }) {
   const [nowTick, setNowTick] = useState(() => Date.now())
 
@@ -82,7 +94,7 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
         </div>
 
         {/* Tokens Table */}
-        {items.filter(it => it.course && it.course._id).length > 0 ? (
+        {items.filter(it => courseIdOf(it)).length > 0 ? (
           <div className="bg-white rounded-xl lg:rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -121,9 +133,9 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {items.filter(it => it.course && it.course._id).map((it) => {
-                    const courseIdStr = String(it.course._id)
-                    const tokenData = courseTokens[courseIdStr] || courseTokens[it.course._id]
+                  {items.filter(it => courseIdOf(it)).map((it) => {
+                    const courseIdStr = courseIdOf(it)
+                    const tokenData = courseTokens[courseIdStr]
                     const tokens = tokenData ? {
                       totalTokens: tokenData.totalTokens || 4,
                       remainingTokens: tokenData.remainingTokens || 4,
@@ -136,7 +148,7 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
                     const statusText = tokens.remainingTokens === 0 ? 'Exhausted' : tokens.remainingTokens <= 1 ? 'Low' : 'Good'
                     
                     return (
-                      <tr key={it.course._id} className="hover:bg-slate-50 transition-colors">
+                      <tr key={enrollmentKey(it)} className="hover:bg-slate-50 transition-colors">
                         <td className="px-4 py-4">
                           <div className="font-semibold text-slate-900"
                           style={{
@@ -185,9 +197,9 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
             <div className="bg-gradient-to-r from-sky-50 to-blue-50 px-4 lg:px-6 py-4 border-t border-slate-200">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {(() => {
-                  const allTokens = items.filter(it => it.course && it.course._id).map(it => {
-                    const courseIdStr = String(it.course._id)
-                    const tokenData = courseTokens[courseIdStr] || courseTokens[it.course._id]
+                  const allTokens = items.filter(it => courseIdOf(it)).map(it => {
+                    const courseIdStr = courseIdOf(it)
+                    const tokenData = courseTokens[courseIdStr]
                     return tokenData ? {
                       totalTokens: tokenData.totalTokens || 4,
                       remainingTokens: tokenData.remainingTokens || 4,
@@ -303,15 +315,23 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
         </div>
 
         {/* Enrolled Courses List */}
-        {items.filter(it => it.course && it.course._id).length > 0 ? (
+        {items.filter(it => courseIdOf(it)).length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-            {items.filter(it => it.course && it.course._id).map((it) => {
-              const prog = courseProgress[it.course._id] || { pct: 0, completed: 0, total: 0 }
+            {items.filter(it => courseIdOf(it)).map((it) => {
+              const cid = courseIdOf(it)
+              const unavailable = isCourseUnavailable(it)
+              const prog = courseProgress[cid] || { pct: 0, completed: 0, total: 0 }
+              const Wrapper = unavailable ? 'div' : 'a'
+              const wrapperProps = unavailable
+                ? { className: 'group bg-white rounded-xl lg:rounded-2xl shadow-sm border border-amber-200 overflow-hidden opacity-90' }
+                : {
+                    href: `/dashboard/course/${cid}`,
+                    className: 'group bg-white rounded-xl lg:rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-200',
+                  }
               return (
-                <a 
-                  key={it.course._id} 
-                  href={`/dashboard/course/${it.course._id}`}
-                  className="group bg-white rounded-xl lg:rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-200"
+                <Wrapper
+                  key={enrollmentKey(it)}
+                  {...wrapperProps}
                 >
                   <div className="relative">
                     <img 
@@ -319,12 +339,12 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
                       className="h-40 lg:h-48 w-full object-cover group-hover:scale-105 transition-transform duration-200" 
                       alt={it.course.title}
                     />
-                    <div className="absolute top-3 right-3 lg:top-4 lg:right-4 bg-green-500 text-white px-2 py-1 lg:px-3 lg:py-1 rounded-full text-xs font-medium"
+                    <div className={`absolute top-3 right-3 lg:top-4 lg:right-4 text-white px-2 py-1 lg:px-3 lg:py-1 rounded-full text-xs font-medium ${unavailable ? 'bg-amber-500' : 'bg-green-500'}`}
                     style={{
                       fontFamily: 'Bona Nova, serif',
                     }}
                     >
-                      Enrolled
+                      {unavailable ? 'Unavailable' : 'Enrolled'}
                     </div>
                   </div>
                   <div className="p-4 lg:p-6">
@@ -340,8 +360,11 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
                       fontFamily: 'Bona Nova, serif',
                     }}
                     >
-                      {it.course.description || 'Continue your musical journey with this course.'}
+                      {unavailable
+                        ? (it.course.description || 'This course could not be loaded.')
+                        : (it.course.description || 'Continue your musical journey with this course.')}
                     </p>
+                    {!unavailable && (
                     <div className="mb-3"
                     style={{
                       fontFamily: 'Bona Nova, serif',
@@ -361,12 +384,13 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
                         {prog.completed} of {prog.total} lessons completed
                       </div>
                     </div>
+                    )}
                     <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                      <span className="text-xs lg:text-sm text-slate-500">Click to continue</span>
-                      <span className="text-sky-600 group-hover:text-sky-700">→</span>
+                      <span className="text-xs lg:text-sm text-slate-500">{unavailable ? 'Contact admin for help' : 'Click to continue'}</span>
+                      {!unavailable && <span className="text-sky-600 group-hover:text-sky-700">→</span>}
                     </div>
                   </div>
-                </a>
+                </Wrapper>
               )
             })}
           </div>
@@ -522,7 +546,7 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
       </div>
 
       {/* Course Progress */}
-      {items.filter(it => it.course && it.course._id).length > 0 && (
+      {items.filter(it => courseIdOf(it)).length > 0 && (
         <div className="mb-6 lg:mb-8">
           <h2 className="text-lg lg:text-xl font-bold text-slate-900 mb-4"
           style={{
@@ -530,35 +554,37 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
           }}
           >Course Progress</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-            {items.filter(it => it.course && it.course._id).map((it) => {
-              const prog = courseProgress[it.course._id] || { pct: 0, completed: 0, total: 0 }
+            {items.filter(it => courseIdOf(it)).map((it) => {
+              const cid = courseIdOf(it)
+              const unavailable = isCourseUnavailable(it)
+              const prog = courseProgress[cid] || { pct: 0, completed: 0, total: 0 }
               const isComplete = prog.pct === 100
-              // Use token data directly from API - ensure we have the correct structure
-              // Try both string and object ID formats
-              const courseIdStr = String(it.course._id)
-              const tokenData = courseTokens[courseIdStr] || courseTokens[it.course._id]
+              const courseIdStr = cid
+              const tokenData = courseTokens[courseIdStr] || courseTokens[cid]
               const tokens = tokenData ? {
                 totalTokens: tokenData.totalTokens || 4,
                 remainingTokens: tokenData.remainingTokens || 4,
                 waivedTokens: tokenData.waivedTokens || 0,
                 manualAdjustment: tokenData.manualAdjustment || 0
               } : { remainingTokens: 4, totalTokens: 4, waivedTokens: 0, manualAdjustment: 0 }
-              console.log('Course Progress - Course:', it.course.title, 'CourseId:', courseIdStr, 'TokenData:', tokenData, 'Tokens:', tokens)
               const tokenPercentage = tokens.totalTokens > 0 ? Math.round((tokens.remainingTokens / tokens.totalTokens) * 100) : 0
-              return (
-                <a 
-                  key={it.course._id} 
-                  href={`/dashboard/course/${it.course._id}`}
-                  className="group bg-white rounded-xl lg:rounded-2xl p-4 lg:p-6 shadow-sm border border-slate-200 hover:shadow-md hover:border-sky-300 transition-all duration-200"
-                >
+              const cardClass = unavailable
+                ? 'group bg-white rounded-xl lg:rounded-2xl p-4 lg:p-6 shadow-sm border border-amber-200 opacity-90'
+                : 'group bg-white rounded-xl lg:rounded-2xl p-4 lg:p-6 shadow-sm border border-slate-200 hover:shadow-md hover:border-sky-300 transition-all duration-200'
+              const inner = (
+                <>
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-semibold text-slate-900 text-sm lg:text-base truncate group-hover:text-sky-700 transition-colors"
                     style={{
                       fontFamily: 'Bona Nova SC, serif',
                     }}
-                    >{it.course.title}</h3>
-                    <span className="text-xs text-slate-600">{prog.completed}/{prog.total}</span>
+                    >{it.course?.title || 'Course'}</h3>
+                    <span className="text-xs text-slate-600">{unavailable ? '—' : `${prog.completed}/${prog.total}`}</span>
                   </div>
+                  {unavailable ? (
+                    <p className="text-xs text-amber-700">Course unavailable — contact admin if this looks wrong.</p>
+                  ) : (
+                    <>
                   <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden mb-3">
                     <div 
                       className="h-3 bg-gradient-to-r from-sky-500 to-blue-600 rounded-full transition-all duration-500" 
@@ -603,7 +629,14 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
                       </div>
                     )}
                   </div>
-                </a>
+                    </>
+                  )}
+                </>
+              )
+              return unavailable ? (
+                <div key={enrollmentKey(it)} className={cardClass}>{inner}</div>
+              ) : (
+                <a key={enrollmentKey(it)} href={`/dashboard/course/${cid}`} className={cardClass}>{inner}</a>
               )
             })}
           </div>
@@ -698,7 +731,8 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
 
             // Get course names from items
             const getCourseName = (courseId) => {
-              const enrollment = items.find(it => it.course && it.course._id === courseId)
+              const id = String(courseId || '')
+              const enrollment = items.find(it => courseIdOf(it) === id)
               return enrollment?.course?.title || 'Unknown Course'
             }
 
@@ -976,29 +1010,32 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
           fontFamily: 'Bona Nova SC, serif',
         }}
         >My Enrolled Courses</h2>
-        {items.filter(it => it.course && it.course._id).length > 0 ? (
+        {items.filter(it => courseIdOf(it)).length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-            {items.filter(it => it.course && it.course._id).map((it) => (
-              <a key={it.course._id} href={`/dashboard/course/${it.course._id}`} className="group bg-white rounded-xl lg:rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-200">
+            {items.filter(it => courseIdOf(it)).map((it) => {
+              const cid = courseIdOf(it)
+              const unavailable = isCourseUnavailable(it)
+              const cardClass = unavailable
+                ? 'group bg-white rounded-xl lg:rounded-2xl shadow-sm border border-amber-200 overflow-hidden opacity-90'
+                : 'group bg-white rounded-xl lg:rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-200'
+              const body = (
+                <>
                 <div className="relative"
                 style={{
                   fontFamily: 'Bona Nova, serif',
                 }}
                 >
                   <img 
-                    src={it.course.thumbnailPath || it.course.image || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=400&auto=format&fit=crop'} 
+                    src={it.course?.thumbnailPath || it.course?.image || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=400&auto=format&fit=crop'} 
                     className="h-40 lg:h-48 w-full object-cover group-hover:scale-105 transition-transform duration-200" 
-                    alt={it.course.title}
-                    style={{
-                      fontFamily: 'Bona Nova, serif',
-                    }}
+                    alt={it.course?.title || 'Course'}
                   />
-                  <div className="absolute top-3 right-3 lg:top-4 lg:right-4 bg-green-500 text-white px-2 py-1 lg:px-3 lg:py-1 rounded-full text-xs font-medium"
+                  <div className={`absolute top-3 right-3 lg:top-4 lg:right-4 text-white px-2 py-1 lg:px-3 lg:py-1 rounded-full text-xs font-medium ${unavailable ? 'bg-amber-500' : 'bg-green-500'}`}
                   style={{
                     fontFamily: 'Bona Nova, serif',
                   }}
                   >
-                    Enrolled
+                    {unavailable ? 'Unavailable' : 'Enrolled'}
                   </div>
                 </div>
                 <div className="p-4 lg:p-6"
@@ -1007,26 +1044,32 @@ function DashboardContent({ activeTab, items, pending, loading, onMenuClick, sch
                 }}
                 >
                   <h3 className="font-bold text-slate-900 mb-2 group-hover:text-sky-700 transition-colors text-sm lg:text-base">
-                    {it.course.title}
+                    {it.course?.title || 'Course'}
                   </h3>
                   <p className="text-xs lg:text-sm text-slate-600 mb-4 line-clamp-2">
-                    {it.course.description || 'Continue your musical journey with this course.'}
+                    {unavailable
+                      ? (it.course?.description || 'This course could not be loaded.')
+                      : (it.course?.description || 'Continue your musical journey with this course.')}
                   </p>
                   <div className="flex items-center justify-between"
                   style={{
                     fontFamily: 'Bona Nova, serif',
                   }}
                   >
-                    <span className="text-xs lg:text-sm text-slate-500"
-                    style={{
-                      fontFamily: 'Bona Nova, serif',
-                    }}
-                    >Click to continue</span>
-                    <span className="text-sky-600 group-hover:text-sky-700">→</span>
+                    <span className="text-xs lg:text-sm text-slate-500">
+                      {unavailable ? 'Contact admin for help' : 'Click to continue'}
+                    </span>
+                    {!unavailable && <span className="text-sky-600 group-hover:text-sky-700">→</span>}
                   </div>
                 </div>
-              </a>
-            ))}
+                </>
+              )
+              return unavailable ? (
+                <div key={enrollmentKey(it)} className={cardClass}>{body}</div>
+              ) : (
+                <a key={enrollmentKey(it)} href={`/dashboard/course/${cid}`} className={cardClass}>{body}</a>
+              )
+            })}
           </div>
         ) : (
           <div className="bg-white rounded-xl lg:rounded-2xl p-8 lg:p-12 text-center border border-slate-200"
@@ -1611,12 +1654,12 @@ export default function StudentDashboard() {
     
     // Process each enrollment sequentially to avoid race conditions
     for (const it of enrollmentsData) {
-      if (!it.course || !it.course._id) {
-        console.warn('refreshTokens: Skipping enrollment without course:', it)
+      const courseId = courseIdOf(it)
+      if (!courseId || isCourseUnavailable(it)) {
+        console.warn('refreshTokens: Skipping enrollment without usable course:', it?.enrollmentId)
         continue
       }
-      
-      const courseId = String(it.course._id) // Ensure it's a string
+
       try {
         // Use same simple pattern as admin - no cache-busting params
         const tokenUrl = `${import.meta.env.VITE_API_BASE_URL}/me/tokens/${courseId}?year=${year}&month=${month}`
@@ -1695,8 +1738,13 @@ export default function StudentDashboard() {
         const token = await getToken().catch(() => undefined)
         const user = window.Clerk?.user
         const userHint = user?.id
+        const emailHint =
+          user?.primaryEmailAddress?.emailAddress ||
+          user?.emailAddresses?.[0]?.emailAddress ||
+          ''
         const url = new URL(`${import.meta.env.VITE_API_BASE_URL}/me/enrollments`)
         if (!token && userHint) url.searchParams.set('userHint', userHint)
+        if (emailHint) url.searchParams.set('emailHint', emailHint)
         const headers = token ? { Authorization: `Bearer ${token}` } : {}
         const res = await fetch(url.toString(), { headers })
         let enrollmentsData = []
@@ -1706,12 +1754,14 @@ export default function StudentDashboard() {
         }
         const urlP = new URL(`${import.meta.env.VITE_API_BASE_URL}/me/enrollments/pending`)
         if (!token && userHint) urlP.searchParams.set('userHint', userHint)
+        if (emailHint) urlP.searchParams.set('emailHint', emailHint)
         const resP = await fetch(urlP.toString(), { headers })
         if (resP.ok) setPending(await resP.json())
         // Load upcoming schedules (this week)
         // Backend still fetches both types, but UI only displays individual schedules
         const urlS = new URL(`${import.meta.env.VITE_API_BASE_URL}/me/schedules`)
         if (!token && userHint) urlS.searchParams.set('userHint', userHint)
+        if (emailHint) urlS.searchParams.set('emailHint', emailHint)
         const resS = await fetch(urlS.toString(), { headers })
         if (resS.ok) {
           const all = await resS.json()
@@ -1741,12 +1791,12 @@ export default function StudentDashboard() {
         let total=0, present=0, absent=0, waived=0
         if (enrollmentsData.length > 0) {
           for (const it of enrollmentsData) {
-            // Skip if course is missing (might have been deleted)
-            if (!it.course || !it.course._id) {
-              console.warn('Skipping enrollment with missing course:', it.enrollmentId)
+            const cid = courseIdOf(it)
+            if (!cid || isCourseUnavailable(it)) {
+              console.warn('Skipping attendance for unavailable course:', it.enrollmentId)
               continue
             }
-            const attUrl = new URL(`${import.meta.env.VITE_API_BASE_URL}/me/attendance/${it.course._id}`)
+            const attUrl = new URL(`${import.meta.env.VITE_API_BASE_URL}/me/attendance/${cid}`)
             if (!token && userHint) attUrl.searchParams.set('userHint', userHint)
             attUrl.searchParams.set('month', month); attUrl.searchParams.set('year', year)
             const r = await fetch(attUrl.toString(), { headers })
@@ -1765,15 +1815,15 @@ export default function StudentDashboard() {
         if (enrollmentsData.length > 0) {
           const progressMap = {}
           for (const it of enrollmentsData) {
-            // Skip if course is missing (might have been deleted)
-            if (!it.course || !it.course._id) {
-              console.warn('Skipping enrollment with missing course for progress:', it.enrollmentId)
+            const cid = courseIdOf(it)
+            if (!cid || isCourseUnavailable(it)) {
+              console.warn('Skipping progress for unavailable course:', it.enrollmentId)
               continue
             }
             try {
               const tokenAuth = token
               if (!tokenAuth) continue
-              const pr = await fetch(`${import.meta.env.VITE_API_BASE_URL}/courses/${it.course._id}/progress`, { headers })
+              const pr = await fetch(`${import.meta.env.VITE_API_BASE_URL}/courses/${cid}/progress`, { headers })
               if (pr.ok) {
                 const data = await pr.json()
                 // Count lessons in course (support both modules and chapters structure)
@@ -1798,10 +1848,10 @@ export default function StudentDashboard() {
                   Object.values(lessonMap).forEach(v => { if (v.completed) completed++ })
                 })
                 const pct = totalLessons>0 ? Math.round((completed/totalLessons)*100) : 0
-                progressMap[it.course._id] = { pct, completed, total: totalLessons }
+                progressMap[cid] = { pct, completed, total: totalLessons }
               }
             } catch (err) {
-              console.error('Error loading progress for course:', it.course._id, err)
+              console.error('Error loading progress for course:', cid, err)
             }
           }
           setCourseProgress(progressMap)
