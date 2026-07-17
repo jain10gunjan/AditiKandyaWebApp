@@ -20,6 +20,6 @@ const TokenSchema = new mongoose.Schema(
 TokenSchema.index({ studentEmail: 1, courseId: 1, year: 1, month: 1 }, { unique: true })
 TokenSchema.index({ studentId: 1, courseId: 1, year: 1, month: 1 })
 
-const Token = mongoose.model('Token', TokenSchema)
+const Token = mongoose.model('Token', TokenSchema) 
 
 module.exports = Token
